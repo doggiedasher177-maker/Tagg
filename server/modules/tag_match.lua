@@ -191,7 +191,11 @@ local function try_tag(state)
             local dx, dy = hunter.x - target.x, (hunter.y - target.y) * 0.85
             if math.sqrt(dx * dx + dy * dy) <= 0.025 then
               state.infected[target_id] = true
-              state.scores[slot] = (state.scores[slot] or 0) + 100
+              local hunter_slot = 1
+              for index, candidate_id in ipairs(ids) do
+                if candidate_id == hunter_id then hunter_slot = index break end
+              end
+              state.scores[hunter_slot] = (state.scores[hunter_slot] or 0) + 100
               state.tagged = slot
               state.tag_cooldown = 3
               local survivors = 0
@@ -271,6 +275,11 @@ end
 function M.match_init(context, params)
   params = params or {}
   local mode = params.mode == "infection" and "infection" or "classic"
+  local map = tostring(params.map or "random"):sub(1, 32)
+  if map == "random" then
+    local choices = { "forge", "archive", "tidal", "moon", "greenland", "city", "mall", "dojo", "desert", "glacier", "skyport", "carnival", "volcano", "bombonera", "monumental", "hell", "heaven" }
+    map = choices[math.random(1, #choices)]
+  end
   local length = clamp(math.floor(valid_number(params.length) or DEFAULT_LENGTH), 60, 1800)
   local state = {
     players = {},
@@ -284,7 +293,7 @@ function M.match_init(context, params)
     match_id = context.match_id,
     status = "lobby",
     mode = mode,
-    map = tostring(params.map or "random"):sub(1, 32),
+    map = map,
     length = length,
     remaining = length,
     countdown = 0,
@@ -370,6 +379,7 @@ function M.match_join(context, dispatcher, tick, state, presences)
 end
 
 function M.match_leave(context, dispatcher, tick, state, presences)
+  local previous_order = state.order or ordered_players(state)
   for _, presence in ipairs(presences) do
     local player = state.players[presence.user_id]
     if player and player.session_id == presence.session_id then
@@ -378,14 +388,29 @@ function M.match_leave(context, dispatcher, tick, state, presences)
     end
   end
 
-  if state.status == "playing" then
-    local ids = ordered_players(state)
-    if #ids == 1 then
-      finish_match(state, 1, "opponent_disconnected")
-    elseif #ids == 0 then
-      state.status = "closed"
+  local ids = ordered_players(state)
+  if state.status == "playing" and #ids < #previous_order then
+    local previous_scores = state.scores or {}
+    local previous_tagger = previous_order[state.tagged]
+    local remapped_scores, remapped_tagger = {}, 1
+    for slot, user_id in ipairs(ids) do
+      for old_slot, old_user_id in ipairs(previous_order) do
+        if old_user_id == user_id then remapped_scores[slot] = previous_scores[old_slot] or 0 end
+        if old_user_id == previous_tagger and old_user_id == user_id then remapped_tagger = slot end
+      end
     end
+    state.scores = remapped_scores
+    state.tagged = remapped_tagger
+    if #ids == 0 then
+      state.status = "closed"
+    else
+      finish_match(state, calculate_winner(state), "disconnect_forfeit")
+    end
+  elseif state.status == "countdown" and #ids < state.target_count then
+    state.status = "closed"
+    state.end_reason = "player_disconnected_before_start"
   end
+
   broadcast_state(dispatcher, state)
   return state
 end
