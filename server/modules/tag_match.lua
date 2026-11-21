@@ -468,18 +468,28 @@ function M.match_signal(context, dispatcher, tick, state, data)
 end
 
 local function matchmaker_matched(context, matched_users)
-  if not matched_users or #matched_users < 2 or #matched_users > MAX_PLAYERS then return nil end
-  local first = matched_users[1].properties or {}
+  if not matched_users or #matched_users < 2 or #matched_users > MAX_PLAYERS then
+    nk.logger_warn("TAG! Matchmaker callback received an invalid roster")
+    return nil
+  end
+
+  local first_user = matched_users[1] or {}
+  local first = first_user.properties or first_user.string_properties or {}
   local mode = first.mode == "infection" and "infection" or "classic"
   local map = tostring(first.map or "random"):sub(1, 32)
   local length = clamp(math.floor(valid_number(first.length) or DEFAULT_LENGTH), 60, 1800)
   local ids = {}
   for _, entry in ipairs(matched_users) do
-    local user_id = entry.user_id or (entry.presence and entry.presence.user_id)
+    local user_id = entry.user_id or
+      (entry.presence and entry.presence.user_id) or
+      (entry.user and entry.user.id)
     if user_id then table.insert(ids, user_id) end
   end
   table.sort(ids)
-  return nk.match_create("tag_match", {
+
+  nk.logger_info("TAG! Matchmaker callback accepted roster size=" .. tostring(#matched_users) ..
+    " resolved_users=" .. tostring(#ids) .. " mode=" .. mode .. " map=" .. map)
+  local match_id = nk.match_create("tag_match", {
     created_by = "matchmaker",
     mode = mode,
     map = map,
@@ -487,6 +497,8 @@ local function matchmaker_matched(context, matched_users)
     expected_users = matched_users,
     owner_id = ids[1]
   })
+  nk.logger_info("TAG! Matchmaker created authoritative match " .. tostring(match_id))
+  return match_id
 end
 
 local function create_private_match(context, payload)
