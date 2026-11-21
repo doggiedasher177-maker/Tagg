@@ -393,22 +393,33 @@ function M.match_leave(context, dispatcher, tick, state, presences)
     local previous_scores = state.scores or {}
     local previous_tagger = previous_order[state.tagged]
     local remapped_scores, remapped_tagger = {}, 1
+    local previous_tagger_connected = false
     for slot, user_id in ipairs(ids) do
       for old_slot, old_user_id in ipairs(previous_order) do
         if old_user_id == user_id then remapped_scores[slot] = previous_scores[old_slot] or 0 end
-        if old_user_id == previous_tagger and old_user_id == user_id then remapped_tagger = slot end
+        if old_user_id == previous_tagger and old_user_id == user_id then
+          remapped_tagger = slot
+          previous_tagger_connected = true
+        end
       end
     end
     state.scores = remapped_scores
     state.tagged = remapped_tagger
+
     if #ids == 0 then
       state.status = "closed"
-    else
-      finish_match(state, calculate_winner(state), "disconnect_forfeit")
+    elseif #ids == 1 then
+      finish_match(state, 1, "opponent_disconnected")
+    elseif not previous_tagger_connected then
+      state.tag_cooldown = math.max(state.tag_cooldown or 0, 1)
     end
   elseif state.status == "countdown" and #ids < state.target_count then
-    state.status = "closed"
-    state.end_reason = "player_disconnected_before_start"
+    if #ids >= 2 then
+      state.target_count = #ids
+    else
+      state.status = "closed"
+      state.end_reason = "player_disconnected_before_start"
+    end
   end
 
   broadcast_state(dispatcher, state)
