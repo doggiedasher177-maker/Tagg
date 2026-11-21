@@ -2,16 +2,16 @@ local nk = require("nakama")
 
 local function match_init(context, params)
   return {
-    state = { players = {}, started_at = os.time(), last_state = nil },
+    state = { players = {}, started_at = os.time() },
     tick_rate = 10,
     label = "TAG! online match"
   }
 end
 
 local function match_join_attempt(context, dispatcher, tick, state, presence, metadata)
-  if #state.players >= 4 then
-    return state, false, "This TAG! room is full."
-  end
+  local count = 0
+  for _ in pairs(state.players) do count = count + 1 end
+  if count >= 4 then return state, false, "This TAG! room is full." end
   return state, true
 end
 
@@ -19,10 +19,6 @@ local function match_join(context, dispatcher, tick, state, presences)
   for _, p in ipairs(presences) do
     state.players[p.user_id] = { username = p.username, joined = tick }
   end
-  dispatcher.broadcast_message(10, nk.json_encode({
-    type = "presence",
-    count = (function() local n=0 for _ in pairs(state.players) do n=n+1 end return n end)()
-  }), nil, nil, true)
   return state
 end
 
@@ -35,10 +31,9 @@ local function match_loop(context, dispatcher, tick, state, messages)
   for _, message in ipairs(messages) do
     local op = message.op_code
     if op == 0 or op == 1 or op == 2 then
-      -- TAG! clients exchange movement snapshots and round state through
-      -- the Nakama match dispatcher. Server membership and message routing
-      -- remain authoritative; gameplay simulation is currently client-hosted.
-      dispatcher.broadcast_message(op, message.data, message.sender, nil, true)
+      -- Room membership and transport are server-managed by Nakama.
+      -- Gameplay simulation remains client-hosted for this first beta.
+      dispatcher.broadcast_message(op, message.data, nil, message.sender, true)
     end
   end
   return state
@@ -53,14 +48,13 @@ local function match_signal(context, dispatcher, tick, state, data)
 end
 
 local function matchmaker_matched(context, entries)
-  local match_id = nk.match_create("tag_match", { created_by = "matchmaker" })
-  return match_id
+  return nk.match_create("tag_match", { created_by = "matchmaker" })
 end
 
 local function InitModule(ctx, logger, nk_api, initializer)
-  if not nk.leaderboard_get("tag_online_wins") then
-    nk.leaderboard_create("tag_online_wins", "reset_never", "asc", "set", {})
-  end
+  -- Client-authoritative, descending win count; each verified client win adds 1.
+  -- pcall makes restarts safe when the leaderboard already exists.
+  pcall(nk.leaderboard_create, "tag_online_wins", false, "desc", "incr", nil, {})
   initializer.register_match("tag_match", {
     match_init = match_init,
     match_join_attempt = match_join_attempt,
@@ -71,8 +65,7 @@ local function InitModule(ctx, logger, nk_api, initializer)
     match_signal = match_signal
   })
   initializer.register_matchmaker_matched(matchmaker_matched)
-  logger_info = logger.info
-  logger_info("TAG! Nakama runtime loaded")
+  logger:info("TAG! Nakama runtime loaded")
 end
 
 return { InitModule = InitModule }
