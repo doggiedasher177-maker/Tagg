@@ -101,7 +101,12 @@ local function award_match(state)
   local winner_user_id = state.winner_user_id
   local winner = winner_user_id and state.players[winner_user_id] or nil
 
-  for _, user_id in ipairs(ids) do
+  local all_ids = {}
+  for user_id, player in pairs(state.players) do
+    if player then table.insert(all_ids, user_id) end
+  end
+  table.sort(all_ids)
+  for _, user_id in ipairs(all_ids) do
     local p = state.players[user_id]
     local metadata = {
       game = "TAG!",
@@ -292,16 +297,19 @@ function M.match_init(context, params)
   }
 
   if type(params.expected_users) == "table" then
+    local expected_count = 0
     for _, entry in ipairs(params.expected_users) do
       local user_id = entry.user_id or (entry.presence and entry.presence.user_id)
       if user_id then
         state.expected_users[user_id] = true
-        state.target_count = state.target_count + 1
+        expected_count = expected_count + 1
       end
+    end
+    if expected_count > 0 then
+      state.target_count = clamp(expected_count, 2, MAX_PLAYERS)
     end
   end
   if next(state.expected_users) ~= nil then
-    state.target_count = clamp(state.target_count, 2, MAX_PLAYERS)
     local expected_ids = {}
     for user_id in pairs(state.expected_users) do table.insert(expected_ids, user_id) end
     table.sort(expected_ids)
