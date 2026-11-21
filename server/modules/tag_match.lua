@@ -55,6 +55,9 @@ local function InitModule(ctx, logger, nk_api, initializer)
   -- Client-authoritative, descending win count; each verified client win adds 1.
   -- pcall makes restarts safe when the leaderboard already exists.
   pcall(nk.leaderboard_create, "tag_online_wins", false, "desc", "incr", nil, {})
+  -- Weekly online wins tournament; client submissions are enabled for this beta.
+  pcall(nk.tournament_create, "tag_weekly", false, "desc", "incr", 604800, "0 0 * * 1", {},
+    "TAG! Weekly", "Win TAG! online rounds this week.", 1, 0, 0, 10000, 100000, false, true)
   initializer.register_match("tag_match", {
     match_init = match_init,
     match_join_attempt = match_join_attempt,
