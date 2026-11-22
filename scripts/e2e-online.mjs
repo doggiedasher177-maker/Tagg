@@ -219,6 +219,112 @@ try {
   assert(botTimerBefore !== botTimerAfter, "The bot-match round timer did not advance.");
   results.push("PASS: Quick Match timeout starts a bot match and its timer advances");
 
+
+  // 7. A published community map is searchable and starts with three replaceable bots.
+  await leaveMatch(first.page);
+  const mapName = "QA Community Arena " + randomUUID().slice(0, 8);
+  const mapClientA = makeClient();
+  const mapClientB = makeClient();
+  const mapSessionA = await mapClientA.authenticateDevice(deviceA, false, nameA);
+  const mapSessionB = await mapClientB.authenticateDevice(deviceB, false, nameB);
+  const mapSocketA = mapClientA.createSocket(true, false);
+  const mapSocketB = mapClientB.createSocket(true, false);
+  let mapStateA = null;
+  let mapStateB = null;
+  const decodeState = message => {
+    if ((message.opCode ?? message.op_code) !== 11) return null;
+    const raw = message.data ?? message.state;
+    if (raw == null) return null;
+    const payload = raw instanceof Uint8Array ? new TextDecoder().decode(raw) :
+      (typeof raw === "string" ? raw : JSON.stringify(raw));
+    try { return JSON.parse(payload); } catch { return null; }
+  };
+  const rpcJson = response => {
+    const raw = response?.payload ?? response;
+    return typeof raw === "string" ? JSON.parse(raw) : raw;
+  };
+  const waitForMapState = async (getter, predicate, description, ms = 18000) => {
+    const deadline = Date.now() + ms;
+    while (Date.now() < deadline) {
+      const value = getter();
+      if (value && predicate(value)) return value;
+      await sleep(150);
+    }
+    throw new Error("Timed out waiting for " + description + ". Last state: " + JSON.stringify(getter()));
+  };
+  try {
+    await mapSocketA.connect(mapSessionA, true);
+    await mapSocketB.connect(mapSessionB, true);
+
+    const eloA = rpcJson(await mapClientA.rpc(mapSessionA, "tag_ensure_elo", "{}"));
+    const eloB = rpcJson(await mapClientB.rpc(mapSessionB, "tag_ensure_elo", "{}"));
+    assert(Number(eloA.elo) === 100 && Number(eloB.elo) === 100,
+      "New online accounts did not initialize at 100 ELO.");
+
+    const level = {
+      id: "qa_" + randomUUID().replace(/-/g, "").slice(0, 18),
+      name: mapName,
+      description: "Temporary automated test arena.",
+      modifiers: [],
+      objects: [
+        { type: "platform", x: 80, y: 570, w: 230, h: 16 },
+        { type: "platform", x: 430, y: 460, w: 190, h: 16 },
+        { type: "platform", x: 790, y: 555, w: 240, h: 16 },
+        { type: "pad", x: 560, y: 420, w: 52, h: 11 },
+        { type: "orb", x: 600, y: 320, r: 12, forceX: 0, forceY: -610 }
+      ]
+    };
+    const published = rpcJson(await mapClientA.rpc(mapSessionA, "tag_publish_map", JSON.stringify({ level })));
+    assert(published.ok && published.key && published.owner_id,
+      "The server did not publish the community map.");
+    const listing = rpcJson(await mapClientB.rpc(mapSessionB, "tag_list_public_maps", JSON.stringify({ query: mapName })));
+    assert((listing.maps || []).some(item => item.key === published.key),
+      "The published community map could not be found by search.");
+
+    const started = rpcJson(await mapClientA.rpc(mapSessionA, "tag_start_public_map_match",
+      JSON.stringify({ key: published.key, owner_id: published.owner_id })));
+    assert(started.match_id, "The server did not create or locate a public map match.");
+    mapSocketA.onmatchdata = message => { const state = decodeState(message); if (state) mapStateA = state; };
+    mapSocketB.onmatchdata = message => { const state = decodeState(message); if (state) mapStateB = state; };
+    const joinedA = await mapSocketA.joinMatch(started.match_id);
+    const matchId = joinedA.match_id || started.match_id;
+    const firstMapState = await waitForMapState(() => mapStateA,
+      state => Array.isArray(state.players) && state.players.length === 4,
+      "a public map match with one human and three bots");
+    assert(firstMapState.players.filter(player => player.is_bot).length === 3,
+      "A new public map match did not fill all three open slots with bots.");
+    await mapSocketB.joinMatch(matchId);
+    const replacementState = await waitForMapState(() => mapStateA,
+      state => Array.isArray(state.players) && state.players.some(player => player.user_id === mapSessionB.user_id),
+      "a second human replacing a bot");
+    assert(replacementState.players.length === 4 &&
+      replacementState.players.filter(player => player.is_bot).length === 2,
+      "The joining human did not replace exactly one bot slot.");
+    await waitForMapState(() => mapStateA, state => state.status === "playing",
+      "public map match countdown to complete");
+    await mapSocketA.leaveMatch(matchId);
+    const quitResult = await waitForMapState(() => mapStateB,
+      state => state.status === "result",
+      "the remaining human winning after the opponent quits");
+    assert(quitResult.winner_user_id === mapSessionB.user_id,
+      "The remaining human did not receive the win after the opponent disconnected.");
+    await sleep(700);
+    const finalEloA = await mapClientA.listLeaderboardRecords(mapSessionA, "tag_online_elo_v1", [mapSessionA.user_id], null, 1, null);
+    const finalEloB = await mapClientB.listLeaderboardRecords(mapSessionB, "tag_online_elo_v1", [mapSessionB.user_id], null, 1, null);
+    const tagpointsB = await mapClientB.listLeaderboardRecords(mapSessionB, "tag_online_tagpoints_v1", [mapSessionB.user_id], null, 1, null);
+    assert(Number(finalEloA.records?.[0]?.score ?? 100) === 100 &&
+      Number(finalEloB.records?.[0]?.score ?? 100) === 100 &&
+      Number(tagpointsB.records?.[0]?.score ?? 0) === 0,
+      "An early opponent quit incorrectly awarded ELO or Tagpoints.");
+    results.push("PASS: public map publishing, search, three-bot fill, and human bot-slot replacement");
+    results.push("PASS: opponent quit awards the remaining player the win without ELO or Tagpoints when more than 30 seconds remain");
+    await mapSocketB.leaveMatch(matchId).catch(() => {});
+    await mapClientA.rpc(mapSessionA, "tag_unpublish_map", JSON.stringify({ key: published.key })).catch(() => {});
+  } finally {
+    try { mapSocketA.disconnect(false); } catch {}
+    try { mapSocketB.disconnect(false); } catch {}
+  }
+
   console.log(JSON.stringify({ ok: true, results }, null, 2));
 } catch (error) {
   console.error(JSON.stringify({ ok: false, results, error: String(error?.stack || error) }, null, 2));
