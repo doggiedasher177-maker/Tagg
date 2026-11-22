@@ -575,7 +575,8 @@ local function update_server_bot(bot, target, is_hunter, state, surfaces, dt)
         end
       end
       table.sort(choices, function(a, b) return a.score > b.score end)
-      local pick = choices[math.random(1, math.min(3, #choices)) or 1]
+      local pick = nil
+      if #choices > 0 then pick = choices[math.random(1, math.min(3, #choices))] end
       if pick then old_goal = pick.surface end
       bot.goal_surface = old_goal and old_goal.id or nil
       bot.goal_timer = 1.25 + math.random() * 1.2
@@ -592,9 +593,14 @@ local function update_server_bot(bot, target, is_hunter, state, surfaces, dt)
     local gap = math.max(0, next_surface.x - (current.x + current.w), current.x - (next_surface.x + next_surface.w))
     local rising = next_surface.y < current.y - 0.035
     if rising or gap > 0.025 then
-      local takeoff = center >= current.x + current.w * 0.5 and (current.x + current.w - 0.025) or (current.x + 0.025)
       local land_x = clamp(center, next_surface.x + 0.018, next_surface.x + next_surface.w - 0.018)
-      if math.abs(bot.x - takeoff) > 0.035 then goal_x = takeoff else goal_x = land_x; should_jump = true end
+      if current.id == "floor" then
+        goal_x = land_x
+        if math.abs(bot.x - land_x) < 0.13 then should_jump = true end
+      else
+        local takeoff = center >= current.x + current.w * 0.5 and (current.x + current.w - 0.025) or (current.x + 0.025)
+        if math.abs(bot.x - takeoff) > 0.035 then goal_x = takeoff else goal_x = land_x; should_jump = true end
+      end
     else
       goal_x = clamp(center, next_surface.x + 0.018, next_surface.x + next_surface.w - 0.018)
     end
