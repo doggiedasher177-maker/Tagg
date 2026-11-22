@@ -2151,6 +2151,7 @@ window.TAGOnlineHooks={
   },
   endMatch(){onlineActive=false;onlineIsHost=false;onlineMatchId=null;if($('onlineChatToggle'))$('onlineChatToggle').style.display='none';if($('matchChatPanel'))$('matchChatPanel').style.display='none';activePlayerCount=4;botPlayers=[];keysDown.clear();},
   getBotPlayers(){return botPlayers.slice(0,activePlayerCount);},
+  getMatchId(){return onlineMatchId;},
   isOnline(){return onlineActive;}
 };
 
