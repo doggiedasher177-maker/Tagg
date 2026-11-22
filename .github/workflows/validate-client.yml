@@ -1,0 +1,31 @@
+name: Validate TAG! Client
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "index.html"
+      - "docs/index.html"
+      - "scripts/validate-client.mjs"
+      - ".github/workflows/validate-client.yml"
+  pull_request:
+    paths:
+      - "index.html"
+      - "docs/index.html"
+      - "scripts/validate-client.mjs"
+      - ".github/workflows/validate-client.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out TAG!
+        uses: actions/checkout@v7
+
+      - name: Validate the browser client
+        run: node scripts/validate-client.mjs
