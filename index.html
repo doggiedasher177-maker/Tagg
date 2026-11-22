@@ -2173,6 +2173,7 @@ window.TAGOnlineHooks={
   applyNetworkState(data){
     if(!data)return;
     const r=data.round||data;
+    if(Array.isArray(r.players)){window.__tagOnlinePlayerIds=r.players.map(p=>p.user_id);botPlayers=r.players.map(p=>!!p.is_bot);playerNames=r.players.map((p,i)=>p.username||`RUNNER ${i+1}`);activePlayerCount=Math.max(2,Math.min(4,r.players.length));}
     if(r.map&&r.map!==mapId){mapId=r.map;buildWorld();}
     if(r.mode)gameMode=r.mode;
     if(Number.isFinite(r.length))roundLength=r.length;
@@ -2771,7 +2772,56 @@ async function saveProfileName(){
  async function createCommunityTournament(){if(!connected){await connect();if(!connected)return;}try{const title=$('tournamentTitleInput').value.trim()||username+"'s Tournament";readOnlineOptions();const response=await client.rpc(session,'tag_create_tournament',{title:title,mode:pendingMode,map:pendingMap,length:String(pendingLength)});const data=rpcPayload(response);if(!data.match_id)throw new Error('The server did not return a tournament lobby.');if(match)await socket.leaveMatch(match.match_id);const m=normalizeMatch(await socket.joinMatch(data.match_id));activeTournamentMatchId=data.match_id;isTournamentHost=true;if($('startTournamentBtn'))$('startTournamentBtn').disabled=false;await enterMatch(m);status('Tournament "'+data.title+'" is open. Invite players, then start whenever you are ready.','connected');await refreshTournaments();}catch(e){status('Could not host tournament: '+e.message,'error');}}
  async function startCommunityTournament(){if(!connected||!activeTournamentMatchId||!isTournamentHost)return;try{const result=rpcPayload(await client.rpc(session,'tag_start_tournament',{match_id:activeTournamentMatchId}));if(result.ok===false)throw new Error(result.error||'The server could not start this tournament.');if($('startTournamentBtn'))$('startTournamentBtn').disabled=true;status('Tournament started! Server bots have filled every empty slot.','connected');}catch(e){status('Could not start tournament: '+e.message,'error');}}
 async function refreshTournaments(){if(!client||!session)return;const el=$('onlineTournamentList');try{const data=rpcPayload(await client.rpc(session,'tag_list_tournaments',{}));el.innerHTML='';const tournaments=data.tournaments||[];if(!tournaments.length){const empty=document.createElement('div');empty.textContent='No community tournaments are open. Host the first one!';el.append(empty);}tournaments.forEach(t=>{const row=document.createElement('div');row.className='online-chat-line';const title=document.createElement('span');title.textContent=t.title+' · '+t.players+'/'+t.max_players+' players · '+t.map;const join=document.createElement('button');join.className='secondary-btn';join.textContent='JOIN';join.onclick=()=>joinCommunityTournament(t.match_id);row.append(title,join);el.append(row);});}catch(e){el.textContent='Community tournament list is unavailable: '+e.message;}}
- $('onlineChatToggle')?.addEventListener('click',()=>{$('matchChatPanel').style.display=$('matchChatPanel').style.display==='none'?'block':'none';});$('matchChatClose')?.addEventListener('click',()=>{$('matchChatPanel').style.display='none';});$('matchChatSendBtn')?.addEventListener('click',sendMatchChat);$('matchChatInput')?.addEventListener('keydown',e=>{if(e.key==='Enter')sendMatchChat();});$('notifyFriendYesBtn')?.addEventListener('click',notifyOnlineFriendAndBattle);$('notifyFriendNoBtn')?.addEventListener('click',()=>showQuickMatchModal('NO OPPONENT AVAILABLE','No opponent available right now.','You remain in the matchmaking queue. Keep waiting for another player to join.',{spinner:false,keep:true}));$('keepQueueBtn')?.addEventListener('click',()=>{if(queueActive)showQuickMatchModal('STILL SEARCHING','No opponent available yet.','You are still in the queue. Another player can join at any moment.',{spinner:true,keep:true});});$('cancelQueueBtn')?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();cancelQuickMatch();});
+ 
+ async function ensureEditorOnline(){
+   if(connected&&client&&session&&socket)return true;
+   if(!$('onlineName')?.value?.trim()){status('Choose your unique online player name before publishing or joining community maps.','error');window.TAGAppScreens?.show('online');return false;}
+   await connect();return !!(connected&&client&&session&&socket);
+ }
+ async function publishEditorMap(id){
+   if(!await ensureEditorOnline())return;
+   const level=window.TAGOnlineHooks?.getCustomMap(id);
+   if(!level){status('Save the level before publishing it online.','error');return;}
+   try{
+     const response=rpcPayload(await client.rpc(session,'tag_publish_map',{level}));
+     status('Published "'+(response.name||level.name)+'" to the TAG! online map library.','connected');
+     await searchCommunityMaps(level.name);
+   }catch(e){status('Could not publish this map: '+(await responseErrorMessage(e)),'error');}
+ }
+ async function searchCommunityMaps(query=''){
+   const list=$('editorOnlineList');if(!list)return;
+   if(!await ensureEditorOnline())return;
+   list.textContent='Searching the TAG! community map library...';
+   try{
+     const data=rpcPayload(await client.rpc(session,'tag_list_public_maps',{query:String(query||'').trim()}));
+     const maps=data.maps||[];list.innerHTML='';
+     if(!maps.length){list.textContent='No public maps matched that search.';return;}
+     maps.forEach(item=>{
+       const row=document.createElement('div');row.className='editor-online-map';
+       const info=document.createElement('div');const name=document.createElement('b');name.textContent=item.name||'Community Arena';
+       const details=document.createElement('small');details.textContent=(item.creator||'TAG! Player')+' · '+(Number(item.object_count)||0)+' objects'+(item.description?' · '+item.description:'');
+       info.append(name,details);
+       const join=document.createElement('button');join.type='button';join.className='secondary-btn';join.textContent='PLAY · 3 BOTS';join.dataset.startPublicMap='true';join.dataset.key=item.key;join.dataset.ownerId=item.owner_id;
+       row.append(info,join);list.append(row);
+     });
+   }catch(e){list.textContent='Online map search failed: '+(await responseErrorMessage(e));}
+ }
+ async function startCommunityMapMatch(key,ownerId){
+   if(!await ensureEditorOnline())return;
+   if(match){status('Leave your current match before joining a community map.','error');return;}
+   try{
+     status('Finding an open match for that community map...');
+     const data=rpcPayload(await client.rpc(session,'tag_start_public_map_match',{key,owner_id:ownerId}));
+     if(!data.match_id)throw new Error('The server did not return a community map match.');
+     const joined=normalizeMatch(await socket.joinMatch(data.match_id));
+     await enterMatch(joined);
+     status('Community arena joined. Bots fill the other three slots; incoming players can replace them.','connected');
+   }catch(e){status('Could not join community map: '+(await responseErrorMessage(e)),'error');}
+ }
+ window.addEventListener('tag-editor-publish-map',e=>{void publishEditorMap(e.detail?.id);});
+ window.addEventListener('tag-editor-search-online',e=>{void searchCommunityMaps(e.detail?.query||'');});
+ window.addEventListener('tag-editor-start-public-map',e=>{void startCommunityMapMatch(e.detail?.key,e.detail?.ownerId);});
+$('onlineChatToggle')?.addEventListener('click',()=>{$('matchChatPanel').style.display=$('matchChatPanel').style.display==='none'?'block':'none';});$('matchChatClose')?.addEventListener('click',()=>{$('matchChatPanel').style.display='none';});$('matchChatSendBtn')?.addEventListener('click',sendMatchChat);$('matchChatInput')?.addEventListener('keydown',e=>{if(e.key==='Enter')sendMatchChat();});$('notifyFriendYesBtn')?.addEventListener('click',notifyOnlineFriendAndBattle);$('notifyFriendNoBtn')?.addEventListener('click',()=>showQuickMatchModal('NO OPPONENT AVAILABLE','No opponent available right now.','You remain in the matchmaking queue. Keep waiting for another player to join.',{spinner:false,keep:true}));$('keepQueueBtn')?.addEventListener('click',()=>{if(queueActive)showQuickMatchModal('STILL SEARCHING','No opponent available yet.','You are still in the queue. Another player can join at any moment.',{spinner:true,keep:true});});$('cancelQueueBtn')?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();cancelQuickMatch();});
 $('cancelQueueBtn')?.addEventListener('pointerup',e=>{if(queueActive){e.preventDefault();e.stopPropagation();cancelQuickMatch();}});$('createCommunityTournamentBtn')?.addEventListener('click',createCommunityTournament);$('startTournamentBtn')?.addEventListener('click',startCommunityTournament);$('openOnlineLeaderboardBtn')?.addEventListener('click',async()=>{if(!connected){await connect();if(!connected)return;}await Promise.allSettled([refreshLeaderboard(),refreshOnlineStats()]);window.TAGAppScreens?.show('leaderboard');});window.addEventListener('tag-open-profile',openPlayerProfile);$('copyRoomCodeBtn')?.addEventListener('click',async()=>{const code=$('roomCode')?.textContent?.trim();if(!code||code==='Not created yet')return;try{await navigator.clipboard.writeText(code);status('Room code copied. Send it to your friend.','connected');}catch(e){status('Select and copy the room code manually.','error');}});$('backProfileBtn')?.addEventListener('click',()=>window.TAGAppScreens?.show('menu'));$('saveProfileNameBtn')?.addEventListener('click',saveProfileName);$('profileNameInput')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();saveProfileName();}});$('profileNameInput')?.addEventListener('input',()=>{const el=$('profileNameInput');if(el)el.value=el.value.replace(/[^A-Za-z0-9_]/g,'').slice(0,16);});$('profileConnectBtn')?.addEventListener('click',async()=>{if(!$('onlineName').value.trim()){window.TAGAppScreens?.show('online');return;}await connect();if(connected)await refreshOnlineStats();});$('profileLeaderboardBtn')?.addEventListener('click',async()=>{if(connected)await Promise.allSettled([refreshOnlineStats(),refreshLeaderboard()]);window.TAGAppScreens?.show('leaderboard');});const openPhotoPicker=()=>{const picker=$('profilePhotoInput');if(!picker)return;try{if(typeof picker.showPicker==='function')picker.showPicker();else picker.click();}catch(e){picker.click();}};
 $('chooseProfilePhotoBtn')?.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openPhotoPicker();}});
 $('profilePhotoFrame')?.addEventListener('click',e=>{if(e.target?.closest?.('button,label'))return;openPhotoPicker();});
