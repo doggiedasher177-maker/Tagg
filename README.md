@@ -18,11 +18,11 @@ For a hosted deployment, deploy this repository with a persistent Postgres datab
 - Nakama runtime match module: `server/modules/tag_match.lua`
 - Docker Compose: Nakama + PostgreSQL
 
-## Important gameplay/security note
+## Online architecture and security
 
-The runtime owns room membership and relays match messages through Nakama. The current browser game still simulates player movement on a client-hosted model; this is suitable for a first playable friends beta, not cheat-resistant ranked competition. A production competitive release should move movement, tagging, scoring, round timers, and win validation into the authoritative runtime.
+The Nakama runtime owns match rooms, player membership, countdowns, round timers, tag checks, scoring, and match results. Clients simulate their own movement and send normalized position/velocity snapshots; the server rejects snapshots outside a movement envelope. This is a playable friends-beta architecture, not a fully cheat-resistant competitive movement simulation.
 
-Nakama leaderboard `tag_online_wins` is initialized on server startup. The client can submit/read online wins. Online tournaments require tournament creation/scheduling and should be initialized before the tournament UI can list active events.
+The runtime initializes the `tag_online_wins_v2`, `tag_online_losses_v2`, `tag_online_matches_v2`, and `tag_online_tags_v2` leaderboards, plus the `tag_weekly_v2` tournament.
 
 ## Publish the browser client
 
