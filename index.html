@@ -2165,7 +2165,7 @@ rafId=requestAnimationFrame(frame);
 <script type="module">
 import { Client } from 'https://esm.sh/@heroiclabs/nakama-js@2.8.0';
 (()=>{
- const $=id=>document.getElementById(id);let client=null,session=null,socket=null,match=null,chatChannel=null,globalChannel=null,matchPresences=[],localIndex=0,isHost=false,sendClock=0,connected=false,username='',deviceId='',pendingMap='forge',pendingMode='classic',pendingLength=120,pendingModifiers=[],roomWaitTimer=null,matchStarted=false,onlineFriendIds=new Set(),cachedOnlineFriends=[],matchmakerTicket=null,queueActive=false,queueTimer=null,queueInterval=null,queueDeadline=0,queueGeneration=0,queueCancelRequested=false,queueBotFallbackStarted=false,activeTournamentMatchId=null,isTournamentHost=false;
+ const $=id=>document.getElementById(id);let client=null,session=null,socket=null,match=null,chatChannel=null,globalChannel=null,matchPresences=[],localIndex=0,isHost=false,sendClock=0,connected=false,connectPromise=null,connectionGeneration=0,username='',deviceId='',pendingMap='forge',pendingMode='classic',pendingLength=120,pendingModifiers=[],roomWaitTimer=null,matchStarted=false,onlineFriendIds=new Set(),cachedOnlineFriends=[],matchmakerTicket=null,queueActive=false,queueTimer=null,queueInterval=null,queueDeadline=0,queueGeneration=0,queueCancelRequested=false,queueBotFallbackStarted=false,activeTournamentMatchId=null,isTournamentHost=false;
  const status=(msg,kind='')=>{const e=$('onlineStatus');if(e){e.textContent=msg;e.className='online-status '+kind;}};
  const log=(name,msg)=>{['onlineChatLog','matchChatLog'].forEach(id=>{const e=$(id);if(!e)return;const line=document.createElement('div');line.className='online-chat-line';const b=document.createElement('b');b.textContent=(name||'PLAYER')+': ';line.append(b,document.createTextNode(String(msg||'')));e.append(line);e.scrollTop=e.scrollHeight;});};
  const setButtons=on=>['onlineChatSendBtn','joinGlobalChatBtn','refreshTournamentsBtn','addFriendBtn','refreshFriendsBtn','createCommunityTournamentBtn'].forEach(id=>{if($(id))$(id).disabled=!on;});if($('startTournamentBtn'))$('startTournamentBtn').disabled=!(on&&isTournamentHost&&activeTournamentMatchId);
@@ -2199,11 +2199,126 @@ import { Client } from 'https://esm.sh/@heroiclabs/nakama-js@2.8.0';
 }
  
  function makeDeviceId(){let id=localStorage.getItem('tagNakamaDevice');if(!id){id=crypto.randomUUID();localStorage.setItem('tagNakamaDevice',id);}return id;}
- async function connect(){try{const url=$('nakamaHost').value.trim(),key=$('nakamaKey').value.trim(),name=$('onlineName').value.trim().slice(0,16);if(!url||!key||!name)throw new Error('Choose a player name first.');if(!/^[A-Za-z0-9_]{3,16}$/.test(name))throw new Error('Names must be 3–16 characters: letters, numbers, or underscores.');const u=hostParts(url);username=name;deviceId=makeDeviceId();client=new Client(key,u.host,u.port,u.ssl);client.timeout=10000;session=await client.authenticateDevice(deviceId,true,username);username=session.username||username;$('onlineName').value=username;$('onlineName').readOnly=true;$('onlineName').setAttribute('aria-readonly','true');try{localStorage.setItem('tagOnlineName',username);}catch(e){}socket=client.createSocket(u.ssl,false);await socket.connect(session,true);await socket.updateStatus(JSON.stringify({status:'Online',game:'TAG!'})).catch(()=>{});connected=true;try{const presenceData=rpcPayload(await client.rpc(session,'tag_online_presence',{}));setOnlinePlayerCount(presenceData.online_count);}catch(presenceError){setOnlinePlayerCount('—');}setButtons(true);status(`Connected as ${session.username||username}. Nakama server is reachable.`,'connected');socket.onmatchdata=onMatchData;socket.onmatchpresence=onPresence;socket.onmatchmakermatched=async event=>{try{const botFallbackWasRunning=queueBotFallbackStarted;queueActive=false;queueGeneration++;clearQueueClocks();$('queueCountdown').textContent='';closeQuickMatchModal();matchmakerTicket=null;if(botFallbackWasRunning&&match){try{await socket.leaveMatch(match.match_id);}catch(e){}match=null;}queueBotFallbackStarted=false;let m;if(typeof event?.match_id==='string'&&event.match_id){m=await socket.joinMatch(event.match_id);}else if(typeof event?.token==='string'&&event.token){m=await socket.joinMatch(undefined,event.token);}else if(typeof event?.match_id?.token==='string'){m=await socket.joinMatch(undefined,event.match_id.token);}else{throw new Error('Matchmaker did not return a usable match ID or join token.');}m=normalizeMatch(m);status('Opponent found! Joining your TAG! arena...','connected');await enterMatch(m);}catch(e){status('Could not join matched room: '+e.message,'error');}};socket.onchannelmessage=m=>{let c={};try{c=typeof m.content==='string'?JSON.parse(m.content):(m.content||m.data||m.message||{});}catch(e){c={message:String(m.content||'')}}const message=String(c.message||c.text||'');const invite=message.match(/^TAG_ROOM_INVITE:(.+)$/);if(invite){$('joinRoomCode').value=invite[1];const details=$('onlineScreen')?.querySelector('.online-settings');if(details)details.open=true;status('A friend invited you to a private room. Press JOIN to accept.','connected');log('SYSTEM',(m.username||m.sender?.username||'A friend')+' invited you to a TAG! match.');return;}log(m.username||m.sender?.username||m.presence?.username||'PLAYER',message||JSON.stringify(c));};socket.onstatuspresence=e=>{(e.joins||[]).forEach(p=>onlineFriendIds.add(p.user_id));(e.leaves||[]).forEach(p=>onlineFriendIds.delete(p.user_id));refreshFriends().catch(()=>{});};socket.onnotification=n=>{if(n.subject)log('SYSTEM',n.subject);};socket.onerror=e=>status('Realtime connection error: '+(e.message||e),'error');await refreshLeaderboard();await refreshOnlineStats();await refreshTournaments();await refreshFriends();}catch(e){connected=false;setButtons(false);const message=String(e.message||e);if(/username/i.test(message)&&/(taken|in use|exist|already)/i.test(message)){if($('onlineName')){$('onlineName').readOnly=false;$('onlineName').value='';}try{localStorage.removeItem('tagOnlineName');}catch(ignore){}status('That player name is already taken. Choose a different name.','error');}else{status(message,'error');}}}
- async function disconnect(){
+ function connect(){
+  if(connected&&client&&session&&socket)return Promise.resolve(true);
+  if(connectPromise)return connectPromise;
+  const generation=++connectionGeneration;
+  const attempt=(async()=>{
+    let nextClient=null,nextSession=null,nextSocket=null;
+    try{
+      const url=$('nakamaHost').value.trim();
+      const key=$('nakamaKey').value.trim();
+      const name=$('onlineName').value.trim().slice(0,16);
+      if(!url||!key||!name)throw new Error('Choose a player name first.');
+      if(!/^[A-Za-z0-9_]{3,16}$/.test(name))throw new Error('Names must be 3–16 characters: letters, numbers, or underscores.');
+      const u=hostParts(url);
+      username=name;deviceId=makeDeviceId();
+      nextClient=new Client(key,u.host,u.port,u.ssl);
+      nextClient.timeout=10000;
+      nextSession=await nextClient.authenticateDevice(deviceId,true,username);
+      if(generation!==connectionGeneration)throw new Error('Connection cancelled.');
+      username=nextSession.username||username;
+      nextSocket=nextClient.createSocket(u.ssl,false);
+      await nextSocket.connect(nextSession,true);
+      if(generation!==connectionGeneration)throw new Error('Connection cancelled.');
+      await nextSocket.updateStatus(JSON.stringify({status:'Online',game:'TAG!'})).catch(()=>{});
+
+      // Publish the connection atomically only after both authentication and socket
+      // connection succeed. Other UI actions can safely share this in-flight promise.
+      client=nextClient;session=nextSession;socket=nextSocket;connected=true;
+      $('onlineName').value=username;
+      $('onlineName').readOnly=true;
+      $('onlineName').setAttribute('aria-readonly','true');
+      try{localStorage.setItem('tagOnlineName',username);}catch(e){}
+      try{
+        const presenceData=rpcPayload(await client.rpc(session,'tag_online_presence',{}));
+        setOnlinePlayerCount(presenceData.online_count);
+      }catch(presenceError){setOnlinePlayerCount('—');}
+      if(generation!==connectionGeneration)throw new Error('Connection cancelled.');
+      setButtons(true);
+      status(`Connected as ${session.username||username}. Nakama server is reachable.`,'connected');
+      nextSocket.onmatchdata=onMatchData;
+      nextSocket.onmatchpresence=onPresence;
+      nextSocket.onmatchmakermatched=async event=>{
+        if(socket!==nextSocket||!connected)return;
+        try{
+          const botFallbackWasRunning=queueBotFallbackStarted;
+          queueActive=false;queueGeneration++;clearQueueClocks();
+          $('queueCountdown').textContent='';
+          closeQuickMatchModal();matchmakerTicket=null;
+          if(botFallbackWasRunning&&match){
+            try{await nextSocket.leaveMatch(match.match_id);}catch(e){}
+            match=null;
+          }
+          queueBotFallbackStarted=false;
+          let m;
+          if(typeof event?.match_id==='string'&&event.match_id)m=await nextSocket.joinMatch(event.match_id);
+          else if(typeof event?.token==='string'&&event.token)m=await nextSocket.joinMatch(undefined,event.token);
+          else if(typeof event?.match_id?.token==='string')m=await nextSocket.joinMatch(undefined,event.match_id.token);
+          else throw new Error('Matchmaker did not return a usable match ID or join token.');
+          if(socket!==nextSocket||!connected){
+            if(m?.match_id)try{await nextSocket.leaveMatch(m.match_id);}catch(e){}
+            return;
+          }
+          m=normalizeMatch(m);
+          status('Opponent found! Joining your TAG! arena...','connected');
+          await enterMatch(m);
+        }catch(e){
+          if(socket===nextSocket&&connected)status('Could not join matched room: '+e.message,'error');
+        }
+      };
+      nextSocket.onchannelmessage=m=>{
+        let c={};
+        try{c=typeof m.content==='string'?JSON.parse(m.content):(m.content||m.data||m.message||{});}
+        catch(e){c={message:String(m.content||'')};}
+        const message=String(c.message||c.text||'');
+        const invite=message.match(/^TAG_ROOM_INVITE:(.+)$/);
+        if(invite){
+          $('joinRoomCode').value=invite[1];
+          const details=$('onlineScreen')?.querySelector('.online-settings');
+          if(details)details.open=true;
+          status('A friend invited you to a private room. Press JOIN to accept.','connected');
+          log('SYSTEM',(m.username||m.sender?.username||'A friend')+' invited you to a TAG! match.');
+          return;
+        }
+        log(m.username||m.sender?.username||m.presence?.username||'PLAYER',message||JSON.stringify(c));
+      };
+      nextSocket.onstatuspresence=e=>{
+        (e.joins||[]).forEach(p=>onlineFriendIds.add(p.user_id));
+        (e.leaves||[]).forEach(p=>onlineFriendIds.delete(p.user_id));
+        refreshFriends().catch(()=>{});
+      };
+      nextSocket.onnotification=n=>{if(n.subject)log('SYSTEM',n.subject);};
+      nextSocket.onerror=e=>{
+        if(socket===nextSocket&&connected)status('Realtime connection error: '+(e.message||e),'error');
+      };
+      await Promise.allSettled([refreshLeaderboard(),refreshOnlineStats(),refreshTournaments(),refreshFriends()]);
+      return true;
+    }catch(e){
+      if(nextSocket&&socket!==nextSocket)try{await nextSocket.disconnect(false);}catch(ignore){}
+      if(generation===connectionGeneration){
+        if(socket===nextSocket){socket=null;session=null;client=null;}
+        connected=false;setButtons(false);
+        const message=String(e.message||e);
+        if(/username/i.test(message)&&/(taken|in use|exist|already)/i.test(message)){
+          if($('onlineName')){$('onlineName').readOnly=false;$('onlineName').value='';}
+          try{localStorage.removeItem('tagOnlineName');}catch(ignore){}
+          status('That player name is already taken. Choose a different name.','error');
+        }else if(message!=='Connection cancelled.'){
+          status(message,'error');
+        }
+      }
+      return false;
+    }
+  })();
+  connectPromise=attempt.finally(()=>{connectPromise=null;});
+  return connectPromise;
+}
+async function disconnect(){
   // Capture the current connection before clearing UI state. Every cleanup operation
   // is isolated: a failed ticket removal must not prevent leaving the match/socket.
   const oldSocket=socket,oldClient=client,oldSession=session;
+  connectionGeneration++;
   const oldTicket=matchmakerTicket?.ticket,oldMatch=match?.match_id;
   queueActive=false;queueCancelRequested=true;queueGeneration++;
   clearQueueClocks();
