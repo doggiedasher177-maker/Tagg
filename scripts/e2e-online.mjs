@@ -155,8 +155,9 @@ try {
     "V16 phone control check did not create exactly one bot player.");
   results.push("PASS: V16 phone layout renders four touch directions for each human and none for the bot; round-start positions are clustered");
 
-  await phonePage.keyboard.press("Escape");
-  await phonePage.waitForFunction(() => document.querySelector("#mobileControls")?.style.display === "none",
+  await phonePage.locator("#mobilePauseBtn").click();
+  await phonePage.waitForFunction(() => document.querySelector("#mobileControls")?.style.display === "none" &&
+    document.querySelector("#mobilePauseBtn")?.style.display === "none",
     null, { timeout: 5000 });
   await phonePage.locator("#resumeBtn").click();
   await phonePage.waitForFunction(() => document.querySelector("#mobileControls")?.style.display === "grid",
