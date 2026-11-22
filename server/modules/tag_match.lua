@@ -7,6 +7,7 @@ local DEFAULT_LENGTH = 120
 local LEADERBOARD_WINS = "tag_online_wins_v2"
 local LEADERBOARD_LOSSES = "tag_online_losses_v2"
 local LEADERBOARD_MATCHES = "tag_online_matches_v2"
+local LEADERBOARD_TAGS = "tag_online_tags_v2"
 local WEEKLY_TOURNAMENT = "tag_weekly_v2"
 
 local function clamp(value, low, high)
@@ -52,7 +53,9 @@ local function public_state(state)
       face = p.face or 1,
       slot = slot - 1,
       connected = true,
-      violations = p.violations or 0
+      violations = p.violations or 0,
+      is_bot = p.is_bot or false,
+      tags = p.tags or 0
     }
   end
 
@@ -85,8 +88,8 @@ local function broadcast_state(dispatcher, state)
   dispatcher.broadcast_message(11, nk.json_encode(public_state(state)), nil, nil)
 end
 
-local function write_progress_record(id, user_id, username, metadata)
-  local ok, result, err = pcall(nk.leaderboard_record_write, id, user_id, username, 1, 0, metadata)
+local function write_progress_record(id, user_id, username, metadata, score_add)
+  local ok, result, err = pcall(nk.leaderboard_record_write, id, user_id, username, score_add or 1, 0, metadata)
   if not ok then
     nk.logger_error("TAG! progression write threw for " .. id .. ": " .. tostring(result))
   elseif err then
@@ -108,6 +111,7 @@ local function award_match(state)
   table.sort(all_ids)
   for _, user_id in ipairs(all_ids) do
     local p = state.players[user_id]
+    if p and not p.is_bot then
     local metadata = {
       game = "TAG!",
       mode = state.mode,
@@ -121,9 +125,13 @@ local function award_match(state)
     else
       write_progress_record(LEADERBOARD_LOSSES, user_id, p.username, metadata)
     end
+    if (p.tags or 0) > 0 then
+      write_progress_record(LEADERBOARD_TAGS, user_id, p.username, metadata, p.tags)
+    end
+    end
   end
 
-  if winner then
+  if winner and not winner.is_bot then
     local ok, result, err = pcall(
       nk.tournament_record_write,
       WEEKLY_TOURNAMENT,
@@ -196,6 +204,7 @@ local function try_tag(state)
                 if candidate_id == hunter_id then hunter_slot = index break end
               end
               state.scores[hunter_slot] = (state.scores[hunter_slot] or 0) + 100
+              hunter.tags = (hunter.tags or 0) + 1
               state.tagged = slot
               state.tag_cooldown = 3
               local survivors = 0
@@ -228,6 +237,7 @@ local function try_tag(state)
       if target.x and target.y then
         local dx, dy = holder.x - target.x, (holder.y - target.y) * 0.85
         if math.sqrt(dx * dx + dy * dy) <= 0.025 then
+          holder.tags = (holder.tags or 0) + 1
           state.scores[state.tagged] = (state.scores[state.tagged] or 0) + 100
           state.tagged = slot
           state.tag_cooldown = 3
@@ -286,7 +296,9 @@ function M.match_init(context, params)
     sessions = {},
     order = {},
     expected_users = {},
-    target_count = 2,
+    tournament_mode = params.tournament_mode == true,
+    tournament_title = tostring(params.tournament_title or "Community Tournament"):sub(1, 32),
+    target_count = params.tournament_mode == true and 4 or clamp(math.floor(valid_number(params.target_count) or 2), 2, MAX_PLAYERS),
     owner_id = params.owner_id,
     host_user_id = params.owner_id,
     created_by = params.created_by or "unknown",
@@ -328,7 +340,11 @@ function M.match_init(context, params)
   end
 
   nk.logger_info("TAG! authoritative match created: " .. tostring(context.match_id))
-  return state, TICK_RATE, "TAG! server-authoritative match"
+  local label = "TAG_MATCH"
+  if state.tournament_mode then
+    label = "TAG_TOURNAMENT|" .. state.tournament_title:gsub("|", " ") .. "|" .. mode .. "|" .. map
+  end
+  return state, TICK_RATE, label
 end
 
 function M.match_join_attempt(context, dispatcher, tick, state, presence, metadata)
@@ -349,7 +365,9 @@ function M.match_join(context, dispatcher, tick, state, presences)
     local player = state.players[presence.user_id] or {
       user_id = presence.user_id,
       username = presence.username,
-      violations = 0
+      violations = 0,
+      tags = 0,
+      is_bot = false
     }
     player.username = presence.username or player.username
     player.session_id = presence.session_id
@@ -360,7 +378,7 @@ function M.match_join(context, dispatcher, tick, state, presences)
 
   local ids = ordered_players(state)
   if not state.host_user_id and ids[1] then state.host_user_id = ids[1] end
-  if state.status == "lobby" and #ids >= state.target_count then
+  if state.status == "lobby" and not state.tournament_mode and #ids >= state.target_count then
     state.status = "countdown"
     state.countdown = 3
     state.tagged = 1
@@ -447,6 +465,45 @@ function M.match_loop(context, dispatcher, tick, state, messages)
       nk.logger_info("TAG! authoritative round started: " .. tostring(context.match_id))
     end
   elseif state.status == "playing" then
+    if state.tournament_mode then
+      for slot, user_id in ipairs(ordered_players(state)) do
+        local bot = state.players[user_id]
+        if bot and bot.is_bot then
+          local target = nil
+          if state.mode == "infection" then
+            for _, other_id in ipairs(ordered_players(state)) do
+              local other = state.players[other_id]
+              if other and not other.is_bot and other.connected and ((state.infected[user_id] and not state.infected[other_id]) or (not state.infected[user_id] and state.infected[other_id])) then
+                target = other
+                break
+              end
+            end
+          elseif slot == state.tagged then
+            for _, other_id in ipairs(ordered_players(state)) do
+              local other = state.players[other_id]
+              if other and not other.is_bot and other.connected then target = other break end
+            end
+          else
+            local holder = state.players[(state.order or {})[state.tagged]]
+            if holder then target = holder end
+          end
+          bot.x = bot.x or math.random(15, 85) / 100
+          bot.y = bot.y or math.random(15, 85) / 100
+          if target and target.x and target.y then
+            local dx, dy = target.x - bot.x, target.y - bot.y
+            local distance = math.sqrt(dx * dx + dy * dy)
+            if distance > 0.001 then
+              local direction = (state.mode ~= "infection" and slot ~= state.tagged) and -1 or 1
+              local speed = 0.24 * dt * direction
+              bot.vx = (dx / distance) * 0.24 * direction
+              bot.vy = (dy / distance) * 0.24 * direction
+              bot.x = clamp(bot.x + (dx / distance) * speed, 0.04, 0.96)
+              bot.y = clamp(bot.y + (dy / distance) * speed, 0.06, 0.94)
+            end
+          end
+        end
+      end
+    end
     state.remaining = math.max(0, state.remaining - dt)
     state.tag_cooldown = math.max(0, state.tag_cooldown - dt)
     state.score_tick = (state.score_tick or 0) + dt
@@ -474,7 +531,44 @@ function M.match_terminate(context, dispatcher, tick, state, grace_seconds)
 end
 
 function M.match_signal(context, dispatcher, tick, state, data)
-  -- Signals are reserved for trusted server-side operational controls.
+  local ok, signal = pcall(nk.json_decode, data or "")
+  if not ok or type(signal) ~= "table" then return state, nk.json_encode({ ok = false, error = "Invalid tournament signal." }) end
+  if signal.action == "start_tournament" then
+    if not state.tournament_mode then return state, nk.json_encode({ ok = false, error = "This is not a community tournament." }) end
+    if signal.user_id ~= state.owner_id then return state, nk.json_encode({ ok = false, error = "Only the host can start this tournament." }) end
+    if state.status ~= "lobby" then return state, nk.json_encode({ ok = false, error = "This tournament has already started." }) end
+    local humans = ordered_players(state)
+    if #humans < 1 then return state, nk.json_encode({ ok = false, error = "At least one player must join first." }) end
+    local bot_number = 1
+    while #humans < MAX_PLAYERS do
+      local bot_id = "tagbot_" .. tostring(state.match_id):gsub("[^%w]", ""):sub(1, 10) .. "_" .. tostring(bot_number)
+      if not state.players[bot_id] then
+        state.players[bot_id] = {
+          user_id = bot_id,
+          username = ({ "IRON BOT", "WAR BOT", "VOID BOT", "STORM BOT" })[bot_number] or ("ARENA BOT " .. bot_number),
+          is_bot = true, connected = true, tags = 0, violations = 0,
+          x = math.random(15, 85) / 100, y = math.random(15, 85) / 100,
+          vx = 0, vy = 0, face = 1
+        }
+        table.insert(humans, bot_id)
+      end
+      bot_number = bot_number + 1
+    end
+    state.target_count = MAX_PLAYERS
+    state.status = "countdown"
+    state.countdown = 3
+    state.remaining = state.length
+    state.tagged = 1
+    state.tag_cooldown = 3
+    state.scores = {}
+    state.infected = {}
+    for slot, user_id in ipairs(ordered_players(state)) do
+      state.scores[slot] = 0
+      if slot == 1 and state.mode == "infection" then state.infected[user_id] = true end
+    end
+    broadcast_state(dispatcher, state)
+    return state, nk.json_encode({ ok = true, message = "Tournament started with bots filling the open slots." })
+  end
   return state, data
 end
 
@@ -535,11 +629,67 @@ local function create_private_match(context, payload)
   })
 end
 
+local function create_tournament(context, payload)
+  local options = {}
+  if payload and payload ~= "" then options = nk.json_decode(payload) or {} end
+  local title = tostring(options.title or "Community Tournament"):gsub("|", " "):sub(1, 32)
+  local mode = options.mode == "infection" and "infection" or "classic"
+  local map = tostring(options.map or "random"):sub(1, 32)
+  local length = clamp(math.floor(valid_number(options.length) or DEFAULT_LENGTH), 60, 1800)
+  local match_id = nk.match_create("tag_match", {
+    created_by = "community_tournament",
+    tournament_mode = true,
+    tournament_title = title,
+    owner_id = context.user_id,
+    mode = mode,
+    map = map,
+    length = length
+  })
+  return nk.json_encode({ match_id = match_id, title = title, mode = mode, map = map, owner_id = context.user_id })
+end
+
+local function list_tournaments(context, payload)
+  local matches, err = nk.match_list(50, true, nil, 1, MAX_PLAYERS)
+  if err then error(err) end
+  local tournaments = {}
+  for _, item in ipairs(matches or {}) do
+    local label = tostring(item.label or "")
+    local title, mode, map = label:match("^TAG_TOURNAMENT|([^|]*)|([^|]*)|([^|]*)$")
+    if title then
+      table.insert(tournaments, {
+        match_id = item.match_id,
+        title = title,
+        mode = mode,
+        map = map,
+        players = tonumber(item.size or item.presence_count or 1) or 1,
+        max_players = MAX_PLAYERS
+      })
+    end
+  end
+  return nk.json_encode({ tournaments = tournaments })
+end
+
+local function start_tournament(context, payload)
+  local options = {}
+  if payload and payload ~= "" then options = nk.json_decode(payload) or {} end
+  local match_id = tostring(options.match_id or "")
+  if match_id == "" then error("Tournament match ID is required.") end
+  local _, response, err = nk.match_signal(match_id, nk.json_encode({
+    action = "start_tournament",
+    user_id = context.user_id
+  }))
+  if err then error(err) end
+  return response or nk.json_encode({ ok = true })
+end
+
 nk.register_matchmaker_matched(matchmaker_matched)
 nk.register_rpc(create_private_match, "tag_create_private_match")
+nk.register_rpc(create_tournament, "tag_create_tournament")
+nk.register_rpc(list_tournaments, "tag_list_tournaments")
+nk.register_rpc(start_tournament, "tag_start_tournament")
 
 nk.run_once(function(context)
-  local leaderboard_ids = { LEADERBOARD_WINS, LEADERBOARD_LOSSES, LEADERBOARD_MATCHES }
+  local leaderboard_ids = { LEADERBOARD_WINS, LEADERBOARD_LOSSES, LEADERBOARD_MATCHES, LEADERBOARD_TAGS }
   for _, id in ipairs(leaderboard_ids) do
     local err = nk.leaderboard_create(id, true, "desc", "incr", "", {}, true)
     if err then
