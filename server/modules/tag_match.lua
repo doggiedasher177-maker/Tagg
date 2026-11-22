@@ -619,7 +619,7 @@ local function update_server_bot(bot, target, is_hunter, state, surfaces, dt)
     desired = -desired
     should_jump = true
   end
-  bot.vx = bot.vx + (desired * 0.34 - bot.vx) * math.min(1, dt * 5.5)
+  bot.vx = bot.vx + (desired * 0.22 - bot.vx) * math.min(1, dt * 5.5)
   if desired ~= 0 then bot.face = desired end
   if should_jump and bot.on_ground and bot.jump_cooldown <= 0 then
     bot.vy = -1.12
