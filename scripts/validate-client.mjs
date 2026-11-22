@@ -37,9 +37,14 @@ const sampleRoomIds = [
 
 for (const matchId of sampleRoomIds) {
   const code = roomCodes.encodeRoomCode(matchId);
-  if (roomCodes.decodeRoomCode(code) !== matchId) {
+  const decodedMatchId = matchId + ".tagg";
+  if (roomCodes.decodeRoomCode(code) !== decodedMatchId || roomCodes.encodeRoomCode(decodedMatchId) !== code) {
     throw new Error("TAG! room-code round-trip failed for " + matchId + ".");
   }
+}
+
+if (roomCodes.decodeRoomCode("TAG-NOT-A-REAL-CODE") !== null) {
+  throw new Error("TAG! accepted an invalid private room code.");
 }
 
 if (
