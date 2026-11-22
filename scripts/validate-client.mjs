@@ -2,6 +2,7 @@ import { readFileSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
+import { runInNewContext } from "node:vm";
 
 const sourcePath = "index.html";
 const publishPath = "docs/index.html";
@@ -18,6 +19,35 @@ const scripts = [...source.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi
 
 if (scripts.length === 0) {
   throw new Error("No inline JavaScript was found in index.html.");
+}
+
+const roomCodeStart = source.indexOf("const ROOM_CODE_ALPHABET");
+const roomCodeEnd = source.indexOf("function clearQueueClocks", roomCodeStart);
+if (roomCodeStart < 0 || roomCodeEnd < 0) {
+  throw new Error("The TAG! room-code encoder/decoder is missing.");
+}
+
+const roomCodeSource = source.slice(roomCodeStart, roomCodeEnd);
+const roomCodes = runInNewContext(roomCodeSource + "\n({ encodeRoomCode, decodeRoomCode })", {});
+const sampleRoomIds = [
+  "00000000-0000-0000-0000-000000000000",
+  "550e8400-e29b-41d4-a716-446655440000",
+  "ffffffff-ffff-ffff-ffff-ffffffffffff",
+];
+
+for (const matchId of sampleRoomIds) {
+  const code = roomCodes.encodeRoomCode(matchId);
+  if (roomCodes.decodeRoomCode(code) !== matchId) {
+    throw new Error("TAG! room-code round-trip failed for " + matchId + ".");
+  }
+}
+
+if (
+  !source.includes("queueDeadline=performance.now()+30000") ||
+  !source.includes("queueDeadline-performance.now()") ||
+  !source.includes("if(!queueActive&&!queueBotFallbackStarted)return;")
+) {
+  throw new Error("The matchmaking countdown regression guards are missing.");
 }
 
 const directory = join(tmpdir(), "tag-client-check-" + process.pid);
