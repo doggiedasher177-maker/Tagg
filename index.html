@@ -2260,6 +2260,7 @@ window.TAGOnlineHooks={
   getPlayerStates(){return players.slice(0,activePlayerCount).map(p=>({id:p.id,x:p.x/worldWidth,y:p.y/height,vy:p.vy,onGround:p.onGround,isBot:!!botPlayers[p.id]}));},
   getMatchId(){return onlineMatchId;},
   isLocalBotMatch(){return localBotMatchActive;},
+  leaveLocalBotMatch(){if(!localBotMatchActive)return false;localBotMatchActive=false;mode='menu';keysDown.clear();stopMapMusic();activeScreen('online');return true;},
   isOnline(){return onlineActive;}
 };
 
@@ -2390,7 +2391,7 @@ import { Client } from 'https://esm.sh/@heroiclabs/nakama-js@2.8.0';
         if(!queueActive&&!queueBotFallbackStarted)return;
         try{
           const botFallbackWasRunning=queueBotFallbackStarted;
-          queueActive=false;queueGeneration++;clearQueueClocks();
+          queueActive=false;queueGeneration++;const joinGeneration=queueGeneration;clearQueueClocks();
           $('queueCountdown').textContent='';
           closeQuickMatchModal();matchmakerTicket=null;
           if(botFallbackWasRunning&&match){
@@ -2403,7 +2404,7 @@ import { Client } from 'https://esm.sh/@heroiclabs/nakama-js@2.8.0';
           else if(typeof event?.token==='string'&&event.token)m=await nextSocket.joinMatch(undefined,event.token);
           else if(typeof event?.match_id?.token==='string')m=await nextSocket.joinMatch(undefined,event.match_id.token);
           else throw new Error('Matchmaker did not return a usable match ID or join token.');
-          if(socket!==nextSocket||!connected){
+          if(socket!==nextSocket||!connected||queueGeneration!==joinGeneration||queueCancelRequested){
             if(m?.match_id)try{await nextSocket.leaveMatch(m.match_id);}catch(e){}
             return;
           }
