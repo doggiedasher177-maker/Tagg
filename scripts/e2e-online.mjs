@@ -87,6 +87,8 @@ async function leaveMatch(page) {
     () => (document.querySelector("#onlineStatus")?.textContent || "").includes("left the online match"),
     "match leave cleanup",
     10000);
+  await page.evaluate(() => window.TAGAppScreens?.show("online"));
+  await page.locator("#quickMatchBtn").waitFor({ state: "visible", timeout: 10000 });
 }
 
 await waitForPublishedClient();
