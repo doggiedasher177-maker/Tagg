@@ -1799,7 +1799,7 @@ function movePlayer(p,dt) {
       relY0+HALF_H>0&&relY0-HALF_H<solid.h;
     const isOverlapping=p.x+HALF_W>solid.x&&p.x-HALF_W<solid.x+solid.w&&
       p.y+HALF_H>solid.y&&p.y-HALF_H<solid.y+solid.h;
-    if(!wasOverlapping&&!isOverlapping){
+    if(!wasOverlapping){
       let xEntry,xExit,yEntry,yExit;
       if(relDX>0){xEntry=(-HALF_W-relX0)/relDX;xExit=(solid.w+HALF_W-relX0)/relDX;}
       else if(relDX<0){xEntry=(solid.w+HALF_W-relX0)/relDX;xExit=(-HALF_W-relX0)/relDX;}
@@ -1808,7 +1808,7 @@ function movePlayer(p,dt) {
       else if(relDY<0){yEntry=(solid.h+HALF_H-relY0)/relDY;yExit=(-HALF_H-relY0)/relDY;}
       else{yEntry=-Infinity;yExit=Infinity;}
       const entry=Math.max(xEntry,yEntry),exit=Math.min(xExit,yExit);
-      if(entry<0||entry>1||entry>exit) continue;
+      if(entry>=0&&entry<=1&&entry<=exit){
       if(yEntry>=xEntry){
         if(relDY>0){
           p.y=solid.y-HALF_H;p.vy=0;p.onGround=true;p.groundId=solid.id;
@@ -1822,6 +1822,8 @@ function movePlayer(p,dt) {
         p.vx=0;
       }
       continue;
+      }
+      if(!isOverlapping) continue;
     }
     if(isOverlapping){
       // Recover from an existing overlap (e.g. a structure moved onto a
