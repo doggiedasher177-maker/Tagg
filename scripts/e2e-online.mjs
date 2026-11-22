@@ -170,7 +170,7 @@ try {
     const ok = window.TAGOnlineHooks.loadCustomMap({
       id: mapId, name: "V16 Collision Test", description: "Temporary automated QA wall",
       modifiers: [],
-      objects: [{ type: "structure", x: 660, y: 280, w: 90, h: 420 }]
+      objects: [{ type: "structure", x: 660, y: 500, w: 90, h: 180 }]
     });
     if (!ok) throw new Error("Could not register the temporary collision test map.");
     window.TAGOnlineHooks.startLocalBotMatch({ playerName: "QA", botLevel: "easy", mapId, roundLength: 120 });
