@@ -16,7 +16,7 @@ async function waitForPublishedClient() {
       const response = await fetch(SITE_URL, { cache: "no-store", signal: AbortSignal.timeout(12000) });
       if (response.ok) {
         const html = await response.text();
-        if (html.includes("const setButtons=on=>{[") && html.includes("async function responseErrorMessage(error){") && html.includes("nextSocket.rpc('tag_online_presence','{}')") && html.includes("oldSocket.rpc('tag_online_leave','{}')")) return;
+        if (html.includes("const setButtons=on=>{[") && html.includes("async function responseErrorMessage(error){") && html.includes("nextSocket.rpc('tag_online_presence','{}')") && html.includes("oldSocket.rpc('tag_online_leave','{}')") && html.includes("getBotPlayers(){return botPlayers.slice(0,activePlayerCount);}")) return;
       }
     } catch {}
     await sleep(2500);
@@ -202,8 +202,10 @@ try {
   });
   await first.page.locator("#quickMatchBtn").click();
   await waitFor(first.page,
-    () => (document.querySelector("#onlineStatus")?.textContent || "").includes("Bot opponent found"),
-    "30-second Quick Match bot fallback",
+    () => window.TAGOnlineHooks?.isOnline?.() === true &&
+      Array.isArray(window.TAGOnlineHooks?.getBotPlayers?.()) &&
+      window.TAGOnlineHooks.getBotPlayers().some(Boolean),
+    "30-second Quick Match bot fallback and authoritative bot roster",
     18000);
   await waitFor(first.page,
     () => window.TAGOnlineHooks?.isOnline?.() === true,
