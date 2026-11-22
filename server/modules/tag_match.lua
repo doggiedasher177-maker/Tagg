@@ -225,7 +225,7 @@ local function write_elo_progress(user_id, username, delta, metadata)
     nk.leaderboard_records_list, LEADERBOARD_ELO, { user_id }, 1, "", 0
   )
   if ok then
-    local record = (owner_records and owner_records[1]) or (records and records[1])
+    local record = owner_records and owner_records[1]
     if record and tonumber(record.score) then current = tonumber(record.score) end
   else
     nk.logger_warn("TAG! could not read current ELO for " .. tostring(user_id) .. ": " .. tostring(records))
@@ -1055,7 +1055,7 @@ local function ensure_elo_account(context, payload)
     nk.leaderboard_records_list, LEADERBOARD_ELO, { context.user_id }, 1, "", 0
   )
   if not ok then error("Could not read your ELO: " .. tostring(records)) end
-  local existing = (owner_records and owner_records[1]) or (records and records[1])
+  local existing = owner_records and owner_records[1]
   local elo = existing and tonumber(existing.score) or nil
   if not elo then
     local wrote, result, err = pcall(
