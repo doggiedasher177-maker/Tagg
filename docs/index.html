@@ -469,7 +469,7 @@ body.argentina-mode #menuScreen{background:linear-gradient(180deg,#75bde9 0 32%,
 <section class="screen" id="achievementScreen" aria-label="Achievements"><div class="full-panel"><div class="eyebrow">COLLECTION ROOM</div><h2>Achievements</h2><p>Milestones for the runners who go the extra mile.</p><div id="achievementCollection"></div><div class="achievement-card" id="secretAchievement"><div class="achievement-icon">🔒</div><div><b id="achievementName">??? · SECRET</b><p id="achievementDescription">Enter a hidden key sequence to discover this achievement.</p></div><span class="achievement-state" id="achievementState">LOCKED</span></div><button class="primary-small" id="backAchievementsBtn">BACK TO TITLE</button></div></section>
 <section class="screen" id="onlineScreen" aria-label="Online multiplayer"><div class="full-panel online-panel online-simple">
 <div class="eyebrow">ZYRON STUDIOS NETWORK</div><h2>TAG! ONLINE</h2><p>Play with friends. Anywhere.</p><div class="online-count-pill"><span class="online-live-dot"></span><span>PLAYERS ONLINE</span><b id="onlinePlayerCount">—</b></div>
-<div class="name-entry"><label for="onlineName">YOUR PLAYER NAME</label><input id="onlineName" maxlength="16" placeholder="Choose your name" autocomplete="nickname"><small>One name per player. Your name is permanent.</small></div>
+<div class="name-entry"><label for="onlineName">YOUR PLAYER NAME</label><input id="onlineName" maxlength="16" placeholder="Choose your name" autocomplete="nickname"><small>Choose your own unique name. Names already in use cannot be claimed.</small></div>
 <div class="online-actions">
 <div class="online-action-card"><span>⚡</span><h3>QUICK MATCH</h3><p>Find players and jump straight into a game.</p><button class="primary-small" id="quickMatchBtn">PLAY NOW</button></div>
 <div class="online-action-card"><span>👥</span><h3>PLAY WITH FRIENDS</h3><p>Create a room or join with your friend's code.</p><button class="primary-small" id="createRoomBtn">CREATE ROOM</button><div class="room-code-wrap"><div class="room-code-label">YOUR ROOM CODE</div><div class="room-code" id="roomCode">Your room code appears here</div><button type="button" class="secondary-btn" id="copyRoomCodeBtn" disabled>COPY CODE</button></div><div class="room-join"><input id="joinRoomCode" placeholder="Enter friend's room code" aria-label="Friend's room code"><button class="secondary-btn" id="joinRoomBtn">JOIN</button></div></div>
@@ -2647,8 +2647,10 @@ async function saveProfileName(){
       $('onlineName').value=requested;
       $('onlineName').readOnly=false;
       $('onlineName').removeAttribute('aria-readonly');
-      await connect();
-      if(!connected||!session)throw new Error('Could not create or connect to your TAG! account.');
+      const authenticated=await connect();
+      // connect() reports username conflicts and connection failures itself. Keep the
+      // player's typed choice in the profile editor and do not replace that message.
+      if(!authenticated||!connected||!session)return;
       let actual=session.username||username||requested;
       // Device authentication reuses an existing account and ignores a newly typed
       // username. Apply the requested profile name after authentication as well.
@@ -2692,7 +2694,7 @@ async function saveProfileName(){
     if($('profileConnectionState'))$('profileConnectionState').textContent='CONNECTED · '+(session?.username||username);
   }catch(e){
     const message=String(e?.message||e);
-    if(/username|already|taken|exists|conflict/i.test(message)){
+    if(/username.{0,100}(already|taken|in use|exist|duplicate)|(already|taken|in use|duplicate).{0,100}username/i.test(message)||Number(e?.status)===409||Number(e?.code)===409){
       status('That name is already taken. Choose another one.','error');
     }else{
       status('Could not update your profile name: '+message,'error');
