@@ -18,10 +18,11 @@ async function waitForPublishedClient() {
         const html = await response.text();
         if (html.includes("const setButtons=on=>{[") && html.includes("async function responseErrorMessage(error){") && html.includes("nextSocket.rpc('tag_online_presence','{}')") && html.includes("oldSocket.rpc('tag_online_leave','{}')") && html.includes("getBotPlayers(){return botPlayers.slice(0,activePlayerCount);}") && html.includes("getMatchId(){return onlineMatchId;}") && html.includes("startLocalBotMatch(info)") && html.includes('id="avatarsScreen"') && html.includes("function resolvePlatformPlacements") && html.includes("function botRoute") && html.includes("getMapLayoutDiagnostics()") &&
           html.includes("V15 · SMART BOTS & ARENA ARCHITECTURE") &&
-          html.includes("V18 · STRUCTURE UNDERSIDE COLLISION") &&
-          html.includes("V17 · COLLISION VERIFIED & IN-MATCH FRIENDS") &&
+          html.includes("V17 · SOLID STRUCTURES & IN-MATCH FRIENDS") &&
           html.includes("V16 · MOBILE PLAY, SOLID ARENAS & FRIEND MAILBOX") &&
-          html.includes("TAG! — Zyron Studios v18 Online") &&
+          html.includes("TAG! — Zyron Studios v17 Online") &&
+          html.includes("function customPlatformGeometry") &&
+          html.includes("getStructureStates(){return platforms.filter(p=>p.kind==='structure')") &&
           html.includes('id="matchMailboxRefreshBtn"') &&
           html.includes('id="mobilePauseBtn"') &&
           html.includes("if(!mobile||mode!=='playing')") &&
@@ -203,62 +204,80 @@ try {
     "A grounded runner passed through the solid structure wall. Start=" + wallStart + ", end=" + wallEnd);
   results.push("PASS: a grounded phone player is blocked by a solid custom structure");
 
-  // V18: jumping into a solid structure from underneath must stop at its bottom face.
+  // V17: both stationary and moving custom structures must collide from underneath.
   await phonePage.bringToFront();
-  const undersideMapId = "v18_underside_test";
-  await phonePage.evaluate(mapId => {
-    const ok = window.TAGOnlineHooks.loadCustomMap({
-      id: mapId, name: "V18 Underside Collision", description: "Temporary automated QA ceiling block",
-      modifiers: [],
-      objects: [
-        { type: "structure", x: 420, y: 360, w: 360, h: 180 },
-        { type: "spawn", x: 600, y: 650 }
-      ]
+  const verifyStructureUnderside = async (mapId, motionAmp) => {
+    await phonePage.evaluate(({ mapId, motionAmp }) => {
+      const ok = window.TAGOnlineHooks.loadCustomMap({
+        id: mapId, name: "V17 Structure Collision", description: "Stationary/moving solid structure QA",
+        modifiers: [],
+        objects: [
+          { type: "structure", x: 600, y: 450, w: 360, h: 180, motionAmp, motionSpeed: 2.5 },
+          { type: "spawn", x: 600, y: 650 }
+        ]
+      });
+      if (!ok) throw new Error("Could not register structure QA map " + mapId + ".");
+      window.TAGOnlineHooks.startLocalBotMatch({
+        playerName: "QA", botLevel: "easy", mapId, roundLength: 120
+      });
+    }, { mapId, motionAmp });
+    await waitFor(phonePage,
+      () => window.TAGOnlineHooks?.getBotDebug?.()?.mode === "playing" &&
+        window.TAGOnlineHooks?.isLocalBotMatch?.() === true,
+      "V17 structure test round to enter active play (" + mapId + ")",
+      12000);
+    await waitFor(phonePage,
+      () => window.TAGOnlineHooks?.getPlayerStates?.()?.[0]?.onGround === true,
+      "V17 test runner to stand below the structure (" + mapId + ")",
+      5000);
+    const initialStructure = await phonePage.evaluate(() => window.TAGOnlineHooks?.getStructureStates?.()?.[0] || null);
+    assert(initialStructure, "The V17 structure was not registered as a collision surface: " + mapId);
+    assert(Math.abs(initialStructure.y - (450-90)/700) < 0.006 &&
+      Math.abs(initialStructure.w - 360/1200) < 0.006 &&
+      Math.abs(initialStructure.h - 180/700) < 0.006,
+      "The structure collision rectangle did not line up with its centered level-editor geometry. " +
+        JSON.stringify({ mapId, structure: initialStructure }));
+    await phonePage.evaluate(() => {
+      window.__v17StructureSamples = [];
+      window.__v17StructureRecording = true;
+      const capture = () => {
+        const player = window.TAGOnlineHooks?.getPlayerStates?.()?.[0];
+        const structure = window.TAGOnlineHooks?.getStructureStates?.()?.[0];
+        if (player && structure && window.__v17StructureRecording) {
+          window.__v17StructureSamples.push({
+            y: player.y, vy: player.vy,
+            bottom: structure.y + structure.h,
+            x: structure.x
+          });
+          requestAnimationFrame(capture);
+        }
+      };
+      requestAnimationFrame(capture);
     });
-    if (!ok) throw new Error("Could not register the V18 underside collision test map.");
-    window.TAGOnlineHooks.startLocalBotMatch({
-      playerName: "QA", botLevel: "easy", mapId, roundLength: 120
-    });
-  }, undersideMapId);
-  await waitFor(phonePage,
-    () => window.TAGOnlineHooks?.getBotDebug?.()?.mode === "playing" &&
-      window.TAGOnlineHooks?.isLocalBotMatch?.() === true,
-    "V18 underside test round to enter active play",
-    12000);
-  await waitFor(phonePage,
-    () => window.TAGOnlineHooks?.getPlayerStates?.()?.[0]?.onGround === true,
-    "V18 test runner to stand below the structure",
-    5000);
-  await phonePage.evaluate(() => {
-    window.__v18UndersideSamples = [];
-    window.__v18UndersideRecording = true;
-    const capture = () => {
-      const player = window.TAGOnlineHooks?.getPlayerStates?.()?.[0];
-      if (player && window.__v18UndersideRecording) {
-        window.__v18UndersideSamples.push({ y: player.y, vy: player.vy });
-        requestAnimationFrame(capture);
-      }
-    };
-    requestAnimationFrame(capture);
-  });
-  await phonePage.keyboard.down("w");
-  await phonePage.waitForTimeout(180);
-  await phonePage.keyboard.up("w");
-  await waitFor(phonePage,
-    () => (window.__v18UndersideSamples || []).some(sample => sample.vy > 0),
-    "V18 underside impact to stop the jump and begin the fall",
-    4000);
-  await phonePage.waitForTimeout(120);
-  await phonePage.evaluate(() => { window.__v18UndersideRecording = false; });
-  const undersideSamples = await phonePage.evaluate(() => window.__v18UndersideSamples || []);
-  const lowestRunnerY = Math.min(...undersideSamples.map(sample => sample.y));
-  const firstFallingSample = undersideSamples.find(sample => sample.vy > 0);
-  const lastRunnerSample = undersideSamples.at(-1);
-  assert(undersideSamples.length > 3 && lowestRunnerY >= 0.775 &&
-    firstFallingSample && lastRunnerSample && lastRunnerSample.y > firstFallingSample.y + 0.003,
-    "V18 runner passed through the structure underside instead of stopping and falling. " +
-      JSON.stringify({ lowestRunnerY, firstFallingSample, lastRunnerSample, samples: undersideSamples.slice(-8) }));
-  results.push("PASS: jumping under a structure hits its underside and gravity brings the runner back down");
+    await phonePage.keyboard.down("w");
+    await phonePage.waitForTimeout(180);
+    await phonePage.keyboard.up("w");
+    await phonePage.waitForTimeout(720);
+    await phonePage.evaluate(() => { window.__v17StructureRecording = false; });
+    const samples = await phonePage.evaluate(() => window.__v17StructureSamples || []);
+    const minCenterY = Math.min(...samples.map(sample => sample.y));
+    const expectedCenterY = initialStructure.y + initialStructure.h + 11 / phonePage.viewport().height;
+    assert(samples.length > 8 && minCenterY >= expectedCenterY - 0.005,
+      "Runner passed through the underside of a " + (motionAmp ? "moving" : "stationary") +
+        " structure. " + JSON.stringify({ mapId, minCenterY, expectedCenterY, recent: samples.slice(-6) }));
+    assert(samples.some(sample => sample.vy > 0 && sample.y > minCenterY + 0.002),
+      "Runner did not fall back down after hitting the structure underside: " + mapId);
+    if (motionAmp > 0) {
+      const xs = samples.map(sample => sample.x);
+      assert(Math.max(...xs) - Math.min(...xs) > 0.001,
+        "The moving-structure regression fixture did not actually move: " + JSON.stringify({ mapId, xs }));
+    }
+    results.push("PASS: " + (motionAmp ? "moving" : "stationary") +
+      " custom structure aligns with editor geometry, blocks upward movement, and sends the runner back down");
+    await phonePage.evaluate(() => window.TAGOnlineHooks?.leaveLocalBotMatch?.());
+  };
+  await verifyStructureUnderside("v17_static_structure_test", 0);
+  await verifyStructureUnderside("v17_moving_structure_test", 100);
 
   // Tablet viewport regression: controls render and the page does not overflow horizontally.
   const tabletContext = await browser.newContext({

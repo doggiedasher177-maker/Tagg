@@ -473,11 +473,13 @@ local function bot_surfaces(state)
   if state.public_map and state.custom_map and type(state.custom_map.objects) == "table" then
     for index, object in ipairs(state.custom_map.objects) do
       if object.type == "platform" or object.type == "structure" then
+        local object_w = clamp(tonumber(object.w) or 28, 6, 500)
+        local object_h = clamp(tonumber(object.h) or 16, 6, 180)
         table.insert(surfaces, {
           id = "community_" .. tostring(index),
-          x = clamp((tonumber(object.x) or 0) / 1200, 0, 1),
-          y = clamp((tonumber(object.y) or 0) / 700, 0.08, 0.82),
-          w = clamp((tonumber(object.w) or 28) / 1200, 0.02, 0.48)
+          x = clamp(((tonumber(object.x) or 0) - object_w / 2) / 1200, 0, 1),
+          y = clamp(((tonumber(object.y) or 0) - object_h / 2) / 700, 0.08, 0.82),
+          w = clamp(object_w / 1200, 0.02, 0.48)
         })
       end
     end

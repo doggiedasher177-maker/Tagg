@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#080d19">
 <meta name="description" content="TAG! — a local multiplayer platform chase across many living realms.">
-<title>TAG! — Zyron Studios v18 Online</title>
+<title>TAG! — Zyron Studios v17 Online</title>
 <style>
 :root{
   --ink:#edf5ff;--muted:#9eafc5;--line:rgba(202,224,255,.15);
@@ -527,9 +527,8 @@ body.argentina-mode #menuScreen{background:linear-gradient(180deg,#75bde9 0 32%,
 
 <section class="screen" id="settingsScreen" aria-label="Settings"><div class="full-panel"><div class="eyebrow">GAME SETTINGS</div><h2>Settings</h2><div class="setting-row"><label for="fovSlider">Field of view <b id="fovValue">100</b></label><input id="fovSlider" type="range" min="50" max="200" value="100" step="5"></div><p>100 is the close default view. The camera only widens a little to keep nearby runners in frame; distant runners do not force a huge zoom-out.</p><div class="setting-row"><label for="settingsLanguage">Language</label><select id="settingsLanguage"><option value="en">English</option><option value="es">Español (España)</option><option value="fr">Français</option><option value="pt">Português</option><option value="it">Italiano</option><option value="zh">中文</option><option value="arg">Argentino 🇦🇷</option></select></div><div class="setting-row"><label for="settingsMusicVolume">Music volume <b id="settingsMusicValue">65%</b></label><input id="settingsMusicVolume" type="range" min="0" max="100" step="1" value="65"></div><button class="secondary-btn" id="settingsMusicToggle">MUSIC: ON</button><div class="music-indicator" id="settingsMusicStatus">ORIGINAL MAP SOUNDTRACK</div><button class="secondary-btn" id="resetWinsBtn">RESET ALL WIN COUNTERS</button><div class="result-actions"><button class="primary-small" id="backSettingsBtn">BACK TO TITLE</button></div></div></section>
 <section class="screen" id="tournamentScreen" aria-label="Tournament setup"><div class="full-panel"><div class="eyebrow">TAG! WORLD CUP</div><h2>Tournaments</h2><p>Build a local elimination bracket. Pick a field size and decide how each duel is judged.</p><div class="setting-row"><label for="tournamentSize">Tournament size</label><select id="tournamentSize"><option value="4">4 groups · 8 players</option><option value="6">6 groups · 12 players</option><option value="8">8 groups · 16 players</option></select></div><div class="setting-row"><label for="tournamentRule">Duel winner</label><select id="tournamentRule"><option value="points">Most points</option><option value="untagged">Player who avoids the tag</option></select></div><div class="setting-row"><label for="tournamentModifier">Tournament modifiers · up to 3</label><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;width:65%"><select id="tournamentModifier"><option value="none">Slot 1 · None</option><option value="doublejump">Double jump</option><option value="superspeed">Speed boost</option><option value="decoys">Decoys</option><option value="chained">Chained</option><option value="sentinels">Sentinels</option><option value="parry">Parry</option><option value="munci">Angry Munci</option></select><select id="tournamentModifier2"><option value="none">Slot 2 · None</option><option value="doublejump">Double jump</option><option value="superspeed">Speed boost</option><option value="decoys">Decoys</option><option value="chained">Chained</option><option value="sentinels">Sentinels</option><option value="parry">Parry</option><option value="munci">Angry Munci</option></select><select id="tournamentModifier3"><option value="none">Slot 3 · None</option><option value="doublejump">Double jump</option><option value="superspeed">Speed boost</option><option value="decoys">Decoys</option><option value="chained">Chained</option><option value="sentinels">Sentinels</option><option value="parry">Parry</option><option value="munci">Angry Munci</option></select></div></div><p id="tournamentInfo">Create up to 8 local brackets. Assign entrants as humans or bots, then play matchups.</p><h3 class="subsection-title">Entrants · choose human or bot</h3><div id="tournamentEntrants" class="entrant-grid"></div><div class="result-actions"><button class="primary-small" id="createTournamentBtn">CREATE BRACKET</button><button class="secondary-btn" id="backTournamentBtn">BACK TO TITLE</button></div><div id="tournamentList" class="control-grid"></div><div id="tournamentBracket" class="tournament-bracket"></div><div id="tournamentMatchPanel" class="setting-row" style="display:none;flex-direction:column;align-items:stretch"><h3 id="matchTitle">Matchup</h3><p id="matchPlayers"></p><div class="result-actions"><button class="primary-small" id="playMatchA">PLAY AS PLAYER A</button><button class="primary-small" id="playMatchB">PLAY AS PLAYER B</button><button class="secondary-btn" id="coinFlipMatch">COIN FLIP</button></div><button class="secondary-btn" id="closeMatchPanel">CLOSE MATCH</button></div></div></section>
-<section class="screen" id="changelogScreen" aria-label="What's new"><div class="full-panel"><div class="eyebrow">ZYRON STUDIOS · COMPLETE UPDATE HISTORY</div><h2>TAG! Update Log · v4–v18</h2><p>Milestones from the original playable realms through the current V18 release. Older entries are historical highlights, not exhaustive patch-by-patch records.</p><div class="changelog-timeline" id="changelogTimeline">
-  <article class="changelog-entry current"><h3>V18 · STRUCTURE UNDERSIDE COLLISION</h3><p>Structures now block runners from below as well as from the sides and top. Jumping into a structure's underside stops upward movement at the collision surface, then gravity brings the runner back down. Added an automated jump-underneath regression test.</p></article>
-  <article class="changelog-entry"><h3>V17 · COLLISION VERIFIED & IN-MATCH FRIENDS</h3><p>Hardened the in-match friend mailbox with a manual refresh action and automatic refresh when Nakama notifications arrive. Verified solid wall collision on a grounded runner and the complete two-account request lifecycle against Nakama: outgoing request, incoming mailbox, decline, resend, accept, and mutual friendship records.</p></article>
+<section class="screen" id="changelogScreen" aria-label="What's new"><div class="full-panel"><div class="eyebrow">ZYRON STUDIOS · COMPLETE UPDATE HISTORY</div><h2>TAG! Update Log · v4–v17</h2><p>Milestones from the original playable realms through the current V17 release. Older entries are historical highlights, not exhaustive patch-by-patch records.</p><div class="changelog-timeline" id="changelogTimeline">
+  <article class="changelog-entry current"><h3>V17 · SOLID STRUCTURES & IN-MATCH FRIENDS</h3><p>Fixed custom structure geometry so collision boxes line up with structures drawn in the level editor. Stationary and moving structures are solid from the top, bottom, left and right: jumping into their underside stops the jump and sends the runner back down. The in-match friend mailbox also supports manual refresh and automatic refresh on Nakama notifications, with outgoing, incoming, decline, resend, accept and mutual friendship records verified.</p></article>
   <article class="changelog-entry"><h3>V16 · MOBILE PLAY, SOLID ARENAS & FRIEND MAILBOX</h3><p>Responsive phone and tablet layouts, dynamic touch controls for each human player, tighter round-start spawns, a shorter arena view, solid structure collision (the green drink still grants temporary noclip), and a friend-request mailbox with accept and decline actions.</p></article>
   <article class="changelog-entry"><h3>V15 · SMART BOTS & ARENA ARCHITECTURE</h3><p>Rebuilt bot movement around platform-to-platform route planning, smarter target prediction, evasive flanks, active patrols, tactical jumps and varied dashes. Arena platforms are now automatically repositioned to avoid overlapping structures, and decorative architecture uses distinct, spaced positions in each realm.</p></article>
   <article class="changelog-entry"><h3>V14 · RUNNER IDENTITY & PROFILE</h3><p>Added player-name editing directly from Profile with unique-name enforcement; empty profiles stay nameless until a name is chosen; fixed Profile navigation to the title and leaderboard; custom profile pictures can be uploaded from your computer; added the Changed and Shiny achievement for uploading a custom picture.</p></article>
@@ -1278,6 +1277,18 @@ function planBotMovement(player,target,isHunter,skill,level){
   return {dir,jump,next,goalX,distance:threatDistance,destination};
 }
 
+function customPlatformGeometry(object,worldW,viewH){
+  const objectW=clamp(Number(object.w)||180,6,500);
+  const objectH=clamp(Number(object.h)||16,6,180);
+  const centerX=clamp(Number(object.x)||0,objectW/2,1200-objectW/2);
+  const centerY=clamp(Number(object.y)||0,objectH/2,700-objectH/2);
+  return {
+    x:(centerX-objectW/2)/1200*worldW,
+    y:(centerY-objectH/2)/700*viewH,
+    w:clamp(objectW/1200,.02,.48)*worldW,
+    h:clamp(objectH/700,.008,.26)*viewH
+  };
+}
 function buildWorld() {
   cameraOffsetX=0;cameraOffsetY=height/2;cameraZoom=clamp(1.42*(100/fovValue),.48,2.45);
   const spec = maps[mapId];
@@ -1288,8 +1299,18 @@ function buildWorld() {
   }];
   const customLevel=userLevels.find(l=>l.id===mapId);
   if(customLevel){
-    const raw=customLevel.objects.filter(o=>o.type==='platform'||o.type==='structure').map((o,i)=>({id:'user-'+i,x:clamp(o.x/1200,0,1)*worldW,y:clamp(o.y/700,.08,.82)*height,w:clamp(o.w/1200,.02,.48)*worldW,h:clamp(o.h/700,.008,.26)*height,kind:'stone',color:o.color||null,oneWay:o.type==='platform',motion:(o.motionAmp||0)/1200*worldW,speed:o.motionSpeed||.7,phase:i*.8,dx:0}));
-    resolvePlatformPlacements(raw,worldW,height).forEach(item=>platforms.push({...item,baseX:item.x,dx:0}));
+    const raw=customLevel.objects.filter(o=>o.type==='platform'||o.type==='structure').map((o,i)=>({
+      ...customPlatformGeometry(o,worldW,height),
+      id:'user-'+i,
+      kind:o.type==='structure'?'structure':'stone',
+      color:o.color||null,
+      oneWay:o.type==='platform',
+      motion:(Number(o.motionAmp)||0)/1200*worldW,
+      speed:Number(o.motionSpeed)||.7,
+      phase:i*.8,
+      dx:0
+    }));
+    resolvePlatformPlacements(raw,worldW,height).forEach(item=>platforms.push({...item,baseX:item.x,prevX:item.x,prevY:item.y,dx:0}));
   }else{
     resolvePlatformPlacements(rawRealmPlatforms(mapId,worldW,height),worldW,height).forEach(item=>platforms.push({...item,baseX:item.x,speed:rand(.55,.9),dx:0}));
   }
@@ -1598,19 +1619,21 @@ function restartRound() {
 
 function updatePlatforms(dt) {
   platforms.forEach(p => {
-    const old = p.x;
+    const old = p.x, oldY=p.y;
+    p.prevX=old;p.prevY=oldY;
     if(p.motion) p.x = p.baseX + Math.sin(worldTime*p.speed+p.phase)*p.motion;
-    p.dx = p.x-old;
+    p.dx = p.x-old;p.dy=p.y-oldY;
   });
   pads.forEach(p => {
-    const oldX=p.x;
+    const oldX=p.x,oldY=p.y;
+    p.prevX=oldX;p.prevY=oldY;
     p.phase += dt*2.5;
     p.flash = Math.max(0,p.flash-dt*2.8);
     if(p.anchorId){
       const anchor=platforms.find(q=>q.id===p.anchorId);
       if(anchor){p.x=p.baseX+(anchor.x-anchor.baseX);p.y=anchor.y-p.h;}
     }
-    p.dx=p.x-oldX;
+    p.dx=p.x-oldX;p.dy=p.y-oldY;
   });
   portals.forEach(p => p.phase += dt*1.45);
   if(portalState==='open'){
@@ -1685,9 +1708,10 @@ function movePlayer(p,dt) {
   }
   if(p.stunTimer>0){p.stunTimer=Math.max(0,p.stunTimer-dt);dir=0;p.jumpBuffer=0;}
   if(p.rootedTimer>0){p.rootedTimer=Math.max(0,p.rootedTimer-dt);dir=0;p.jumpBuffer=0;}
+  let carriedSurfaceX=0;
   if (p.onGround && p.groundId) {
     const ground = platforms.find(s=>s.id===p.groundId) || pads.find((s,i)=>`pad-${i}`===p.groundId);
-    if (ground) p.x += (ground.dx||0);
+    if (ground) { carriedSurfaceX=ground.dx||0; p.x += carriedSurfaceX; }
   }
 
   if(dir) p.face=dir;
@@ -1725,7 +1749,7 @@ function movePlayer(p,dt) {
 
   const oldBottom=p.y+HALF_H;
   const wasGrounded=p.onGround;
-  const previousX=p.x, previousY=p.y;
+  const previousX=p.x-carriedSurfaceX, previousY=p.y;
   p.vy += 1450*dt;
   p.x += p.vx*dt;
   p.y += p.vy*dt;
@@ -1735,44 +1759,79 @@ function movePlayer(p,dt) {
   const ceilingY=height*.075;
   if(p.y-HALF_H<ceilingY+9){p.y=ceilingY+9+HALF_H;if(p.vy<0)p.vy=95;burst(p.x,ceilingY,'#c5f4ff',3,45);}
 
-  // Resolve only the first surface crossed from above. Jump pads are included
-  // in the same pass, so their impulse happens exactly once per landing.
+
+  // Land on the actual top face of stationary or moving collision surfaces.
   let landing=null;
   if(p.vy>=0) {
     const candidates = [
       ...platforms.filter(s=>s.id!=='ceiling'&&!(p.potionTime>0&&s.id!=='floor')).map(s=>({...s,surfaceType:'platform'})),
       ...pads.map((s,i)=>({...s,id:'pad-'+i,surfaceType:'pad'}))
     ];
-    for(const s of candidates) {
-      const overlaps = p.x+HALF_W>s.x && p.x-HALF_W<s.x+s.w;
-      const crossed = oldBottom<=s.y+4 && p.y+HALF_H>=s.y;
-      if(overlaps && crossed && (!landing || s.y<landing.y ||
-          (Math.abs(s.y-landing.y)<.5 && s.surfaceType==='pad'))) landing=s;
+    for(const surface of candidates) {
+      const previousSurfaceX=Number.isFinite(surface.prevX)?surface.prevX:surface.x-(surface.dx||0);
+      const previousSurfaceY=Number.isFinite(surface.prevY)?surface.prevY:surface.y-(surface.dy||0);
+      const previousGap=oldBottom-previousSurfaceY;
+      const currentGap=p.y+HALF_H-surface.y;
+      if(previousGap>4||currentGap<0) continue;
+      const gapTravel=currentGap-previousGap;
+      const hitTime=gapTravel>0?clamp(-previousGap/gapTravel,0,1):0;
+      const playerXAtHit=previousX+(p.x-previousX)*hitTime;
+      const surfaceXAtHit=previousSurfaceX+(surface.x-previousSurfaceX)*hitTime;
+      const overlaps=playerXAtHit+HALF_W>surfaceXAtHit&&playerXAtHit-HALF_W<surfaceXAtHit+surface.w;
+      if(overlaps&&(!landing||surface.y<landing.y||
+          (Math.abs(surface.y-landing.y)<.5&&surface.surfaceType==='pad'))) landing=surface;
     }
   }
 
-  // Solid structures block every side. Use a swept underside check so a runner
-  // cannot jump through the bottom, even when a thin structure is crossed in one tick.
+  // Structures are full solid blocks. Resolve underside impacts against the
+  // moving rectangle at the crossing time, not its already-updated X position.
   for(const solid of [...platforms.filter(s=>s.id!=='ceiling'),...pads]){
     if(solid.id==='floor'||p.potionTime>0) continue;
-    const overlapX=p.x+HALF_W>solid.x && p.x-HALF_W<solid.x+solid.w;
-    const overlapY=p.y+HALF_H>solid.y && p.y-HALF_H<solid.y+solid.h;
-    if(solid.oneWay && solid.kind!=='structure'){if(overlapX&&overlapY){if(previousX+HALF_W<=solid.x+4){p.x=solid.x-HALF_W;p.vx=Math.min(0,p.vx);}else if(previousX-HALF_W>=solid.x+solid.w-4){p.x=solid.x+solid.w+HALF_W;p.vx=Math.max(0,p.vx);}}continue;}
-    const previousTop=previousY-HALF_H, currentTop=p.y-HALF_H, underside=solid.y+solid.h;
-    const wasOverlappingX=previousX+HALF_W>solid.x && previousX-HALF_W<solid.x+solid.w;
-    if(overlapX&&wasOverlappingX&&p.vy<0&&previousTop>=underside-2&&currentTop<=underside){
-      p.y=underside+HALF_H;
-      p.vy=0;
-      p.jumpBuffer=0;
-      p.onGround=false;
-      p.groundId=null;
+    const previousSolidX=Number.isFinite(solid.prevX)?solid.prevX:solid.x-(solid.dx||0);
+    const previousSolidY=Number.isFinite(solid.prevY)?solid.prevY:solid.y-(solid.dy||0);
+    const overlapX=p.x+HALF_W>solid.x&&p.x-HALF_W<solid.x+solid.w;
+    const overlapY=p.y+HALF_H>solid.y&&p.y-HALF_H<solid.y+solid.h;
+    if(solid.oneWay&&solid.kind!=='structure'){
+      if(overlapX&&overlapY){
+        if(previousX+HALF_W<=previousSolidX+4){p.x=solid.x-HALF_W;p.vx=Math.min(0,p.vx);}
+        else if(previousX-HALF_W>=previousSolidX+solid.w-4){p.x=solid.x+solid.w+HALF_W;p.vx=Math.max(0,p.vx);}
+      }
       continue;
     }
-    // A floor landing must not suppress side collision with a separate solid structure.
-    if(overlapX&&overlapY&&(!landing||landing.id!==solid.id)){
-      if(previousX+HALF_W<=solid.x+4){p.x=solid.x-HALF_W;p.vx=Math.min(0,p.vx);}
-      else if(previousX-HALF_W>=solid.x+solid.w-4){p.x=solid.x+solid.w+HALF_W;p.vx=Math.max(0,p.vx);}
-      else if(previousTop>=underside-4&&p.vy<0){p.y=underside+HALF_H;p.vy=0;p.jumpBuffer=0;}
+
+    const previousTop=previousY-HALF_H;
+    const currentTop=p.y-HALF_H;
+    const previousUnderside=previousSolidY+solid.h;
+    const currentUnderside=solid.y+solid.h;
+    const previousClearance=previousTop-previousUnderside;
+    const currentClearance=currentTop-currentUnderside;
+    if(p.vy<0&&previousClearance>=-2&&currentClearance<=0){
+      const travel=previousClearance-currentClearance;
+      const hitTime=travel>0?clamp(previousClearance/travel,0,1):1;
+      const playerXAtHit=previousX+(p.x-previousX)*hitTime;
+      const solidXAtHit=previousSolidX+(solid.x-previousSolidX)*hitTime;
+      if(playerXAtHit+HALF_W>solidXAtHit&&playerXAtHit-HALF_W<solidXAtHit+solid.w){
+        p.y=solid.y+solid.h+HALF_H;
+        p.vy=0;
+        p.jumpBuffer=0;
+        p.onGround=false;
+        p.groundId=null;
+        continue;
+      }
+    }
+
+    // A top landing on this same block is handled by the landing resolver above.
+    if(landing&&landing.id===solid.id) continue;
+    if(overlapX&&overlapY){
+      if(previousX+HALF_W<=previousSolidX+4){
+        p.x=solid.x-HALF_W;p.vx=Math.min(0,p.vx);
+      }else if(previousX-HALF_W>=previousSolidX+solid.w-4){
+        p.x=solid.x+solid.w+HALF_W;p.vx=Math.max(0,p.vx);
+      }else if(previousY+HALF_H<=previousSolidY+4&&p.vy>0){
+        p.y=solid.y-HALF_H;p.vy=0;p.onGround=true;p.groundId=solid.id;
+      }else if(previousY-HALF_H>=previousSolidY+solid.h-4&&p.vy<0){
+        p.y=solid.y+solid.h+HALF_H;p.vy=0;p.jumpBuffer=0;
+      }
     }
   }
 
@@ -2490,6 +2549,7 @@ window.TAGOnlineHooks={
   getBotPlayers(){return botPlayers.slice(0,activePlayerCount);},
   getOnlinePlayers(){return Array.from({length:activePlayerCount},(_,i)=>({userId:window.__tagOnlinePlayerIds?.[i]||null,username:playerNames[i]||`PLAYER ${i+1}`,isLocal:i===onlineLocalIndex,isBot:!!botPlayers[i]}));},
   getPlayerStates(){return players.slice(0,activePlayerCount).map(p=>({id:p.id,x:p.x/worldWidth,y:p.y/height,vx:p.vx,vy:p.vy,onGround:p.onGround,groundId:p.groundId,isBot:!!botPlayers[p.id],botDir:p.botDir,botThink:p.botThink,botGoalPlatform:p.botGoalPlatform,botWanderTimer:p.botWanderTimer}));},
+  getStructureStates(){return platforms.filter(p=>p.kind==='structure').map(p=>({id:p.id,x:p.x/worldWidth,y:p.y/height,w:p.w/worldWidth,h:p.h/height,prevX:(Number.isFinite(p.prevX)?p.prevX:p.x)/worldWidth,motion:(p.motion||0)/worldWidth}));},
   getBotDebug(){return {mode,onlineActive,localBotMatchActive,tagged,activePlayerCount,botPlayers:botPlayers.slice(0,activePlayerCount),players:window.TAGOnlineHooks.getPlayerStates()};},
   getMapLayoutDiagnostics(){return Object.keys(realmLayouts).map(id=>{const raw=rawRealmPlatforms(id,worldWidth,height),placed=resolvePlatformPlacements(raw,worldWidth,height);let overlaps=0;for(let i=0;i<placed.length;i++)for(let j=i+1;j<placed.length;j++){const a=placed[i],b=placed[j],horizontal=a.reserveX<b.reserveX+b.reserveW+18&&a.reserveX+a.reserveW+18>b.reserveX,vertical=a.y<b.y+b.h+18&&a.y+a.h+18>b.y;if(horizontal&&vertical)overlaps++;}return {map:id,requested:raw.length,placed:placed.length,overlaps,signature:placed.map(p=>[Number((p.x/worldWidth).toFixed(3)),Number((p.y/height).toFixed(3)),Number((p.w/worldWidth).toFixed(3))])};});},
   getMatchId(){return onlineMatchId;},

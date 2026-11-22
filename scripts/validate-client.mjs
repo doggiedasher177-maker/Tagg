@@ -65,13 +65,16 @@ if (
 }
 
 if (
-  !source.includes("V18 · STRUCTURE UNDERSIDE COLLISION") ||
-  !source.includes("TAG! — Zyron Studios v18 Online") ||
-  !source.includes("previousTop>=underside-2&&currentTop<=underside") ||
-  !source.includes("p.jumpBuffer=0;") ||
-  !source.includes("V17 · COLLISION VERIFIED & IN-MATCH FRIENDS") ||
+  !source.includes("V17 · SOLID STRUCTURES & IN-MATCH FRIENDS") ||
+  !source.includes("TAG! — Zyron Studios v17 Online") ||
+  !source.includes("function customPlatformGeometry") ||
+  !source.includes("centerX-objectW/2") ||
+  !source.includes("centerY-objectH/2") ||
+  !source.includes("kind:o.type==='structure'?'structure':'stone'") ||
+  !source.includes("getStructureStates(){return platforms.filter(p=>p.kind==='structure')") ||
+  !source.includes("const previousSolidX=Number.isFinite(solid.prevX)?solid.prevX:solid.x-(solid.dx||0)") ||
+  !source.includes("const previousClearance=previousTop-previousUnderside") ||
   !source.includes("V16 · MOBILE PLAY, SOLID ARENAS & FRIEND MAILBOX") ||
-  !source.includes("TAG! — Zyron Studios v18 Online") ||
   !source.includes('id="matchMailboxRefreshBtn"') ||
   !source.includes("if($('matchMailbox')?.style.display==='block')refreshMatchMailbox().catch(()=>{});") ||
   !source.includes("function refreshMobileControls()") ||
@@ -85,12 +88,10 @@ if (
   !source.includes("id=\"matchMailbox\"") ||
   !source.includes("MAILBOX · INCOMING FRIEND REQUESTS") ||
   !source.includes("refreshFriends().catch(()=>{})") ||
-  !source.includes("if(solid.id==='floor'||p.potionTime>0) continue;") ||
-  !source.includes("!(p.potionTime>0&&s.id!=='floor')") ||
-  !source.includes("(!landing||landing.id!==solid.id)") ||
-  source.includes("(p.id===tagged&&remaining<=10)")
+  source.includes("V18 · STRUCTURE UNDERSIDE COLLISION") ||
+  source.includes("Zyron Studios v18 Online")
 ) {
-  throw new Error("V16 touch controls, friend mailbox, username request, or Green Drink collision guards are missing.");
+  throw new Error("V17 centered structure geometry, solid collision, or existing V16/V17 safeguards are missing.");
 }
 
 const directory = join(tmpdir(), "tag-client-check-" + process.pid);
