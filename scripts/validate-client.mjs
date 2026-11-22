@@ -71,7 +71,7 @@ if (
   !source.includes("p.jumpBuffer=0;") ||
   !source.includes("V17 · COLLISION VERIFIED & IN-MATCH FRIENDS") ||
   !source.includes("V16 · MOBILE PLAY, SOLID ARENAS & FRIEND MAILBOX") ||
-  !source.includes("TAG! — Zyron Studios v17 Online") ||
+  !source.includes("TAG! — Zyron Studios v18 Online") ||
   !source.includes('id="matchMailboxRefreshBtn"') ||
   !source.includes("if($('matchMailbox')?.style.display==='block')refreshMatchMailbox().catch(()=>{});") ||
   !source.includes("function refreshMobileControls()") ||
