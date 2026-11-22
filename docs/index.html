@@ -2328,7 +2328,9 @@ import { Client } from 'https://esm.sh/@heroiclabs/nakama-js@2.8.0';
         if(/username/i.test(message)&&/(taken|in use|exist|already)/i.test(message)){
           if($('onlineName')){$('onlineName').readOnly=false;$('onlineName').value='';}
           try{localStorage.removeItem('tagOnlineName');}catch(ignore){}
-          status('That player name is already taken. Choose a different name.','error');
+          const nameError='That player name is already taken. Choose a different name.';
+          if($('profileConnectionState'))$('profileConnectionState').textContent=nameError;
+          status(nameError,'error');
         }else if(message!=='Connection cancelled.'){
           status(message,'error');
         }
@@ -2695,9 +2697,13 @@ async function saveProfileName(){
   }catch(e){
     const message=String(e?.message||e);
     if(/username.{0,100}(already|taken|in use|exist|duplicate)|(already|taken|in use|duplicate).{0,100}username/i.test(message)||Number(e?.status)===409||Number(e?.code)===409){
-      status('That name is already taken. Choose another one.','error');
+      const nameError='That name is already taken. Your current username has not changed.';
+      if($('profileConnectionState'))$('profileConnectionState').textContent=nameError;
+      status(nameError,'error');
     }else{
-      status('Could not update your profile name: '+message,'error');
+      const nameError='Could not update your profile name: '+message;
+      if($('profileConnectionState'))$('profileConnectionState').textContent=nameError;
+      status(nameError,'error');
     }
   }finally{
     if(button){button.disabled=false;button.textContent='SAVE NAME';}
