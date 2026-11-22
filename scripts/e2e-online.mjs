@@ -325,9 +325,9 @@ try {
     assert(scoreAfterEarlyQuit - scoreBeforeEarlyQuit < 100,
       "An opponent who quit with more than 30 seconds remaining incorrectly granted the disconnect score bonus.");
     await sleep(700);
-    const finalEloA = await mapClientA.listLeaderboardRecords(mapSessionA, "tag_online_elo_v1", [mapSessionA.user_id], null, 1, null);
-    const finalEloB = await mapClientB.listLeaderboardRecords(mapSessionB, "tag_online_elo_v1", [mapSessionB.user_id], null, 1, null);
-    const tagpointsB = await mapClientB.listLeaderboardRecords(mapSessionB, "tag_online_tagpoints_v1", [mapSessionB.user_id], null, 1, null);
+    const finalEloA = await mapClientA.listLeaderboardRecords(mapSessionA, "tag_online_elo_v1", [mapSessionA.user_id], 1, null, null);
+    const finalEloB = await mapClientB.listLeaderboardRecords(mapSessionB, "tag_online_elo_v1", [mapSessionB.user_id], 1, null, null);
+    const tagpointsB = await mapClientB.listLeaderboardRecords(mapSessionB, "tag_online_tagpoints_v1", [mapSessionB.user_id], 1, null, null);
     assert(Number(finalEloA.records?.[0]?.score ?? 100) === 100 &&
       Number(finalEloB.records?.[0]?.score ?? 100) === 100 &&
       Number(tagpointsB.records?.[0]?.score ?? 0) === 0,
