@@ -2561,7 +2561,7 @@ async function quickMatch(){
     await connect();
     if(!connected){showQuickMatchModal('CONNECTION UNAVAILABLE','TAG! could not connect to the online server.','Check the connection message and try again.',{spinner:false,keep:false,cancel:true});return;}
   }
-  if(localBotMatchActive){status('Finish or leave your local bot match before starting another Quick Match.','error');return;}
+  if(window.TAGOnlineHooks?.isLocalBotMatch?.()){status('Finish or leave your local bot match before starting another Quick Match.','error');return;}
   if(queueActive||matchmakerTicket?.ticket){showQuickMatchModal('FINDING OPPONENTS','You are already in the matchmaking queue.','Cancel the current search before starting another.',{keep:true});return;}
   if(match){status('Leave your current online room before starting Quick Match.','error');return;}
   readOnlineOptions();matchStarted=false;queueActive=true;queueCancelRequested=false;queueBotFallbackStarted=false;
