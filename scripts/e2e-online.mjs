@@ -140,6 +140,39 @@ try {
   await first.page.locator("#onlineName").waitFor({ state: "visible", timeout });
   results.push("PASS: Item Shop and Avatars open Coming Soon pages with working back buttons");
 
+  // V15: every built-in arena must retain distinct, non-overlapping platform layouts.
+  const arenaLayouts = await first.page.evaluate(() => window.TAGOnlineHooks?.getMapLayoutDiagnostics?.() || []);
+  assert(arenaLayouts.length >= 17, "V15 arena diagnostics did not include all built-in maps.");
+  const crowdedLayouts = arenaLayouts.filter(layout => layout.overlaps !== 0 || layout.placed < 12);
+  assert(crowdedLayouts.length === 0,
+    "V15 arena platforms still overlap or were excessively dropped: " + JSON.stringify(crowdedLayouts));
+  const uniqueLayouts = new Set(arenaLayouts.map(layout => JSON.stringify(layout.signature)));
+  assert(uniqueLayouts.size >= 15, "V15 arenas do not have sufficiently distinct platform placements.");
+  results.push("PASS: V15 built-in realms have non-overlapping, distinct platform layouts");
+
+  // V15: let the native hard bot play for a few seconds and verify it traverses the arena.
+  await first.page.evaluate(() => window.TAGOnlineHooks?.startLocalBotMatch?.({
+    playerName: "QA HUMAN", mapId: "forge", gameMode: "classic",
+    roundLength: 180, modifiers: [], botLevel: "hard"
+  }));
+  await waitFor(first.page,
+    () => window.TAGOnlineHooks?.isLocalBotMatch?.() === true &&
+      window.TAGOnlineHooks?.getPlayerStates?.()?.some(player => player.isBot),
+    "V15 local bot arena startup");
+  await sleep(3800);
+  const botStart = await first.page.evaluate(() =>
+    window.TAGOnlineHooks?.getPlayerStates?.()?.find(player => player.isBot) || null);
+  await sleep(2200);
+  const botEnd = await first.page.evaluate(() =>
+    window.TAGOnlineHooks?.getPlayerStates?.()?.find(player => player.isBot) || null);
+  assert(botStart && botEnd && Math.hypot(botEnd.x - botStart.x, botEnd.y - botStart.y) > 0.012,
+    "V15 hard bot did not traverse the arena during active play. Start=" + JSON.stringify(botStart) + " End=" + JSON.stringify(botEnd));
+  assert(botEnd.y > 0.10 && botEnd.y < 0.96,
+    "V15 hard bot moved outside the playable arena.");
+  await first.page.evaluate(() => window.TAGOnlineHooks?.leaveLocalBotMatch?.());
+  await first.page.evaluate(() => window.TAGAppScreens?.show("online"));
+  results.push("PASS: V15 hard bot uses active platform navigation and moves across the arena");
+
   const nameA = makeName();
   const nameB = makeName();
 
