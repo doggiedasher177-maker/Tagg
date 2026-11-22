@@ -287,6 +287,7 @@ try {
   results.push("PASS: V15 hard bot uses active platform navigation and moves across the arena");
 
   // 7. A published community map is searchable and starts with three replaceable bots.
+  // V15 rechecks this path against the nil-safe Nakama bot planner deployed to production.
   await leaveMatch(first.page);
   const mapName = "QA Community Arena " + randomUUID().slice(0, 8);
   const mapClientA = makeClient();
