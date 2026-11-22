@@ -122,6 +122,47 @@ try {
   contexts.push(first.context, second.context);
   primaryPage = first.page;
 
+  // V16 touch controls: emulate a phone with three humans and one bot.
+  const phoneContext = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    deviceScaleFactor: 3,
+    isMobile: true,
+    hasTouch: true
+  });
+  contexts.push(phoneContext);
+  const phonePage = await phoneContext.newPage();
+  phonePage.__e2eDiagnostics = [];
+  phonePage.on("console", message => { if (message.type() === "error") phonePage.__e2eDiagnostics.push("console: " + message.text()); });
+  phonePage.on("pageerror", error => phonePage.__e2eDiagnostics.push("pageerror: " + String(error?.stack || error)));
+  await phonePage.goto(SITE_URL, { waitUntil: "domcontentloaded", timeout: 45000 });
+  await phonePage.locator("#playMenuBtn").click();
+  await phonePage.locator("#count").selectOption("4");
+  await phonePage.locator("#botCount").selectOption("1");
+  await phonePage.locator("#startBtn").click();
+  for (const slot of [0, 2, 3]) await phonePage.locator('[data-ready="' + slot + '"]').click();
+  await phonePage.waitForFunction(() => {
+    const root = document.querySelector("#mobileControls");
+    return root && root.style.display === "grid" && root.querySelectorAll(".touch-player-pad").length === 3;
+  }, null, { timeout: 20000 });
+  const phonePads = await phonePage.evaluate(() => [...document.querySelectorAll("#mobileControls .touch-player-pad")]
+    .map(pad => pad.querySelectorAll(".touch-key").length));
+  assert(phonePads.length === 3 && phonePads.every(count => count === 4),
+    "V16 phone controls did not render four directions for each of the three human players. " + JSON.stringify(phonePads));
+  const spawnStates = await phonePage.evaluate(() => window.TAGOnlineHooks?.getPlayerStates?.() || []);
+  assert(spawnStates.length === 4 && Math.max(...spawnStates.map(p => p.x)) - Math.min(...spawnStates.map(p => p.x)) <= 0.20,
+    "V16 round-start spawn positions were not clustered closely together.");
+  assert((await phonePage.evaluate(() => window.TAGOnlineHooks?.getBotPlayers?.() || [])).filter(Boolean).length === 1,
+    "V16 phone control check did not create exactly one bot player.");
+  results.push("PASS: V16 phone layout renders four touch directions for each human and none for the bot; round-start positions are clustered");
+
+  await phonePage.keyboard.press("Escape");
+  await phonePage.waitForFunction(() => document.querySelector("#mobileControls")?.style.display === "none",
+    null, { timeout: 5000 });
+  await phonePage.locator("#resumeBtn").click();
+  await phonePage.waitForFunction(() => document.querySelector("#mobileControls")?.style.display === "grid",
+    null, { timeout: 5000 });
+  results.push("PASS: V16 touch controls hide while paused and return on resume");
+
   // The title-menu cosmetic buttons must navigate to inert Coming Soon pages.
   await first.page.evaluate(() => window.TAGAppScreens?.show("menu"));
   await first.page.locator("#itemShopBtn").click();
