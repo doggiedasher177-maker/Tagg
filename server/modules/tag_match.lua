@@ -66,6 +66,7 @@ local function public_state(state)
 
   return {
     status = state.status,
+    tournament_mode = state.tournament_mode or false,
     players = players,
     host_user_id = state.host_user_id,
     mode = state.mode,
@@ -407,6 +408,20 @@ function M.match_leave(context, dispatcher, tick, state, presences)
   end
 
   local ids = ordered_players(state)
+  if state.tournament_mode then
+    local owner = state.owner_id and state.players[state.owner_id] or nil
+    if owner and not owner.connected then
+      local successor = nil
+      for _, user_id in ipairs(ids) do
+        local candidate = state.players[user_id]
+        if candidate and not candidate.is_bot then successor = user_id break end
+      end
+      state.owner_id = successor
+      state.host_user_id = successor
+      if not successor then state.status = "closed" end
+    end
+    if #ids == 0 then state.status = "closed" end
+  end
   if state.status == "playing" and #ids < #previous_order then
     local previous_scores = state.scores or {}
     local previous_tagger = previous_order[state.tagged]
@@ -493,7 +508,12 @@ function M.match_loop(context, dispatcher, tick, state, messages)
             local dx, dy = target.x - bot.x, target.y - bot.y
             local distance = math.sqrt(dx * dx + dy * dy)
             if distance > 0.001 then
-              local direction = (state.mode ~= "infection" and slot ~= state.tagged) and -1 or 1
+              local direction = 1
+              if state.mode == "infection" and not state.infected[user_id] then
+                direction = -1
+              elseif state.mode ~= "infection" and slot ~= state.tagged then
+                direction = -1
+              end
               local speed = 0.24 * dt * direction
               bot.vx = (dx / distance) * 0.24 * direction
               bot.vy = (dy / distance) * 0.24 * direction
