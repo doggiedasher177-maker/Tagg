@@ -261,7 +261,7 @@ try {
     await phonePage.evaluate(() => { window.__v17StructureRecording = false; });
     const samples = await phonePage.evaluate(() => window.__v17StructureSamples || []);
     const minCenterY = Math.min(...samples.map(sample => sample.y));
-    const expectedCenterY = initialStructure.y + initialStructure.h + 11 / phonePage.viewport().height;
+    const expectedCenterY = initialStructure.y + initialStructure.h + 11 / phonePage.viewportSize().height;
     assert(samples.length > 8 && minCenterY >= expectedCenterY - 0.005,
       "Runner passed through the underside of a " + (motionAmp ? "moving" : "stationary") +
         " structure. " + JSON.stringify({ mapId, minCenterY, expectedCenterY, recent: samples.slice(-6) }));
