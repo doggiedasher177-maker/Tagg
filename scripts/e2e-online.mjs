@@ -85,11 +85,20 @@ async function readDeviceId(page) {
 }
 
 async function leaveMatch(page) {
-  await page.evaluate(() => window.dispatchEvent(new CustomEvent("tag-online-leave")));
-  await waitFor(page,
-    () => (document.querySelector("#onlineStatus")?.textContent || "").includes("left the online match"),
-    "match leave cleanup",
-    10000);
+  const wasLocalBot = await page.evaluate(() => {
+    if (window.TAGOnlineHooks?.isLocalBotMatch?.()) {
+      window.TAGOnlineHooks?.leaveLocalBotMatch?.();
+      return true;
+    }
+    window.dispatchEvent(new CustomEvent("tag-online-leave"));
+    return false;
+  });
+  if (!wasLocalBot) {
+    await waitFor(page,
+      () => (document.querySelector("#onlineStatus")?.textContent || "").includes("left the online match"),
+      "match leave cleanup",
+      10000);
+  }
   await page.evaluate(() => window.TAGAppScreens?.show("online"));
   await page.locator("#quickMatchBtn").waitFor({ state: "visible", timeout: 10000 });
 }
