@@ -385,7 +385,7 @@ try {
       const after = serverBotEnds.find(player => player.user_id === before.id);
       return after && Number(after.bot_ai_ticks || 0) > before.aiTicks &&
         Math.hypot(Number(after.x) - before.x, Number(after.y) - before.y) > 0.006;
-    }), "V15 online public-map bots did not navigate their arena platforms. Flags=" + JSON.stringify({public_map:mapStateA.public_map,bot_match:mapStateA.bot_match,loopTicksBefore,loopTicksAfter}) + " Starts=" + JSON.stringify(serverBotStarts) + " Ends=" + JSON.stringify(serverBotEnds));
+    }), "V15 online public-map bots did not navigate their arena platforms. Flags=" + JSON.stringify({public_map:mapStateA.public_map,bot_match:mapStateA.bot_match,loopTicksBefore,loopTicksAfter,bot_ai_error:mapStateA.bot_ai_error}) + " Starts=" + JSON.stringify(serverBotStarts) + " Ends=" + JSON.stringify(serverBotEnds));
     results.push("PASS: V15 online public-map bots actively navigate and move between arena locations");
     await mapSocketB.joinMatch(matchId);
     const replacementState = await waitForMapState(() => mapStateA,
