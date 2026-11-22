@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#080d19">
 <meta name="description" content="TAG! — a local multiplayer platform chase across many living realms.">
-<title>TAG! — Zyron Studios v17 Online</title>
+<title>TAG! — Zyron Studios v18 Online</title>
 <style>
 :root{
   --ink:#edf5ff;--muted:#9eafc5;--line:rgba(202,224,255,.15);
@@ -527,8 +527,9 @@ body.argentina-mode #menuScreen{background:linear-gradient(180deg,#75bde9 0 32%,
 
 <section class="screen" id="settingsScreen" aria-label="Settings"><div class="full-panel"><div class="eyebrow">GAME SETTINGS</div><h2>Settings</h2><div class="setting-row"><label for="fovSlider">Field of view <b id="fovValue">100</b></label><input id="fovSlider" type="range" min="50" max="200" value="100" step="5"></div><p>100 is the close default view. The camera only widens a little to keep nearby runners in frame; distant runners do not force a huge zoom-out.</p><div class="setting-row"><label for="settingsLanguage">Language</label><select id="settingsLanguage"><option value="en">English</option><option value="es">Español (España)</option><option value="fr">Français</option><option value="pt">Português</option><option value="it">Italiano</option><option value="zh">中文</option><option value="arg">Argentino 🇦🇷</option></select></div><div class="setting-row"><label for="settingsMusicVolume">Music volume <b id="settingsMusicValue">65%</b></label><input id="settingsMusicVolume" type="range" min="0" max="100" step="1" value="65"></div><button class="secondary-btn" id="settingsMusicToggle">MUSIC: ON</button><div class="music-indicator" id="settingsMusicStatus">ORIGINAL MAP SOUNDTRACK</div><button class="secondary-btn" id="resetWinsBtn">RESET ALL WIN COUNTERS</button><div class="result-actions"><button class="primary-small" id="backSettingsBtn">BACK TO TITLE</button></div></div></section>
 <section class="screen" id="tournamentScreen" aria-label="Tournament setup"><div class="full-panel"><div class="eyebrow">TAG! WORLD CUP</div><h2>Tournaments</h2><p>Build a local elimination bracket. Pick a field size and decide how each duel is judged.</p><div class="setting-row"><label for="tournamentSize">Tournament size</label><select id="tournamentSize"><option value="4">4 groups · 8 players</option><option value="6">6 groups · 12 players</option><option value="8">8 groups · 16 players</option></select></div><div class="setting-row"><label for="tournamentRule">Duel winner</label><select id="tournamentRule"><option value="points">Most points</option><option value="untagged">Player who avoids the tag</option></select></div><div class="setting-row"><label for="tournamentModifier">Tournament modifiers · up to 3</label><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;width:65%"><select id="tournamentModifier"><option value="none">Slot 1 · None</option><option value="doublejump">Double jump</option><option value="superspeed">Speed boost</option><option value="decoys">Decoys</option><option value="chained">Chained</option><option value="sentinels">Sentinels</option><option value="parry">Parry</option><option value="munci">Angry Munci</option></select><select id="tournamentModifier2"><option value="none">Slot 2 · None</option><option value="doublejump">Double jump</option><option value="superspeed">Speed boost</option><option value="decoys">Decoys</option><option value="chained">Chained</option><option value="sentinels">Sentinels</option><option value="parry">Parry</option><option value="munci">Angry Munci</option></select><select id="tournamentModifier3"><option value="none">Slot 3 · None</option><option value="doublejump">Double jump</option><option value="superspeed">Speed boost</option><option value="decoys">Decoys</option><option value="chained">Chained</option><option value="sentinels">Sentinels</option><option value="parry">Parry</option><option value="munci">Angry Munci</option></select></div></div><p id="tournamentInfo">Create up to 8 local brackets. Assign entrants as humans or bots, then play matchups.</p><h3 class="subsection-title">Entrants · choose human or bot</h3><div id="tournamentEntrants" class="entrant-grid"></div><div class="result-actions"><button class="primary-small" id="createTournamentBtn">CREATE BRACKET</button><button class="secondary-btn" id="backTournamentBtn">BACK TO TITLE</button></div><div id="tournamentList" class="control-grid"></div><div id="tournamentBracket" class="tournament-bracket"></div><div id="tournamentMatchPanel" class="setting-row" style="display:none;flex-direction:column;align-items:stretch"><h3 id="matchTitle">Matchup</h3><p id="matchPlayers"></p><div class="result-actions"><button class="primary-small" id="playMatchA">PLAY AS PLAYER A</button><button class="primary-small" id="playMatchB">PLAY AS PLAYER B</button><button class="secondary-btn" id="coinFlipMatch">COIN FLIP</button></div><button class="secondary-btn" id="closeMatchPanel">CLOSE MATCH</button></div></div></section>
-<section class="screen" id="changelogScreen" aria-label="What's new"><div class="full-panel"><div class="eyebrow">ZYRON STUDIOS · COMPLETE UPDATE HISTORY</div><h2>TAG! Update Log · v4–v17</h2><p>Milestones from the original playable realms through the current V17 release. Older entries are historical highlights, not exhaustive patch-by-patch records.</p><div class="changelog-timeline" id="changelogTimeline">
-  <article class="changelog-entry current"><h3>V17 · COLLISION VERIFIED & IN-MATCH FRIENDS</h3><p>Hardened the in-match friend mailbox with a manual refresh action and automatic refresh when Nakama notifications arrive. Verified solid wall collision on a grounded runner and the complete two-account request lifecycle against Nakama: outgoing request, incoming mailbox, decline, resend, accept, and mutual friendship records.</p></article>
+<section class="screen" id="changelogScreen" aria-label="What's new"><div class="full-panel"><div class="eyebrow">ZYRON STUDIOS · COMPLETE UPDATE HISTORY</div><h2>TAG! Update Log · v4–v18</h2><p>Milestones from the original playable realms through the current V18 release. Older entries are historical highlights, not exhaustive patch-by-patch records.</p><div class="changelog-timeline" id="changelogTimeline">
+  <article class="changelog-entry current"><h3>V18 · STRUCTURE UNDERSIDE COLLISION</h3><p>Structures now block runners from below as well as from the sides and top. Jumping into a structure's underside stops upward movement at the collision surface, then gravity brings the runner back down. Added an automated jump-underneath regression test.</p></article>
+  <article class="changelog-entry"><h3>V17 · COLLISION VERIFIED & IN-MATCH FRIENDS</h3><p>Hardened the in-match friend mailbox with a manual refresh action and automatic refresh when Nakama notifications arrive. Verified solid wall collision on a grounded runner and the complete two-account request lifecycle against Nakama: outgoing request, incoming mailbox, decline, resend, accept, and mutual friendship records.</p></article>
   <article class="changelog-entry"><h3>V16 · MOBILE PLAY, SOLID ARENAS & FRIEND MAILBOX</h3><p>Responsive phone and tablet layouts, dynamic touch controls for each human player, tighter round-start spawns, a shorter arena view, solid structure collision (the green drink still grants temporary noclip), and a friend-request mailbox with accept and decline actions.</p></article>
   <article class="changelog-entry"><h3>V15 · SMART BOTS & ARENA ARCHITECTURE</h3><p>Rebuilt bot movement around platform-to-platform route planning, smarter target prediction, evasive flanks, active patrols, tactical jumps and varied dashes. Arena platforms are now automatically repositioned to avoid overlapping structures, and decorative architecture uses distinct, spaced positions in each realm.</p></article>
   <article class="changelog-entry"><h3>V14 · RUNNER IDENTITY & PROFILE</h3><p>Added player-name editing directly from Profile with unique-name enforcement; empty profiles stay nameless until a name is chosen; fixed Profile navigation to the title and leaderboard; custom profile pictures can be uploaded from your computer; added the Changed and Shiny achievement for uploading a custom picture.</p></article>
@@ -1724,6 +1725,7 @@ function movePlayer(p,dt) {
 
   const oldBottom=p.y+HALF_H;
   const wasGrounded=p.onGround;
+  const previousX=p.x, previousY=p.y;
   p.vy += 1450*dt;
   p.x += p.vx*dt;
   p.y += p.vy*dt;
@@ -1749,18 +1751,28 @@ function movePlayer(p,dt) {
     }
   }
 
-  // Solid platforms block side impacts and the underside as well as landings.
+  // Solid structures block every side. Use a swept underside check so a runner
+  // cannot jump through the bottom, even when a thin structure is crossed in one tick.
   for(const solid of [...platforms.filter(s=>s.id!=='ceiling'),...pads]){
     if(solid.id==='floor'||p.potionTime>0) continue;
     const overlapX=p.x+HALF_W>solid.x && p.x-HALF_W<solid.x+solid.w;
     const overlapY=p.y+HALF_H>solid.y && p.y-HALF_H<solid.y+solid.h;
-    if(solid.oneWay && solid.kind!=='structure'){if(overlapX&&overlapY){const oldX=p.x-p.vx*dt;if(oldX+HALF_W<=solid.x+4){p.x=solid.x-HALF_W;p.vx=Math.min(0,p.vx);}else if(oldX-HALF_W>=solid.x+solid.w-4){p.x=solid.x+solid.w+HALF_W;p.vx=Math.max(0,p.vx);}}continue;}
+    if(solid.oneWay && solid.kind!=='structure'){if(overlapX&&overlapY){if(previousX+HALF_W<=solid.x+4){p.x=solid.x-HALF_W;p.vx=Math.min(0,p.vx);}else if(previousX-HALF_W>=solid.x+solid.w-4){p.x=solid.x+solid.w+HALF_W;p.vx=Math.max(0,p.vx);}}continue;}
+    const previousTop=previousY-HALF_H, currentTop=p.y-HALF_H, underside=solid.y+solid.h;
+    const wasOverlappingX=previousX+HALF_W>solid.x && previousX-HALF_W<solid.x+solid.w;
+    if(overlapX&&wasOverlappingX&&p.vy<0&&previousTop>=underside-2&&currentTop<=underside){
+      p.y=underside+HALF_H;
+      p.vy=0;
+      p.jumpBuffer=0;
+      p.onGround=false;
+      p.groundId=null;
+      continue;
+    }
     // A floor landing must not suppress side collision with a separate solid structure.
     if(overlapX&&overlapY&&(!landing||landing.id!==solid.id)){
-      const oldX=p.x-p.vx*dt, oldY=p.y-p.vy*dt;
-      if(oldX+HALF_W<=solid.x+4){p.x=solid.x-HALF_W;p.vx=Math.min(0,p.vx);}
-      else if(oldX-HALF_W>=solid.x+solid.w-4){p.x=solid.x+solid.w+HALF_W;p.vx=Math.max(0,p.vx);}
-      else if(oldY-HALF_H>=solid.y+solid.h-4 && p.vy<0){p.y=solid.y+solid.h+HALF_H;p.vy=0;}
+      if(previousX+HALF_W<=solid.x+4){p.x=solid.x-HALF_W;p.vx=Math.min(0,p.vx);}
+      else if(previousX-HALF_W>=solid.x+solid.w-4){p.x=solid.x+solid.w+HALF_W;p.vx=Math.max(0,p.vx);}
+      else if(previousTop>=underside-4&&p.vy<0){p.y=underside+HALF_H;p.vy=0;p.jumpBuffer=0;}
     }
   }
 

@@ -18,9 +18,10 @@ async function waitForPublishedClient() {
         const html = await response.text();
         if (html.includes("const setButtons=on=>{[") && html.includes("async function responseErrorMessage(error){") && html.includes("nextSocket.rpc('tag_online_presence','{}')") && html.includes("oldSocket.rpc('tag_online_leave','{}')") && html.includes("getBotPlayers(){return botPlayers.slice(0,activePlayerCount);}") && html.includes("getMatchId(){return onlineMatchId;}") && html.includes("startLocalBotMatch(info)") && html.includes('id="avatarsScreen"') && html.includes("function resolvePlatformPlacements") && html.includes("function botRoute") && html.includes("getMapLayoutDiagnostics()") &&
           html.includes("V15 · SMART BOTS & ARENA ARCHITECTURE") &&
+          html.includes("V18 · STRUCTURE UNDERSIDE COLLISION") &&
           html.includes("V17 · COLLISION VERIFIED & IN-MATCH FRIENDS") &&
           html.includes("V16 · MOBILE PLAY, SOLID ARENAS & FRIEND MAILBOX") &&
-          html.includes("TAG! — Zyron Studios v17 Online") &&
+          html.includes("TAG! — Zyron Studios v18 Online") &&
           html.includes('id="matchMailboxRefreshBtn"') &&
           html.includes('id="mobilePauseBtn"') &&
           html.includes("if(!mobile||mode!=='playing')") &&
@@ -201,6 +202,63 @@ try {
     wallEnd > wallStart + 0.015 && wallEnd < 0.55,
     "A grounded runner passed through the solid structure wall. Start=" + wallStart + ", end=" + wallEnd);
   results.push("PASS: a grounded phone player is blocked by a solid custom structure");
+
+  // V18: jumping into a solid structure from underneath must stop at its bottom face.
+  await phonePage.bringToFront();
+  const undersideMapId = "v18_underside_test";
+  await phonePage.evaluate(mapId => {
+    const ok = window.TAGOnlineHooks.loadCustomMap({
+      id: mapId, name: "V18 Underside Collision", description: "Temporary automated QA ceiling block",
+      modifiers: [],
+      objects: [
+        { type: "structure", x: 420, y: 360, w: 360, h: 180 },
+        { type: "spawn", x: 600, y: 650 }
+      ]
+    });
+    if (!ok) throw new Error("Could not register the V18 underside collision test map.");
+    window.TAGOnlineHooks.startLocalBotMatch({
+      playerName: "QA", botLevel: "easy", mapId, roundLength: 120
+    });
+  }, undersideMapId);
+  await waitFor(phonePage,
+    () => window.TAGOnlineHooks?.getBotDebug?.()?.mode === "playing" &&
+      window.TAGOnlineHooks?.isLocalBotMatch?.() === true,
+    "V18 underside test round to enter active play",
+    12000);
+  await waitFor(phonePage,
+    () => window.TAGOnlineHooks?.getPlayerStates?.()?.[0]?.onGround === true,
+    "V18 test runner to stand below the structure",
+    5000);
+  await phonePage.evaluate(() => {
+    window.__v18UndersideSamples = [];
+    window.__v18UndersideRecording = true;
+    const capture = () => {
+      const player = window.TAGOnlineHooks?.getPlayerStates?.()?.[0];
+      if (player && window.__v18UndersideRecording) {
+        window.__v18UndersideSamples.push({ y: player.y, vy: player.vy });
+        requestAnimationFrame(capture);
+      }
+    };
+    requestAnimationFrame(capture);
+  });
+  await phonePage.keyboard.down("w");
+  await phonePage.waitForTimeout(180);
+  await phonePage.keyboard.up("w");
+  await waitFor(phonePage,
+    () => (window.__v18UndersideSamples || []).some(sample => sample.vy > 0),
+    "V18 underside impact to stop the jump and begin the fall",
+    4000);
+  await phonePage.waitForTimeout(120);
+  await phonePage.evaluate(() => { window.__v18UndersideRecording = false; });
+  const undersideSamples = await phonePage.evaluate(() => window.__v18UndersideSamples || []);
+  const lowestRunnerY = Math.min(...undersideSamples.map(sample => sample.y));
+  const firstFallingSample = undersideSamples.find(sample => sample.vy > 0);
+  const lastRunnerSample = undersideSamples.at(-1);
+  assert(undersideSamples.length > 3 && lowestRunnerY >= 0.775 &&
+    firstFallingSample && lastRunnerSample && lastRunnerSample.y > firstFallingSample.y + 0.003,
+    "V18 runner passed through the structure underside instead of stopping and falling. " +
+      JSON.stringify({ lowestRunnerY, firstFallingSample, lastRunnerSample, samples: undersideSamples.slice(-8) }));
+  results.push("PASS: jumping under a structure hits its underside and gravity brings the runner back down");
 
   // Tablet viewport regression: controls render and the page does not overflow horizontally.
   const tabletContext = await browser.newContext({

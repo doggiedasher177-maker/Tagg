@@ -65,6 +65,10 @@ if (
 }
 
 if (
+  !source.includes("V18 · STRUCTURE UNDERSIDE COLLISION") ||
+  !source.includes("TAG! — Zyron Studios v18 Online") ||
+  !source.includes("previousTop>=underside-2&&currentTop<=underside") ||
+  !source.includes("p.jumpBuffer=0;") ||
   !source.includes("V17 · COLLISION VERIFIED & IN-MATCH FRIENDS") ||
   !source.includes("V16 · MOBILE PLAY, SOLID ARENAS & FRIEND MAILBOX") ||
   !source.includes("TAG! — Zyron Studios v17 Online") ||
