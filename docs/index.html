@@ -439,12 +439,13 @@ body.argentina-mode #menuScreen{background:linear-gradient(180deg,#75bde9 0 32%,
  .tournament-bracket{grid-template-columns:1fr 1fr}
  #markHud .eyebrow,#realmHud .eyebrow{font-size:7px}#itname,#realmname{font-size:10px}
 }
+.mobile-pause-button{position:fixed;z-index:13;right:8px;top:108px;display:none;pointer-events:auto;border:1px solid #ffffff55;border-radius:10px;padding:8px 11px;background:#0c1c30e8;color:#f3fbff;font-size:10px;font-weight:950;letter-spacing:.08em;box-shadow:0 5px 18px #0006}
 #mobileControls{position:fixed;z-index:12;left:8px;right:8px;bottom:max(10px,env(safe-area-inset-bottom));display:none;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:7px;pointer-events:none;max-height:34vh}
 .touch-player-pad{pointer-events:auto;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:18px 42px 42px;gap:4px;padding:6px;border:1px solid var(--player-color);border-radius:13px;background:#081222d9;backdrop-filter:blur(8px);touch-action:none}
 .touch-player-label{grid-column:1/-1;text-align:center;color:var(--player-color);font-size:9px;font-weight:1000;letter-spacing:.14em}
 .touch-key{border:1px solid #ffffff35;border-radius:9px;background:#182b40e8;color:#f4fbff;font-size:18px;font-weight:1000;touch-action:none;user-select:none;-webkit-user-select:none;padding:0;min-width:0}
 .touch-key:active{background:#527b91;transform:scale(.96)}.touch-up{grid-column:2;grid-row:2}.touch-left{grid-column:1;grid-row:3}.touch-down{grid-column:2;grid-row:3}.touch-right{grid-column:3;grid-row:3}
-@media(hover:hover) and (pointer:fine){#mobileControls{display:none!important}}
+@media(hover:hover) and (pointer:fine){#mobileControls,.mobile-pause-button{display:none!important}}
 
 </style>
 </head>
@@ -460,6 +461,7 @@ body.argentina-mode #menuScreen{background:linear-gradient(180deg,#75bde9 0 32%,
   <div class="hud-panel" id="realmHud"><span class="eyebrow">Current realm</span><strong id="realmname">EMBERGLASS FOUNDRY</strong></div>
   <div id="hintHud">P1 A / D + W　 ·　 P2 ← / → + ↑　 ·　 ESC PAUSE</div>
 </div>
+<button id="mobilePauseBtn" type="button" class="mobile-pause-button" style="display:none" aria-label="Pause match">Ⅱ PAUSE</button>
 <div id="mobileControls" aria-label="Touch controls" style="display:none"></div>
 <button id="onlineChatToggle" class="online-chat-toggle" type="button" style="display:none">💬 CHAT</button>
 <div id="matchChatPanel" class="match-chat-panel" style="display:none"><div class="match-chat-head"><b>TAG! CHAT</b><button id="matchChatClose" type="button">×</button></div><select id="matchChatTarget"><option value="match">Online match</option><option value="local">Local players</option><option value="bots">Bot players</option><option value="munci">Angry Munci</option></select><div id="matchChatLog" class="online-chat-log"></div><div class="room-join"><input id="matchChatInput" maxlength="240" placeholder="Write a message..."><button id="matchChatSendBtn" type="button">SEND</button></div></div>
@@ -1359,8 +1361,10 @@ function setHint() {
 }
 
 function refreshMobileControls(){
-  const root=$('mobileControls');if(!root)return;
+  const root=$('mobileControls');
   const mobile=window.matchMedia('(pointer: coarse), (max-width: 900px)').matches;
+  const pauseButton=$('mobilePauseBtn');if(pauseButton)pauseButton.style.display=mobile&&mode==='playing'?'block':'none';
+  if(!root)return;
   if(!mobile||!['playing','countdown'].includes(mode)){root.style.display='none';root.innerHTML='';return;}
   const ids=onlineActive?[onlineLocalIndex]:Array.from({length:activePlayerCount},(_,i)=>i).filter(i=>!botPlayers[i]);
   root.innerHTML='';if(!ids.length){root.style.display='none';return;}root.style.display='grid';
@@ -2418,7 +2422,7 @@ $('readyPlayers').addEventListener('click',e=>{const b=e.target.closest('[data-r
 $('readyPlayers').addEventListener('change',e=>{if(e.target.matches('[data-bot]')){const i=Number(e.target.dataset.bot);botPlayers[i]=e.target.checked;readyFlags[i]=botPlayers[i];const inp=$('playerName'+i);if(inp)inp.disabled=botPlayers[i];const btn=document.querySelector(`[data-ready="${i}"]`);if(btn){btn.disabled=botPlayers[i];btn.textContent=botPlayers[i]?'BOT READY':`PRESS ${controls[i].keys[2]} TO READY`;}updateReadyStatus();if(readyFlags.slice(0,activePlayerCount).every(Boolean))beginCountdown();}if(e.target.matches('[data-level]'))botLevels[Number(e.target.dataset.level)]=e.target.value.toLowerCase();if(e.target.matches('[data-accessory]')){const i=Number(e.target.dataset.accessory);playerAccessories[i]=e.target.value;try{localStorage.setItem('tagPlayerAccessories',JSON.stringify(playerAccessories))}catch(err){} }if(e.target.matches('[data-ability-key]')){const [idx,mod]=e.target.dataset.abilityKey.split(':');controls[Number(idx)].abilityKeys=controls[Number(idx)].abilityKeys||{};controls[Number(idx)].abilityKeys[mod]=e.target.value;try{const saved=JSON.parse(localStorage.getItem('tagAbilityKeys')||'{}');saved[Number(idx)]=controls[Number(idx)].abilityKeys;localStorage.setItem('tagAbilityKeys',JSON.stringify(saved));}catch(err){}}});
 $('readyPlayers').addEventListener('input',e=>{if(e.target.id&&e.target.id.startsWith('playerName')){const i=Number(e.target.id.replace('playerName',''));if(!readyFlags[i]){playerNames[i]=e.target.value.slice(0,14);renderWinCounters();}}});
 $('backSetupBtn').addEventListener('click',()=>{mode='menu';activeScreen('menu');});
-$('resumeBtn').addEventListener('click',togglePause);
+$('resumeBtn').addEventListener('click',togglePause);$('mobilePauseBtn')?.addEventListener('click',()=>{if(mode==='playing')togglePause();});
 $('restartBtn').addEventListener('click',restartRound);
 $('menuBtn').addEventListener('click',()=>{if(window.TAGOnlineHooks?.isOnline())window.dispatchEvent(new CustomEvent('tag-online-leave'));resetToMenu();});
 $('againBtn').addEventListener('click',()=>{if(window.TAGOnlineHooks?.isOnline()){window.dispatchEvent(new CustomEvent('tag-online-leave'));activeScreen('online');return;}startRound();});
