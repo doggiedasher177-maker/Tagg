@@ -586,6 +586,7 @@ function M.match_signal(context, dispatcher, tick, state, data)
       state.scores[slot] = 0
       if slot == 1 and state.mode == "infection" then state.infected[user_id] = true end
     end
+    dispatcher.match_label_update("TAG_TOURNAMENT_DONE|" .. state.tournament_title:gsub("|", " "))
     broadcast_state(dispatcher, state)
     return state, nk.json_encode({ ok = true, message = "Tournament started with bots filling the open slots." })
   end
