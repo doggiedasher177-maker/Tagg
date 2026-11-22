@@ -12,6 +12,10 @@ on:
       - "server/modules/tag_match.lua"
   workflow_dispatch:
 
+concurrency:
+  group: tag-online-production-e2e
+  cancel-in-progress: false
+
 permissions:
   contents: read
 
