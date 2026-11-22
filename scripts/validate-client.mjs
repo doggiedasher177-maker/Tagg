@@ -54,6 +54,15 @@ if (
 ) {
   throw new Error("The matchmaking countdown regression guards are missing.");
 }
+if (
+  !source.includes("function resolvePlatformPlacements") ||
+  !source.includes("function botRoute") ||
+  !source.includes("function chooseBotPlatform") ||
+  !source.includes("V15 · SMART BOTS & ARENA ARCHITECTURE") ||
+  !source.includes("getMapLayoutDiagnostics()")
+) {
+  throw new Error("V15 bot pathfinding or non-overlapping arena layout features are missing.");
+}
 
 const directory = join(tmpdir(), "tag-client-check-" + process.pid);
 mkdirSync(directory, { recursive: true });
