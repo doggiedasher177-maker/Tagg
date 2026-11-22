@@ -185,6 +185,7 @@ local function public_state(state)
     tournament_mode = state.tournament_mode or false,
     bot_match = state.bot_match or false,
     public_map = state.public_map or false,
+    bot_loop_ticks = state.bot_loop_ticks or 0,
     modifiers = state.modifiers or {},
     players = players,
     host_user_id = state.host_user_id,
@@ -660,12 +661,8 @@ local function update_server_bot(bot, target, is_hunter, state, surfaces, dt)
 end
 
 local function update_match_bots(state, dt)
-  if not (state.public_map or state.tournament_mode or state.bot_match) then
-    if state.status == "playing" then
-      nk.logger_warn("TAG! V15 bot updater skipped: public_map=" .. tostring(state.public_map) .. " tournament=" .. tostring(state.tournament_mode) .. " bot_match=" .. tostring(state.bot_match))
-    end
-    return
-  end
+  -- The roster is the source of truth: if a connected bot exists, it must
+  -- receive the same server tick regardless of which match flow created it.
   local ids, surfaces = ordered_players(state), bot_surfaces(state)
   for slot, user_id in ipairs(ids) do
     local bot = state.players[user_id]
@@ -1078,6 +1075,7 @@ end
 
 function M.match_loop(context, dispatcher, tick, state, messages)
   local dt = 1 / TICK_RATE
+  state.bot_loop_ticks = (state.bot_loop_ticks or 0) + 1
 
   for _, message in ipairs(messages) do
     if message.op_code == 0 then
@@ -1097,9 +1095,7 @@ function M.match_loop(context, dispatcher, tick, state, messages)
       nk.logger_info("TAG! authoritative round started: " .. tostring(context.match_id))
     end
   elseif state.status == "playing" then
-    if state.public_map or state.tournament_mode or state.bot_match then
-      update_match_bots(state, dt);
-    end
+    update_match_bots(state, dt);
     state.remaining = math.max(0, state.remaining - dt)
     state.tag_cooldown = math.max(0, state.tag_cooldown - dt)
     state.score_tick = (state.score_tick or 0) + dt
