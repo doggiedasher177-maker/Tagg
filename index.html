@@ -1784,10 +1784,10 @@ function movePlayer(p,dt) {
     }
   }
 
-  // V17: structures are true solid rectangles, not one-way platforms.
-  // Resolve swept AABB collisions in relative space so moving structures are
-  // solid even when they move into a runner or cross the runner between frames.
-  for(const solid of platforms.filter(s=>s.kind==='structure')){
+  // V17: every raised map platform/structure is a solid 2D rectangle.
+  // The player collides with its top, underside, and sides; moving surfaces
+  // are tested in relative space so they cannot pass through the player.
+  for(const solid of platforms.filter(s=>s.id!=='floor'&&s.id!=='ceiling')){
     if(p.potionTime>0) continue; // the green potion intentionally grants noclip
     const sx0=Number.isFinite(solid.prevX)?solid.prevX:solid.x-(solid.dx||0);
     const sy0=Number.isFinite(solid.prevY)?solid.prevY:solid.y-(solid.dy||0);
@@ -1842,7 +1842,7 @@ function movePlayer(p,dt) {
     }
   }
   // Preserve the legacy collision response for non-structure solid objects.
-  for(const solid of [...platforms.filter(s=>s.id!=='ceiling'&&s.kind!=='structure'),...pads]){
+  for(const solid of pads){
     if(solid.id==='floor'||p.potionTime>0) continue;
     const previousSolidX=Number.isFinite(solid.prevX)?solid.prevX:solid.x-(solid.dx||0);
     const previousSolidY=Number.isFinite(solid.prevY)?solid.prevY:solid.y-(solid.dy||0);
