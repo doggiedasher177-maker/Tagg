@@ -2150,6 +2150,7 @@ window.TAGOnlineHooks={
     updateHud();
   },
   endMatch(){onlineActive=false;onlineIsHost=false;onlineMatchId=null;if($('onlineChatToggle'))$('onlineChatToggle').style.display='none';if($('matchChatPanel'))$('matchChatPanel').style.display='none';activePlayerCount=4;botPlayers=[];keysDown.clear();},
+  getBotPlayers(){return botPlayers.slice(0,activePlayerCount);},
   isOnline(){return onlineActive;}
 };
 
@@ -2399,7 +2400,7 @@ async function disconnect(){
     leaves.forEach(p => byId.delete(p.user_id));
     match.presences = [...byId.values()];
     if (joins.length || leaves.length) {
-      status("Room " + match.match_id.slice(0, 8) + " · " + byId.size + " runner(s) connected.", "connected");
+      if(!window.TAGOnlineHooks?.isOnline())status("Room " + match.match_id.slice(0, 8) + " · " + byId.size + " runner(s) connected.", "connected");
       if (byId.size >= 2 && !window.TAGOnlineHooks?.isOnline()) {
         matchStarted = false;
         enterMatch(match).catch(e => status(e.message, "error"));
