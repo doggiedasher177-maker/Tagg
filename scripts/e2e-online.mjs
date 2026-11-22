@@ -350,36 +350,29 @@ try {
     nameB, { timeout });
   await first.page.locator("#matchFriendList .online-chat-line").filter({ hasText: nameB })
     .locator("button").click();
-  await second.page.locator("#refreshFriendsBtn").click();
+  await second.page.locator("#onlineChatToggle").click();
+  await second.page.locator("#matchMailboxToggleBtn").click();
   await second.page.waitForFunction(name =>
-    [...document.querySelectorAll("#onlineFriendList .online-chat-line")].some(row => row.textContent.includes(name + " · DECLINE")),
+    [...document.querySelectorAll("#matchMailbox .online-chat-line")].some(row => row.textContent.includes(name)),
     nameA, { timeout });
-  await second.page.locator("#onlineFriendList .online-chat-line")
-    .filter({ hasText: nameA + " · DECLINE" }).locator("button").click();
-  await first.page.locator("#refreshFriendsBtn").click();
-  await first.page.waitForFunction(name =>
-    ![...document.querySelectorAll("#onlineFriendList .online-chat-line")].some(row => row.textContent.includes(name)),
-    nameB, { timeout });
+  await second.page.locator("#matchMailbox .online-chat-line").filter({ hasText: nameA })
+    .locator("button").filter({ hasText: "DECLINE" }).click();
+  await second.page.waitForFunction(() => (document.querySelector("#matchMailbox")?.textContent || "").includes("empty"),
+    null, { timeout });
 
   await first.page.locator("#matchFriendToggleBtn").click();
   await first.page.locator("#matchFriendToggleBtn").click();
   await first.page.locator("#matchFriendList .online-chat-line").filter({ hasText: nameB })
     .locator("button").click();
-  await second.page.locator("#refreshFriendsBtn").click();
+  await second.page.locator("#matchMailboxToggleBtn").click();
+  await second.page.locator("#matchMailboxToggleBtn").click();
   await second.page.waitForFunction(name =>
-    [...document.querySelectorAll("#onlineFriendList .online-chat-line")].some(row => row.textContent.includes(name)),
+    [...document.querySelectorAll("#matchMailbox .online-chat-line")].some(row => row.textContent.includes(name)),
     nameA, { timeout });
-  await second.page.locator("#onlineFriendList .online-chat-line")
-    .filter({ hasText: nameA }).first().locator("button").click();
-  await second.page.waitForFunction(name =>
-    [...document.querySelectorAll("#onlineFriendList .online-chat-line")].some(row =>
-      row.textContent.includes(name) && row.querySelector("button")?.textContent === "INVITE"),
-    nameA, { timeout });
-  await first.page.locator("#refreshFriendsBtn").click();
-  await first.page.waitForFunction(name =>
-    [...document.querySelectorAll("#onlineFriendList .online-chat-line")].some(row =>
-      row.textContent.includes(name) && row.querySelector("button")?.textContent === "INVITE"),
-    nameB, { timeout });
+  await second.page.locator("#matchMailbox .online-chat-line").filter({ hasText: nameA })
+    .locator("button").filter({ hasText: "ACCEPT" }).click();
+  await second.page.waitForFunction(() => (document.querySelector("#matchMailbox")?.textContent || "").includes("empty"),
+    null, { timeout });
   results.push("PASS: a player can send a friend request from a live online match, and the recipient can decline or accept it in the mailbox");
 
   // Ensure the room entered the authoritative round and the displayed timer advances.
