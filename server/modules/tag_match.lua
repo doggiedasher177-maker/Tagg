@@ -653,6 +653,7 @@ local function matchmaker_matched(context, matched_users)
   local mode = first.mode == "infection" and "infection" or "classic"
   local map = tostring(first.map or "random"):sub(1, 32)
   local length = clamp(math.floor(valid_number(first.length) or DEFAULT_LENGTH), 60, 1800)
+  local modifiers = clean_modifiers(first.modifiers)
   local ids = {}
   for _, entry in ipairs(matched_users) do
     local user_id = entry.user_id or
@@ -669,6 +670,7 @@ local function matchmaker_matched(context, matched_users)
     mode = mode,
     map = map,
     length = length,
+    modifiers = modifiers,
     expected_users = matched_users,
     owner_id = ids[1]
   })
