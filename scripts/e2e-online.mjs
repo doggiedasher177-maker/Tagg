@@ -382,6 +382,14 @@ try {
       "The joining human did not replace exactly one bot slot.");
     await waitForMapState(() => mapStateA, state => state.status === "playing",
       "public map match countdown to complete");
+    const onlineBotPositionsBefore = mapStateA.players.filter(player => player.is_bot).map(player => ({ id: player.user_id, x: player.x, y: player.y }));
+    await sleep(1800);
+    const onlineBotPositionsAfter = mapStateA.players.filter(player => player.is_bot);
+    assert(onlineBotPositionsBefore.some(before => {
+      const after = onlineBotPositionsAfter.find(player => player.user_id === before.id);
+      return after && Math.hypot(Number(after.x) - Number(before.x), Number(after.y) - Number(before.y)) > 0.006;
+    }), "V15 server-side public-map bots did not traverse their arena platforms.");
+    results.push("PASS: V15 online public-map bots actively navigate and move between arena locations");
     const bSlotBeforeQuit = mapStateA.players.findIndex(player => player.user_id === mapSessionB.user_id);
     const scoreBeforeEarlyQuit = Number(mapStateA.scores?.[bSlotBeforeQuit] || 0);
     await mapSocketA.leaveMatch(matchId);
