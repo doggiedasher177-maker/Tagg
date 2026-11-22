@@ -328,7 +328,6 @@ function M.match_init(context, params)
     expected_users = {},
     tournament_mode = params.tournament_mode == true,
     bot_match = params.bot_match == true,
-    modifiers = clean_modifiers(params.modifiers),
     tournament_title = tostring(params.tournament_title or "Community Tournament"):sub(1, 32),
     target_count = params.tournament_mode == true and 4 or clamp(math.floor(valid_number(params.target_count) or 2), 2, MAX_PLAYERS),
     owner_id = params.owner_id,
