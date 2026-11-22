@@ -167,7 +167,7 @@ try {
   const botEnd = await first.page.evaluate(() =>
     window.TAGOnlineHooks?.getPlayerStates?.()?.find(player => player.isBot) || null);
   assert(botStart && botEnd && Math.hypot(botEnd.x - botStart.x, botEnd.y - botStart.y) > 0.012,
-    "V15 hard bot did not traverse the arena during active play. Start=" + JSON.stringify(botStart) + " End=" + JSON.stringify(botEnd));
+    "V15 hard bot did not traverse the arena during active play. Start=" + JSON.stringify(botStart) + " End=" + JSON.stringify(botEnd) + " Debug=" + JSON.stringify(await first.page.evaluate(() => window.TAGOnlineHooks?.getBotDebug?.())));
   assert(botEnd.y > 0.10 && botEnd.y < 0.96,
     "V15 hard bot moved outside the playable arena.");
   await first.page.evaluate(() => window.TAGOnlineHooks?.leaveLocalBotMatch?.());
