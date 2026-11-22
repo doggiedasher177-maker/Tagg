@@ -2265,7 +2265,7 @@ import { Client } from 'https://esm.sh/@heroiclabs/nakama-js@2.8.0';
       $('onlineName').setAttribute('aria-readonly','true');
       try{localStorage.setItem('tagOnlineName',username);}catch(e){}
       try{
-        const presenceData=rpcPayload(await client.rpc(session,'tag_online_presence',{}));
+        const presenceData=rpcPayload(await nextSocket.rpc('tag_online_presence','{}'));
         setOnlinePlayerCount(presenceData.online_count);
       }catch(presenceError){setOnlinePlayerCount('—');}
       if(generation!==connectionGeneration)throw new Error('Connection cancelled.');
@@ -2373,7 +2373,7 @@ async function disconnect(){
   };
   if(oldTicket&&oldSocket)await attempt('matchmaking ticket',()=>oldSocket.removeMatchmaker(oldTicket));
   if(oldMatch&&oldSocket)await attempt('match',()=>oldSocket.leaveMatch(oldMatch));
-  if(oldClient&&oldSession)await attempt('online presence',()=>oldClient.rpc(oldSession,'tag_online_leave',{}));
+  if(oldSocket&&oldSession)await attempt('online presence',()=>oldSocket.rpc('tag_online_leave','{}'));
   if(oldSocket){
     await attempt('online status',()=>oldSocket.updateStatus(''));
     await attempt('socket',()=>oldSocket.disconnect(false));
