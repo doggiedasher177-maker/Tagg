@@ -337,7 +337,7 @@ function M.match_init(context, params)
     table.sort(expected_ids)
     state.host_user_id = state.host_user_id or expected_ids[1]
   else
-    state.target_count = 2
+    state.target_count = state.tournament_mode and MAX_PLAYERS or 2
   end
 
   nk.logger_info("TAG! authoritative match created: " .. tostring(context.match_id))
