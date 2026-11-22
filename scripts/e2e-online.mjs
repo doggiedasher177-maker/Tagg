@@ -473,6 +473,9 @@ try {
   results.push("PASS: Quick Match timeout starts a local-physics bot match with no ranked server match");
 
   // V15: verify local hard-bot traversal on the normal-clock second browser context.
+  // Bring this separate browser context to the foreground first: background tabs can
+  // throttle requestAnimationFrame, which otherwise makes a healthy game clock look frozen.
+  await second.page.bringToFront();
   await second.page.evaluate(() => window.TAGOnlineHooks?.startLocalBotMatch?.({
     playerName: "QA HUMAN", mapId: "forge", gameMode: "classic",
     roundLength: 180, modifiers: [], botLevel: "hard"
@@ -482,14 +485,22 @@ try {
       window.TAGOnlineHooks?.isLocalBotMatch?.() === true,
     "V15 local bot round to enter active play",
     12000);
-  const localTimerBefore = (await second.page.locator("#timer").textContent()).trim();
+  const localClockStart = await second.page.evaluate(() => ({
+    display: (document.querySelector("#timer")?.textContent || "").trim(),
+    remaining: Number(window.TAGOnlineHooks?.getHostState?.()?.remaining)
+  }));
   const botStart = await second.page.evaluate(() =>
     window.TAGOnlineHooks?.getPlayerStates?.()?.find(player => player.isBot) || null);
+  await waitFor(second.page, () => {
+    const state = window.TAGOnlineHooks?.getHostState?.();
+    const display = (document.querySelector("#timer")?.textContent || "").trim();
+    return Number.isFinite(state?.remaining) &&
+      state.remaining < localClockStart.remaining - 0.75 &&
+      display !== localClockStart.display;
+  }, "V15 local bot round timer to advance on the normal animation clock", 12000);
   await sleep(2200);
   const botEnd = await second.page.evaluate(() =>
     window.TAGOnlineHooks?.getPlayerStates?.()?.find(player => player.isBot) || null);
-  const localTimerAfter = (await second.page.locator("#timer").textContent()).trim();
-  assert(localTimerBefore !== localTimerAfter, "V15 local bot round timer did not advance on the normal animation clock.");
   assert(botStart && botEnd && Math.hypot(botEnd.x - botStart.x, botEnd.y - botStart.y) > 0.012,
     "V15 hard bot did not traverse the arena during active play. Start=" + JSON.stringify(botStart) + " End=" + JSON.stringify(botEnd) + " Debug=" + JSON.stringify(await second.page.evaluate(() => window.TAGOnlineHooks?.getBotDebug?.())));
   assert(botEnd.y > 0.10 && botEnd.y < 0.96,
