@@ -1365,7 +1365,7 @@ function refreshMobileControls(){
   const mobile=window.matchMedia('(pointer: coarse), (max-width: 900px)').matches;
   const pauseButton=$('mobilePauseBtn');if(pauseButton)pauseButton.style.display=mobile&&mode==='playing'?'block':'none';
   if(!root)return;
-  if(!mobile||!['playing','countdown'].includes(mode)){root.style.display='none';root.innerHTML='';return;}
+  if(!mobile||mode!=='playing'){root.style.display='none';root.innerHTML='';return;}
   const ids=onlineActive?[onlineLocalIndex]:Array.from({length:activePlayerCount},(_,i)=>i).filter(i=>!botPlayers[i]);
   root.innerHTML='';if(!ids.length){root.style.display='none';return;}root.style.display='grid';
   ids.forEach(i=>{
