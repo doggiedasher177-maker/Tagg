@@ -224,9 +224,9 @@ try {
     document.querySelector("#onlineMap").value = "heaven";
     document.querySelector("#onlineMode").value = "infection";
     document.querySelector("#onlineLength").value = "180";
-    document.querySelector("#onlineModifier1").value = "munci";
-    document.querySelector("#onlineModifier2").value = "parry";
-    document.querySelector("#onlineModifier3").value = "chained";
+    document.querySelector("#onlineModifier1").value = "none";
+    document.querySelector("#onlineModifier2").value = "none";
+    document.querySelector("#onlineModifier3").value = "none";
   });
   await first.page.locator("#quickMatchBtn").click();
   await waitFor(first.page,
