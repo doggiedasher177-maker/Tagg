@@ -304,7 +304,7 @@ try {
     const eloA = await callRpc(mapClientA, mapSessionA, "tag_ensure_elo", {});
     const eloB = await callRpc(mapClientB, mapSessionB, "tag_ensure_elo", {});
     assert(Number(eloA.elo) === 100 && Number(eloB.elo) === 100,
-      "New online accounts did not initialize at 100 ELO.");
+      "New online accounts did not initialize at 100 ELO. A=" + JSON.stringify(eloA) + " B=" + JSON.stringify(eloB) + ".");
 
     const level = {
       id: "qa_" + randomUUID().replace(/-/g, "").slice(0, 18),
