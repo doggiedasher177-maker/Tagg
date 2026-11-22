@@ -8,6 +8,21 @@ const SERVER_KEY = process.env.NAKAMA_SERVER_KEY || "tagg-public-client-key-2026
 const timeout = 25000;
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+async function waitForPublishedClient() {
+  const deadline = Date.now() + 120000;
+  while (Date.now() < deadline) {
+    try {
+      const response = await fetch(SITE_URL, { cache: "no-store", signal: AbortSignal.timeout(12000) });
+      if (response.ok) {
+        const html = await response.text();
+        if (html.includes("const setButtons=on=>{[")) return;
+      }
+    } catch {}
+    await sleep(2500);
+  }
+  throw new Error("GitHub Pages did not publish the online module initialization fix within 120 seconds.");
+}
 const makeName = () => "tq" + randomUUID().replace(/-/g, "").slice(0, 14).toLowerCase();
 
 function makeClient() {
@@ -20,7 +35,7 @@ async function waitFor(page, fn, description, ms = timeout) {
   catch {
     const status = await page.locator("#onlineStatus").textContent().catch(() => "unavailable");
     const diagnostics = page.__e2eDiagnostics || [];
-    const button = await page.locator("#onlineConnectBtn").evaluate(el => ({ hidden: el.hidden, exists: !!el, listeners: getEventListeners?.(el) || null })).catch(() => null);
+    const button = await page.locator("#onlineConnectBtn").evaluate(el => ({ hidden: el.hidden, exists: !!el, disabled: el.disabled })).catch(() => null);
     throw new Error("Timed out waiting for " + description + ". Last status: " + status + ". Button: " + JSON.stringify(button) + ". Browser diagnostics: " + diagnostics.slice(-20).join(" | "));
   }
 }
@@ -73,6 +88,8 @@ async function leaveMatch(page) {
     "match leave cleanup",
     10000);
 }
+
+await waitForPublishedClient();
 
 const browser = await chromium.launch({ headless: true });
 const contexts = [];
