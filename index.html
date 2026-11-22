@@ -1784,66 +1784,81 @@ function movePlayer(p,dt) {
     }
   }
 
-  // Structures are full solid blocks. Resolve underside impacts against the
-  // moving rectangle at the crossing time, not its already-updated X position.
-  for(const solid of [...platforms.filter(s=>s.id!=='ceiling'),...pads]){
+  // V17: structures are true solid rectangles, not one-way platforms.
+  // Resolve swept AABB collisions in relative space so moving structures are
+  // solid even when they move into a runner or cross the runner between frames.
+  for(const solid of platforms.filter(s=>s.kind==='structure')){
+    if(p.potionTime>0) continue; // the green potion intentionally grants noclip
+    const sx0=Number.isFinite(solid.prevX)?solid.prevX:solid.x-(solid.dx||0);
+    const sy0=Number.isFinite(solid.prevY)?solid.prevY:solid.y-(solid.dy||0);
+    const px0=previousX, py0=previousY;
+    const relX0=px0-sx0, relY0=py0-sy0;
+    const relDX=(p.x-px0)-(solid.x-sx0);
+    const relDY=(p.y-py0)-(solid.y-sy0);
+    const wasOverlapping=relX0+HALF_W>0&&relX0-HALF_W<solid.w&&
+      relY0+HALF_H>0&&relY0-HALF_H<solid.h;
+    const isOverlapping=p.x+HALF_W>solid.x&&p.x-HALF_W<solid.x+solid.w&&
+      p.y+HALF_H>solid.y&&p.y-HALF_H<solid.y+solid.h;
+    if(!wasOverlapping&&!isOverlapping){
+      let xEntry,xExit,yEntry,yExit;
+      if(relDX>0){xEntry=(-HALF_W-relX0)/relDX;xExit=(solid.w+HALF_W-relX0)/relDX;}
+      else if(relDX<0){xEntry=(solid.w+HALF_W-relX0)/relDX;xExit=(-HALF_W-relX0)/relDX;}
+      else{xEntry=-Infinity;xExit=Infinity;}
+      if(relDY>0){yEntry=(-HALF_H-relY0)/relDY;yExit=(solid.h+HALF_H-relY0)/relDY;}
+      else if(relDY<0){yEntry=(solid.h+HALF_H-relY0)/relDY;yExit=(-HALF_H-relY0)/relDY;}
+      else{yEntry=-Infinity;yExit=Infinity;}
+      const entry=Math.max(xEntry,yEntry),exit=Math.min(xExit,yExit);
+      if(entry<0||entry>1||entry>exit) continue;
+      if(yEntry>=xEntry){
+        if(relDY>0){
+          p.y=solid.y-HALF_H;p.vy=0;p.onGround=true;p.groundId=solid.id;
+        }else{
+          p.y=solid.y+solid.h+HALF_H;p.vy=0;p.jumpBuffer=0;
+          p.onGround=false;p.groundId=null;
+        }
+      }else{
+        if(relDX>0)p.x=solid.x-HALF_W;
+        else p.x=solid.x+solid.w+HALF_W;
+        p.vx=0;
+      }
+      continue;
+    }
+    if(isOverlapping){
+      // Recover from an existing overlap (e.g. a structure moved onto a
+      // stationary runner) by pushing out along the shallowest penetration.
+      const penetrations=[
+        {d:p.x+HALF_W-solid.x,axis:'left'},
+        {d:solid.x+solid.w-(p.x-HALF_W),axis:'right'},
+        {d:p.y+HALF_H-solid.y,axis:'top'},
+        {d:solid.y+solid.h-(p.y-HALF_H),axis:'bottom'}
+      ].sort((a,b)=>a.d-b.d);
+      const side=penetrations[0].axis;
+      if(side==='left'){p.x=solid.x-HALF_W;p.vx=Math.min(0,p.vx);}
+      else if(side==='right'){p.x=solid.x+solid.w+HALF_W;p.vx=Math.max(0,p.vx);}
+      else if(side==='top'){p.y=solid.y-HALF_H;p.vy=Math.max(0,p.vy);p.onGround=true;p.groundId=solid.id;}
+      else{p.y=solid.y+solid.h+HALF_H;p.vy=Math.max(0,p.vy);p.jumpBuffer=0;p.onGround=false;p.groundId=null;}
+    }
+  }
+  // Preserve the legacy collision response for non-structure solid objects.
+  for(const solid of [...platforms.filter(s=>s.id!=='ceiling'&&s.kind!=='structure'),...pads]){
     if(solid.id==='floor'||p.potionTime>0) continue;
     const previousSolidX=Number.isFinite(solid.prevX)?solid.prevX:solid.x-(solid.dx||0);
     const previousSolidY=Number.isFinite(solid.prevY)?solid.prevY:solid.y-(solid.dy||0);
     const overlapX=p.x+HALF_W>solid.x&&p.x-HALF_W<solid.x+solid.w;
     const overlapY=p.y+HALF_H>solid.y&&p.y-HALF_H<solid.y+solid.h;
-    if(solid.oneWay&&solid.kind!=='structure'){
+    if(solid.oneWay){
       if(overlapX&&overlapY){
         if(previousX+HALF_W<=previousSolidX+4){p.x=solid.x-HALF_W;p.vx=Math.min(0,p.vx);}
         else if(previousX-HALF_W>=previousSolidX+solid.w-4){p.x=solid.x+solid.w+HALF_W;p.vx=Math.max(0,p.vx);}
       }
       continue;
     }
-
-    const previousTop=previousY-HALF_H;
-    const currentTop=p.y-HALF_H;
-    const previousUnderside=previousSolidY+solid.h;
-    const currentUnderside=solid.y+solid.h;
-
-    // Swept underside collision. Use relative player/platform motion so a
-    // moving structure cannot be jumped through between animation frames.
-    // Also resolve a head already touching the underside (e.g. after spawn).
-    const previousClearance=previousTop-previousUnderside;
-    const currentClearance=currentTop-currentUnderside;
-    const crossedUnderside=previousClearance>=-3&&currentClearance<=2;
-    const structureHeadOverlap=solid.kind==='structure'&&
-      currentTop<currentUnderside&&p.y+HALF_H>solid.y;
-    if((crossedUnderside||structureHeadOverlap)&&
-       (p.vy<0||solid.kind==='structure')){
-      const travel=previousClearance-currentClearance;
-      const hitTime=travel>0?clamp(previousClearance/travel,0,1):1;
-      const playerXAtHit=previousX+(p.x-previousX)*hitTime;
-      const solidXAtHit=previousSolidX+(solid.x-previousSolidX)*hitTime;
-      const overlapsAtHit=playerXAtHit+HALF_W>solidXAtHit&&
-        playerXAtHit-HALF_W<solidXAtHit+solid.w;
-      const overlapsNow=p.x+HALF_W>solid.x&&p.x-HALF_W<solid.x+solid.w;
-      if(overlapsAtHit||overlapsNow){
-        p.y=solid.y+solid.h+HALF_H;
-        p.vy=Math.max(0,p.vy);
-        p.jumpBuffer=0;
-        p.onGround=false;
-        p.groundId=null;
-        continue;
-      }
-    }
-
-    // A top landing on this same block is handled by the landing resolver above.
     if(landing&&landing.id===solid.id) continue;
     if(overlapX&&overlapY){
-      if(previousX+HALF_W<=previousSolidX+4){
-        p.x=solid.x-HALF_W;p.vx=Math.min(0,p.vx);
-      }else if(previousX-HALF_W>=previousSolidX+solid.w-4){
-        p.x=solid.x+solid.w+HALF_W;p.vx=Math.max(0,p.vx);
-      }else if(previousY+HALF_H<=previousSolidY+4&&p.vy>0){
-        p.y=solid.y-HALF_H;p.vy=0;p.onGround=true;p.groundId=solid.id;
-      }else if(previousY-HALF_H>=previousSolidY+solid.h-4&&p.vy<0){
-        p.y=solid.y+solid.h+HALF_H;p.vy=0;p.jumpBuffer=0;
-      }
+      if(previousX+HALF_W<=previousSolidX+4){p.x=solid.x-HALF_W;p.vx=Math.min(0,p.vx);}
+      else if(previousX-HALF_W>=previousSolidX+solid.w-4){p.x=solid.x+solid.w+HALF_W;p.vx=Math.max(0,p.vx);}
+      else if(previousY+HALF_H<=previousSolidY+4&&p.vy>0){p.y=solid.y-HALF_H;p.vy=0;p.onGround=true;p.groundId=solid.id;}
+      else if(previousY-HALF_H>=previousSolidY+solid.h-4&&p.vy<0){p.y=solid.y+solid.h+HALF_H;p.vy=0;p.jumpBuffer=0;}
     }
   }
 
