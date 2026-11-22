@@ -23,7 +23,9 @@ async function waitForPublishedClient() {
           html.includes('id="mobilePauseBtn"') &&
           html.includes("if(!mobile||mode!=='playing')") &&
           html.includes("getOnlinePlayers(){return Array.from({length:activePlayerCount}") &&
-          html.includes("async function refreshMatchFriendTargets()")) return;
+          html.includes("async function refreshMatchFriendTargets()") &&
+          html.includes("async function refreshMatchMailbox()") &&
+          html.includes('id="matchMailbox"')) return;
       }
     } catch {}
     await sleep(2500);
