@@ -496,8 +496,9 @@ body.argentina-mode #menuScreen{background:linear-gradient(180deg,#75bde9 0 32%,
 
 <section class="screen" id="settingsScreen" aria-label="Settings"><div class="full-panel"><div class="eyebrow">GAME SETTINGS</div><h2>Settings</h2><div class="setting-row"><label for="fovSlider">Field of view <b id="fovValue">100</b></label><input id="fovSlider" type="range" min="50" max="200" value="100" step="5"></div><p>100 is the close default view. The camera only widens a little to keep nearby runners in frame; distant runners do not force a huge zoom-out.</p><div class="setting-row"><label for="settingsLanguage">Language</label><select id="settingsLanguage"><option value="en">English</option><option value="es">Español (España)</option><option value="fr">Français</option><option value="pt">Português</option><option value="it">Italiano</option><option value="zh">中文</option><option value="arg">Argentino 🇦🇷</option></select></div><div class="setting-row"><label for="settingsMusicVolume">Music volume <b id="settingsMusicValue">65%</b></label><input id="settingsMusicVolume" type="range" min="0" max="100" step="1" value="65"></div><button class="secondary-btn" id="settingsMusicToggle">MUSIC: ON</button><div class="music-indicator" id="settingsMusicStatus">ORIGINAL MAP SOUNDTRACK</div><button class="secondary-btn" id="resetWinsBtn">RESET ALL WIN COUNTERS</button><div class="result-actions"><button class="primary-small" id="backSettingsBtn">BACK TO TITLE</button></div></div></section>
 <section class="screen" id="tournamentScreen" aria-label="Tournament setup"><div class="full-panel"><div class="eyebrow">TAG! WORLD CUP</div><h2>Tournaments</h2><p>Build a local elimination bracket. Pick a field size and decide how each duel is judged.</p><div class="setting-row"><label for="tournamentSize">Tournament size</label><select id="tournamentSize"><option value="4">4 groups · 8 players</option><option value="6">6 groups · 12 players</option><option value="8">8 groups · 16 players</option></select></div><div class="setting-row"><label for="tournamentRule">Duel winner</label><select id="tournamentRule"><option value="points">Most points</option><option value="untagged">Player who avoids the tag</option></select></div><div class="setting-row"><label for="tournamentModifier">Tournament modifiers · up to 3</label><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;width:65%"><select id="tournamentModifier"><option value="none">Slot 1 · None</option><option value="doublejump">Double jump</option><option value="superspeed">Speed boost</option><option value="decoys">Decoys</option><option value="chained">Chained</option><option value="sentinels">Sentinels</option><option value="parry">Parry</option><option value="munci">Angry Munci</option></select><select id="tournamentModifier2"><option value="none">Slot 2 · None</option><option value="doublejump">Double jump</option><option value="superspeed">Speed boost</option><option value="decoys">Decoys</option><option value="chained">Chained</option><option value="sentinels">Sentinels</option><option value="parry">Parry</option><option value="munci">Angry Munci</option></select><select id="tournamentModifier3"><option value="none">Slot 3 · None</option><option value="doublejump">Double jump</option><option value="superspeed">Speed boost</option><option value="decoys">Decoys</option><option value="chained">Chained</option><option value="sentinels">Sentinels</option><option value="parry">Parry</option><option value="munci">Angry Munci</option></select></div></div><p id="tournamentInfo">Create up to 8 local brackets. Assign entrants as humans or bots, then play matchups.</p><h3 class="subsection-title">Entrants · choose human or bot</h3><div id="tournamentEntrants" class="entrant-grid"></div><div class="result-actions"><button class="primary-small" id="createTournamentBtn">CREATE BRACKET</button><button class="secondary-btn" id="backTournamentBtn">BACK TO TITLE</button></div><div id="tournamentList" class="control-grid"></div><div id="tournamentBracket" class="tournament-bracket"></div><div id="tournamentMatchPanel" class="setting-row" style="display:none;flex-direction:column;align-items:stretch"><h3 id="matchTitle">Matchup</h3><p id="matchPlayers"></p><div class="result-actions"><button class="primary-small" id="playMatchA">PLAY AS PLAYER A</button><button class="primary-small" id="playMatchB">PLAY AS PLAYER B</button><button class="secondary-btn" id="coinFlipMatch">COIN FLIP</button></div><button class="secondary-btn" id="closeMatchPanel">CLOSE MATCH</button></div></div></section>
-<section class="screen" id="changelogScreen" aria-label="What's new"><div class="full-panel"><div class="eyebrow">ZYRON STUDIOS · COMPLETE UPDATE HISTORY</div><h2>TAG! Update Log · v4–v14</h2><p>Milestones from the original playable realms through the current V14 release. Older entries are historical highlights, not exhaustive patch-by-patch records.</p><div class="changelog-timeline" id="changelogTimeline">
-  <article class="changelog-entry current"><h3>V14 · RUNNER IDENTITY & PROFILE</h3><p>Added player-name editing directly from Profile with unique-name enforcement; empty profiles stay nameless until a name is chosen; fixed Profile navigation to the title and leaderboard; custom profile pictures can be uploaded from your computer; added the Changed and Shiny achievement for uploading a custom picture.</p></article>
+<section class="screen" id="changelogScreen" aria-label="What's new"><div class="full-panel"><div class="eyebrow">ZYRON STUDIOS · COMPLETE UPDATE HISTORY</div><h2>TAG! Update Log · v4–v15</h2><p>Milestones from the original playable realms through the current V15 release. Older entries are historical highlights, not exhaustive patch-by-patch records.</p><div class="changelog-timeline" id="changelogTimeline">
+  <article class="changelog-entry current"><h3>V15 · SMART BOTS & ARENA ARCHITECTURE</h3><p>Rebuilt bot movement around platform-to-platform route planning, smarter target prediction, evasive flanks, active patrols, tactical jumps and varied dashes. Arena platforms are now automatically repositioned to avoid overlapping structures, and decorative architecture uses distinct, spaced positions in each realm.</p></article>
+  <article class="changelog-entry"><h3>V14 · RUNNER IDENTITY & PROFILE</h3><p>Added player-name editing directly from Profile with unique-name enforcement; empty profiles stay nameless until a name is chosen; fixed Profile navigation to the title and leaderboard; custom profile pictures can be uploaded from your computer; added the Changed and Shiny achievement for uploading a custom picture.</p></article>
   <article class="changelog-entry"><h3>V4 · REALMS IN MOTION</h3><p>Original TAG! foundation, local chase gameplay and the first three arenas: Emberglass Foundry, Astral Archive and Drowned Observatory.</p></article>
   <article class="changelog-entry"><h3>V5 · THE REALM EXPANSION</h3><p>Expanded the world roster with Lunar Frontier, Greenland Trail, Neon City Rush, Overgrown Mall, Shadow Ninja Dojo, Sunscorch Canyon, Frostfall Peak, Cloudline Skyport and Ashen Caldera.</p></article>
   <article class="changelog-entry"><h3>V6 · READY ROOM & ROUND FLOW</h3><p>Added a player ready room, player count setup, bot support foundations, pre-round countdown and more defined round flow.</p></article>
@@ -1077,6 +1078,167 @@ function resize() {
 }
 window.addEventListener('resize', resize);
 
+
+function rawRealmPlatforms(id,worldW,viewH){
+  const layout=realmLayouts[id]||maps[id]?.platforms||[];
+  const extras=[[.045,.59,.055],[.115,.44,.065],[.205,.34,.075],[.275,.65,.055],[.335,.55,.07],[.405,.25,.06],[.465,.29,.075],[.535,.58,.06],[.595,.54,.075],[.665,.23,.065],[.735,.35,.075],[.805,.62,.055],[.865,.56,.07],[.925,.42,.06],[.965,.29,.035]];
+  return [
+    ...layout.map((d,i)=>({id:'platform-'+i,x:d[0]*worldW,y:d[1]*viewH,w:d[2]*worldW*.68,h:16,motion:(d[3]||0)*worldW,phase:i*1.73,oneWay:true,kind:'stone'})),
+    ...extras.map((d,i)=>({id:'extra-'+i,x:d[0]*worldW,y:d[1]*viewH,w:d[2]*worldW,h:13,motion:0,phase:i,oneWay:true,kind:'stone'}))
+  ];
+}
+function resolvePlatformPlacements(items,worldW,viewH){
+  const placed=[],xOffsets=[0,.055,-.055,.11,-.11,.17,-.17,.23,-.23,.30,-.30,.38,-.38,.46,-.46],
+    yOffsets=[0,-.055,.055,-.11,.11,-.17,.17,-.23,.23];
+  for(const item of items){
+    const motion=Math.abs(Number(item.motion)||0),reserveW=item.w+motion*2;
+    const baseX=item.x-motion,baseY=item.y;
+    const candidates=[];
+    for(const oy of yOffsets)for(const ox of xOffsets){
+      const x=clamp(baseX+ox*worldW,8,worldW-reserveW-8),y=clamp(baseY+oy*viewH,viewH*.145,floorY()-Math.max(48,item.h+20));
+      const cost=Math.abs(x-baseX)+Math.abs(y-baseY)*.72;
+      candidates.push({x,y,cost,reserveX:x,reserveW});
+    }
+    candidates.sort((a,b)=>a.cost-b.cost);
+    let chosen=null;
+    for(const c of candidates){
+      const collides=placed.some(p=>{
+        const horizontal=c.reserveX < p.reserveX+p.reserveW+18 && c.reserveX+c.reserveW+18 > p.reserveX;
+        const vertical=c.y < p.y+p.h+18 && c.y+item.h+18 > p.y;
+        return horizontal&&vertical;
+      });
+      if(!collides){chosen=c;break;}
+    }
+    if(chosen)placed.push({...item,x:chosen.x+motion,y:chosen.y,reserveX:chosen.reserveX,reserveW:chosen.reserveW});
+  }
+  return placed;
+}
+function scenicStructureX(index,count,margin=16){
+  if(count<=1)return width*.5;
+  let seed=0;for(let i=0;i<mapId.length;i++)seed=(seed+mapId.charCodeAt(i)*(i+11))%9973;
+  const gcd=(a,b)=>b?gcd(b,a%b):a;
+  let stride=(seed%count)||1;while(gcd(stride,count)!==1)stride++;
+  const slot=(index*stride+seed)%count,step=(width-margin*2)/count;
+  const jitter=Math.sin((seed+index*37)*.731)*step*.10;
+  return margin+(slot+.5)*step+jitter;
+}
+function botSurfaceNode(player){
+  const preferred=player.groundId||player.lastGroundId;
+  if(preferred){const found=platforms.find(surface=>surface.id===preferred);if(found)return found;}
+  const foot=player.y+HALF_H;
+  let best=null,bestScore=Infinity;
+  for(const surface of platforms){
+    if(surface.id==='ceiling')continue;
+    const horizontalGap=Math.max(0,surface.x-player.x,player.x-(surface.x+surface.w));
+    const verticalGap=surface.y-foot;
+    if(verticalGap < -30 || verticalGap > 270)continue;
+    const score=Math.abs(verticalGap)*1.12+horizontalGap*.8+(verticalGap<0?500:0);
+    if(score<bestScore){bestScore=score;best=surface;}
+  }
+  return best;
+}
+function botJumpReach(from,to,skill=0.7){
+  if(!from||!to)return false;
+  const rise=from.y-to.y;
+  if(rise>205||rise < -330)return false;
+  const deltaY=to.y-from.y,disc=790*790-2*1450*deltaY;
+  if(disc<0)return false;
+  const flight=(790+Math.sqrt(disc))/1450;
+  const gap=Math.max(0,to.x-(from.x+from.w),from.x-(to.x+to.w));
+  const reach=276*flight*.78+(skill>.68?115:skill>.4?65:25);
+  return gap<=reach;
+}
+function botRoute(from,to,skill){
+  if(!from||!to)return [];
+  if(from.id===to.id)return [from];
+  const nodes=platforms.filter(surface=>surface.id!=='ceiling'),dist=new Map(),previous=new Map(),unvisited=new Set(nodes.map(n=>n.id));
+  nodes.forEach(n=>dist.set(n.id,n.id===from.id?0:Infinity));
+  while(unvisited.size){
+    let current=null,best=Infinity;
+    for(const id of unvisited){const value=dist.get(id);if(value<best){best=value;current=id;}}
+    if(current===null||!Number.isFinite(best))break;
+    if(current===to.id)break;
+    unvisited.delete(current);
+    const source=nodes.find(n=>n.id===current);if(!source)continue;
+    for(const next of nodes){
+      if(!unvisited.has(next.id)||next.id===source.id||!botJumpReach(source,next,skill))continue;
+      const gap=Math.max(0,next.x-(source.x+source.w),source.x-(next.x+next.w));
+      const vertical=next.y-source.y;
+      const edge=1+gap/250+Math.max(0,-vertical)/230+Math.max(0,vertical)/520;
+      const alt=best+edge;
+      if(alt<dist.get(next.id)){dist.set(next.id,alt);previous.set(next.id,current);}
+    }
+  }
+  if(!Number.isFinite(dist.get(to.id)))return [];
+  const path=[to];let cursor=to.id;
+  while(cursor!==from.id){cursor=previous.get(cursor);if(!cursor)return [];const node=nodes.find(n=>n.id===cursor);if(!node)return [];path.unshift(node);}
+  return path;
+}
+function chooseBotPlatform(player,target,current,skill){
+  const nodes=platforms.filter(n=>n.id!=='ceiling'&&n.id!==current?.id);
+  const ranked=[];
+  for(const node of nodes){
+    const path=botRoute(current,node,skill);
+    if(path.length<2||path.length>5)continue;
+    const center=node.x+node.w*.5,away=Math.hypot(center-target.x,(node.y-target.y)*.72);
+    const elevation=clamp((target.y-node.y)/180,-1.2,1.2);
+    const edgeRisk=(center<worldWidth*.10||center>worldWidth*.90)?95:0;
+    const novelty=node.id===player.botLastWanderPlatform?130:0;
+    ranked.push({node,path,score:away+elevation*95-edgeRisk-novelty+rand(-55,55)});
+  }
+  ranked.sort((a,b)=>b.score-a.score);
+  if(!ranked.length)return null;
+  const pool=ranked.slice(0,Math.min(3,ranked.length));
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+function planBotMovement(player,target,isHunter,skill,level){
+  const current=botSurfaceNode(player);
+  if(!current||!target)return {dir:isHunter?Math.sign(target?.x-player.x):player.botDir||player.face,next:null};
+  const targetSurface=botSurfaceNode(target);
+  let destination=targetSurface;
+  if(!isHunter){
+    player.botWanderTimer=Math.max(0,(player.botWanderTimer||0)-.18);
+    const currentGoal=platforms.find(n=>n.id===player.botGoalPlatform);
+    if(player.botWanderTimer<=0||!currentGoal||currentGoal.id===current.id){
+      const choice=chooseBotPlatform(player,target,current,skill);
+      if(choice){destination=choice.node;player.botGoalPlatform=choice.node.id;player.botLastWanderPlatform=choice.node.id;}
+      player.botWanderTimer=rand(1.0,2.2)+(1-skill)*.8;
+    }else destination=currentGoal;
+  }
+  let path=botRoute(current,destination,skill),next=path.length>1?path[1]:null;
+  const predictedX=target.x+target.vx*(level==='extreme'?.82:level==='hard'?.58:level==='medium'?.34:.12);
+  let goalX=isHunter?predictedX:clamp(destination.x+destination.w*.5,HALF_W,worldWidth-HALF_W),dir=0,jump=false;
+  if(next){
+    const center=next.x+next.w*.5,gap=Math.max(0,next.x-(current.x+current.w),current.x-(next.x+next.w));
+    const sameLane=player.x+HALF_W>next.x&&player.x-HALF_W<next.x+next.w;
+    if(next.y<current.y-34||gap>22){
+      const toRight=center>current.x+current.w*.5;
+      const takeoff=toRight?current.x+current.w-HALF_W-12:current.x+HALF_W+12;
+      const landingX=clamp(isHunter?predictedX:center,next.x+HALF_W+5,next.x+next.w-HALF_W-5);
+      if(player.onGround&&!sameLane&&Math.abs(player.x-takeoff)>30){goalX=takeoff;}
+      else{goalX=landingX;if(player.onGround)jump=true;}
+    }else if(next.y>current.y+90&&gap>18){
+      goalX=clamp(center,next.x+HALF_W+5,next.x+next.w-HALF_W-5);
+    }else goalX=clamp(isHunter?predictedX:center,next.x+HALF_W+4,next.x+next.w-HALF_W-4);
+  }else if(isHunter){
+    goalX=predictedX;
+  }else{
+    const left=current.x+HALF_W+12,right=current.x+current.w-HALF_W-12;
+    if(Math.abs(player.x-goalX)<30||goalX<left||goalX>right)goalX=target.x>player.x?left:right;
+    if(Math.abs(player.x-goalX)<28)goalX=target.x>player.x?right:left;
+  }
+  const threatDistance=Math.hypot(target.x-player.x,(target.y-player.y)*.8);
+  if(!isHunter&&threatDistance<210&&player.onGround&&skill>.3&&Math.random()<skill*.35)jump=true;
+  if(next&&next.y<current.y-34&&player.onGround){
+    const sameLane=player.x+HALF_W>next.x&&player.x-HALF_W<next.x+next.w;
+    if(sameLane||Math.abs(player.x-goalX)<48)jump=true;
+  }
+  if(!isHunter&&Math.random()<skill*.12&&player.onGround&&threatDistance<300)goalX=clamp(player.x+(Math.random()<.5?-1:1)*rand(110,230),HALF_W,worldWidth-HALF_W);
+  dir=Math.sign(goalX-player.x);
+  if(!dir&&!isHunter)dir=Math.random()<.5?-1:1;
+  return {dir,jump,next,goalX,distance:threatDistance,destination};
+}
+
 function buildWorld() {
   cameraOffsetX=0;cameraOffsetY=height/2;cameraZoom=clamp(1.42*(100/fovValue),.48,2.45);
   const spec = maps[mapId];
@@ -1087,11 +1249,10 @@ function buildWorld() {
   }];
   const customLevel=userLevels.find(l=>l.id===mapId);
   if(customLevel){
-    customLevel.objects.filter(o=>o.type==='platform'||o.type==='structure').forEach((o,i)=>{const x=clamp(o.x/1200,0,1)*worldW,y=clamp(o.y/700,.08,.82)*height,w=clamp(o.w/1200,.02,.48)*worldW,h=clamp(o.h/700,.008,.26)*height;platforms.push({id:'user-'+i,x,baseX:x,y,w,h,kind:'stone',color:o.color||null,oneWay:o.type==='platform',motion:(o.motionAmp||0)/1200*worldW,speed:o.motionSpeed||.7,phase:i*.8,dx:0});});
+    const raw=customLevel.objects.filter(o=>o.type==='platform'||o.type==='structure').map((o,i)=>({id:'user-'+i,x:clamp(o.x/1200,0,1)*worldW,y:clamp(o.y/700,.08,.82)*height,w:clamp(o.w/1200,.02,.48)*worldW,h:clamp(o.h/700,.008,.26)*height,kind:'stone',color:o.color||null,oneWay:o.type==='platform',motion:(o.motionAmp||0)/1200*worldW,speed:o.motionSpeed||.7,phase:i*.8,dx:0}));
+    resolvePlatformPlacements(raw,worldW,height).forEach(item=>platforms.push({...item,baseX:item.x,dx:0}));
   }else{
-    (realmLayouts[mapId]||spec.platforms).forEach((d,i) => {platforms.push({id:'platform-'+i,x:d[0]*worldW,baseX:d[0]*worldW,y:d[1]*height,w:d[2]*worldW*.68,h:16,kind:'stone',oneWay:true,motion:d[3]*worldW,speed:rand(.55,.9),phase:i*1.73,dx:0});});
-    const extraLedges=[[.045,.59,.055],[.115,.44,.065],[.205,.34,.075],[.275,.65,.055],[.335,.55,.07],[.405,.25,.06],[.465,.29,.075],[.535,.58,.06],[.595,.54,.075],[.665,.23,.065],[.735,.35,.075],[.805,.62,.055],[.865,.56,.07],[.925,.42,.06],[.965,.29,.035]];
-    extraLedges.forEach((d,i)=>platforms.push({id:'extra-'+i,x:d[0]*worldW,baseX:d[0]*worldW,y:d[1]*height,w:d[2]*worldW,h:13,kind:'stone',oneWay:true,motion:0,speed:0,phase:i,dx:0}));
+    resolvePlatformPlacements(rawRealmPlatforms(mapId,worldW,height),worldW,height).forEach(item=>platforms.push({...item,baseX:item.x,speed:rand(.55,.9),dx:0}));
   }
   const topLimit=height*.075;
   platforms.push({id:'ceiling',x:0,baseX:0,y:topLimit,w:worldW,h:9,kind:'ceiling',oneWay:false,motion:0,phase:0,dx:0});
@@ -1145,7 +1306,7 @@ function spawnPlayers(count) {
       coyote:.12, jumpBuffer:0, walk:rand(0,TAU), runBlend:0,
       airTime:0, landSquash:0, blink:rand(1.5,4.5), blinkNow:0,
       cape:rand(0,TAU), tagPulse:0, trail:[], portalCooldown:0,
-      dashGlow:0, dashTimer:0, lastVy:0, dashCooldown:0, potionTime:0, bot:!!botPlayers[i], botThink:0, botDir:0, botJump:0, botTrick:0, extraJump:1,
+      dashGlow:0, dashTimer:0, lastVy:0, dashCooldown:0, potionTime:0, bot:!!botPlayers[i], botThink:0, botDir:0, botJump:0, botTrick:0, botWanderTimer:rand(.2,1.1),botGoalPlatform:null,botLastWanderPlatform:null,botDecision:0,extraJump:1,lastGroundId:'floor',
       stunTimer:0,rootedTimer:0,decoyCooldown:0,decoyFlash:0,invulnerable:0,sentinelCooldown:rand(0,2),sentinelSwing:0,parryCooldown:rand(0,2),parryGuard:0,chainPartner:-1
     });
   }
@@ -1418,51 +1579,42 @@ function movePlayer(p,dt) {
   const c = controls[p.id];
   let dir = (keysDown.has(c.right)?1:0) - (keysDown.has(c.left)?1:0);
   if(botPlayers[p.id]){
-    p.botThink-=dt;
+    p.botThink-=dt;p.botWanderTimer=Math.max(0,(p.botWanderTimer||0)-dt);
     if(p.botThink<=0){
       const level=(botLevels[p.id]||'medium').toLowerCase();
-      const skill={easy:.25,medium:.48,hard:.72,extreme:1}[level]||.48;
+      const skill={easy:.38,medium:.62,hard:.84,extreme:1}[level]||.62;
       const targets=players.filter(q=>q.id!==p.id&&!roundEliminated.has(q.id));
-      let target;if(gameMode==='infection'){if(infected.has(p.id))target=targets.filter(q=>!infected.has(q.id)).sort((a,b)=>Math.hypot(a.x-p.x,a.y-p.y)-Math.hypot(b.x-p.x,b.y-p.y))[0];else target=targets.filter(q=>infected.has(q.id)).sort((a,b)=>Math.hypot(a.x-p.x,a.y-p.y)-Math.hypot(b.x-p.x,b.y-p.y))[0];}else target=p.id===tagged?targets.sort((a,b)=>Math.hypot(a.x-p.x,a.y-p.y)-Math.hypot(b.x-p.x,b.y-p.y))[0]:players[tagged];
-      if(target){
-        const prediction=(level==='extreme'?.78:level==='hard'?.52:level==='medium'?.28:.08);
-        const predictedX=target.x+target.vx*prediction;
-        const dx=predictedX-p.x, dy=target.y-p.y, distance=Math.hypot(dx,dy);
-        const toward=Math.sign(dx)||p.face;
+      let target;
+      if(gameMode==='infection'){
+        if(infected.has(p.id))target=targets.filter(q=>!infected.has(q.id)).sort((a,b)=>Math.hypot(a.x-p.x,(a.y-p.y)*.8)-Math.hypot(b.x-p.x,(b.y-p.y)*.8))[0];
+        else target=targets.filter(q=>infected.has(q.id)).sort((a,b)=>Math.hypot(a.x-p.x,(a.y-p.y)*.8)-Math.hypot(b.x-p.x,(b.y-p.y)*.8))[0];
+      }else target=p.id===tagged?targets.sort((a,b)=>Math.hypot(a.x-p.x,(a.y-p.y)*.8)-Math.hypot(b.x-p.x,(b.y-p.y)*.8))[0]:players[tagged];
+      if(target&&!roundEliminated.has(target.id)){
         const isHunter=(gameMode==='infection'?infected.has(p.id):p.id===tagged);
-        p.botDir=isHunter?toward:-toward;
-        // Keep bots from clumping: spread laterally away from nearby players and avoid occupied lanes.
-        let separation=0;for(const other of players){if(other.id===p.id||roundEliminated.has(other.id))continue;const ddx=p.x-other.x,ddy=p.y-other.y,d=Math.hypot(ddx,ddy);if(d<125&&d>1)separation+=Math.sign(ddx)*(125-d)/125;}
-        if(Math.abs(separation)>.18&&(!isHunter||distance>95))p.botDir=Math.sign(p.botDir+Math.sign(separation)*.9)||Math.sign(separation);
-        const edgeLeft=p.x<145,edgeRight=worldWidth-p.x<145;
-        const closing=distance<260;
-        if(!isHunter&&level!=='easy'&&distance<330){const openLeft=p.x>155,openRight=worldWidth-p.x>155;const escapes=[openLeft?-1:0,openRight?1:0].filter(Boolean);if(escapes.length&&(Math.abs(dx)<190||closing))p.botDir=escapes.sort((a,b)=>Math.abs((p.x+a*230)-target.x)-Math.abs((p.x+b*230)-target.x))[0];}
-        // When cornered, choose the open side and juke hard rather than running into the wall.
-        if(!isHunter&&(edgeLeft||edgeRight))p.botDir=edgeLeft?1:-1;
-        if(!isHunter&&closing&&skill>.35){
-          const towardWall=(p.x<260&&p.botDir<0)||(worldWidth-p.x<260&&p.botDir>0);
-          if(towardWall)p.botDir=-p.botDir;
-          if(Math.random()<skill*(level==='extreme'?.65:level==='hard'?.48:.25))p.botDir=-p.botDir;
-        }
-        const aheadX=p.x+p.botDir*38;
-        const ledgeAhead=platforms.some(s=>s.id!=='floor'&&s.id!=='ceiling'&&aheadX>s.x-HALF_W&&aheadX<s.x+s.w+HALF_W&&s.y<p.y+38&&s.y>p.y-180);
-        const safeFloor=platforms.some(s=>s.id!=='ceiling'&&aheadX>s.x-HALF_W&&aheadX<s.x+s.w+HALF_W&&s.y>=p.y-35&&s.y<=p.y+100);
-        const needHeight=dy<-45&&Math.abs(dx)<260;
-        const urgent=distance<(isHunter?245:175);
-        const cornered=(edgeLeft&&p.botDir<0)||(edgeRight&&p.botDir>0);
-        if(p.onGround&&(needHeight||ledgeAhead||!safeFloor||urgent&&skill>.28||cornered))p.botJump=.14;
-        // Higher tiers chain jumps, use nearby orbs, and bait a pursuer with sharp reversals.
-        if(skill>.62&&orbs.length){const orb=orbs.filter(o=>o.cool<=0).sort((a,b)=>Math.hypot(a.x-p.x,a.y-p.y)-Math.hypot(b.x-p.x,b.y-p.y))[0];if(orb&&Math.abs(orb.x-p.x)<220&&Math.abs(orb.y-p.y)<165&&p.onGround)p.botJump=.16;}
-        if(!isHunter&&skill>.78&&closing&&p.onGround&&Math.random()<skill*.22)p.botJump=.15;
-        if(p.dashCooldown<=0&&distance>(isHunter?125:150)&&Math.random()<skill*(isHunter?.82:.58)){
-          const dashDir=p.botDir; p.dashTimer=.20; p.vx=dashDir*820;p.dashCooldown=25;p.dashGlow=1;burst(p.x,p.y,playerColors[p.id],7,95);
-        }
+        const plan=planBotMovement(p,target,isHunter,skill,level);
+        p.botDir=plan.dir||0;
+        if(plan.jump&&p.onGround)p.botJump=.16;
+        const distance=plan.distance??Math.hypot(target.x-p.x,(target.y-p.y)*.8);
+        // Bots vary between direct pressure, wide flanks and evasive platform rotations.
+        if(isHunter&&skill>.55&&distance>170&&p.dashCooldown<=0&&Math.random()<skill*.42){
+          const dashDir=p.botDir||Math.sign(target.x-p.x)||p.face;
+          p.dashTimer=.22;p.vx=dashDir*820;p.dashCooldown=rand(8,15);p.dashGlow=1;
+          burst(p.x,p.y,playerColors[p.id],9,110);
+        }else if(!isHunter&&skill>.48&&distance<340&&p.onGround&&Math.random()<skill*.18)p.botJump=.14;
+        const leftEdge=p.x<95,rightEdge=worldWidth-p.x<95;
+        if(leftEdge)p.botDir=1;if(rightEdge)p.botDir=-1;
+        // Re-evaluate often enough to react to moving targets, but preserve chosen routes.
+      }else if(!target){
+        // No active opponent: keep patrols alive rather than freezing at spawn.
+        if(!p.botPatrolTarget||Math.abs(p.x-p.botPatrolTarget)<30)p.botPatrolTarget=rand(worldWidth*.12,worldWidth*.88);
+        p.botDir=Math.sign(p.botPatrolTarget-p.x);
+        if(p.onGround&&Math.random()<.09)p.botJump=.14;
       }
-      p.botThink=level==='easy'?.28:level==='medium'?.19:level==='hard'?.125:.085;
+      p.botThink=level==='easy'?.22:level==='medium'?.15:level==='hard'?.105:.075;
     }
     dir=p.botDir;
-    if(dir>0&&worldWidth-p.x<105)dir=-1;else if(dir<0&&p.x<105)dir=1;
-    if(p.botJump>0){p.jumpBuffer=.16;p.botJump=0;}
+    if(dir>0&&worldWidth-p.x<70)dir=-1;else if(dir<0&&p.x<70)dir=1;
+    if(p.botJump>0&&p.onGround){p.jumpBuffer=.16;p.botJump=0;}
   }
   if(p.stunTimer>0){p.stunTimer=Math.max(0,p.stunTimer-dt);dir=0;p.jumpBuffer=0;}
   if(p.rootedTimer>0){p.rootedTimer=Math.max(0,p.rootedTimer-dt);dir=0;p.jumpBuffer=0;}
@@ -1561,7 +1713,7 @@ function movePlayer(p,dt) {
       const impact=p.vy;
       p.vy=0;
       p.onGround=true;
-      p.groundId=landing.id;p.extraJump=1;
+      p.groundId=landing.id;p.lastGroundId=landing.id;p.extraJump=1;
       if(!wasGrounded && impact>180) {
         p.landSquash=1;
         burst(p.x,p.y+HALF_H,'#dcebe9',6,65);
@@ -2257,7 +2409,8 @@ window.TAGOnlineHooks={
   },
   endMatch(){localBotMatchActive=false;onlineActive=false;onlineIsHost=false;onlineMatchId=null;if($('onlineChatToggle'))$('onlineChatToggle').style.display='none';if($('matchChatPanel'))$('matchChatPanel').style.display='none';activePlayerCount=4;botPlayers=[];keysDown.clear();},
   getBotPlayers(){return botPlayers.slice(0,activePlayerCount);},
-  getPlayerStates(){return players.slice(0,activePlayerCount).map(p=>({id:p.id,x:p.x/worldWidth,y:p.y/height,vy:p.vy,onGround:p.onGround,isBot:!!botPlayers[p.id]}));},
+  getPlayerStates(){return players.slice(0,activePlayerCount).map(p=>({id:p.id,x:p.x/worldWidth,y:p.y/height,vx:p.vx,vy:p.vy,onGround:p.onGround,groundId:p.groundId,isBot:!!botPlayers[p.id]}));},
+  getMapLayoutDiagnostics(){return Object.keys(realmLayouts).map(id=>{const raw=rawRealmPlatforms(id,worldWidth,height),placed=resolvePlatformPlacements(raw,worldWidth,height);let overlaps=0;for(let i=0;i<placed.length;i++)for(let j=i+1;j<placed.length;j++){const a=placed[i],b=placed[j],horizontal=a.reserveX<b.reserveX+b.reserveW+18&&a.reserveX+a.reserveW+18>b.reserveX,vertical=a.y<b.y+b.h+18&&a.y+a.h+18>b.y;if(horizontal&&vertical)overlaps++;}return {map:id,requested:raw.length,placed:placed.length,overlaps};});},
   getMatchId(){return onlineMatchId;},
   isLocalBotMatch(){return localBotMatchActive;},
   leaveLocalBotMatch(){if(!localBotMatchActive)return false;localBotMatchActive=false;mode='menu';keysDown.clear();stopMapMusic();activeScreen('online');return true;},
