@@ -530,27 +530,35 @@ try {
     "The fallback bot was not simulated locally.");
   results.push("PASS: Quick Match timeout starts a local-physics bot match with no ranked server match");
 
-  // V15: verify local hard-bot traversal on the normal-clock second browser context.
-  // Bring this separate browser context to the foreground first: background tabs can
-  // throttle requestAnimationFrame, which otherwise makes a healthy game clock look frozen.
-  await second.page.bringToFront();
-  await second.page.evaluate(() => window.TAGOnlineHooks?.startLocalBotMatch?.({
+  // V15: verify local hard-bot traversal in a fresh, dedicated normal-clock browser page.
+  // A separate context avoids hidden-tab throttling and visibility state left by online play.
+  const localBotContext = await browser.newContext();
+  contexts.push(localBotContext);
+  const localBotPage = await localBotContext.newPage();
+  localBotPage.__e2eDiagnostics = [];
+  localBotPage.on("console", message => { if (message.type() === "error") localBotPage.__e2eDiagnostics.push("console: " + message.text()); });
+  localBotPage.on("pageerror", error => localBotPage.__e2eDiagnostics.push("pageerror: " + String(error?.stack || error)));
+  await localBotPage.goto(SITE_URL, { waitUntil: "domcontentloaded", timeout: 45000 });
+  await localBotPage.waitForFunction(() => typeof window.TAGOnlineHooks?.startLocalBotMatch === "function", null, { timeout });
+  await localBotPage.bringToFront();
+  await localBotPage.waitForFunction(() => document.visibilityState === "visible", null, { timeout: 5000 });
+  await localBotPage.evaluate(() => window.TAGOnlineHooks.startLocalBotMatch({
     playerName: "QA HUMAN", mapId: "forge", gameMode: "classic",
     roundLength: 180, modifiers: [], botLevel: "hard"
   }));
-  await waitFor(second.page,
+  await waitFor(localBotPage,
     () => window.TAGOnlineHooks?.getBotDebug?.()?.mode === "playing" &&
       window.TAGOnlineHooks?.isLocalBotMatch?.() === true,
     "V15 local bot round to enter active play",
     12000);
-  const localClockStart = await second.page.evaluate(() => ({
+  const localClockStart = await localBotPage.evaluate(() => ({
     display: (document.querySelector("#timer")?.textContent || "").trim(),
     remaining: Number(window.TAGOnlineHooks?.getHostState?.()?.remaining)
   }));
-  await second.page.evaluate(start => { window.__tagBotTimerStart = start; }, localClockStart);
-  const botStart = await second.page.evaluate(() =>
+  await localBotPage.evaluate(start => { window.__tagBotTimerStart = start; }, localClockStart);
+  const botStart = await localBotPage.evaluate(() =>
     window.TAGOnlineHooks?.getPlayerStates?.()?.find(player => player.isBot) || null);
-  await waitFor(second.page, () => {
+  await waitFor(localBotPage, () => {
     const state = window.TAGOnlineHooks?.getHostState?.();
     const display = (document.querySelector("#timer")?.textContent || "").trim();
     const start = window.__tagBotTimerStart;
@@ -559,14 +567,14 @@ try {
       display !== start.display;
   }, "V15 local bot round timer to advance on the normal animation clock", 12000);
   await sleep(2200);
-  const botEnd = await second.page.evaluate(() =>
+  const botEnd = await localBotPage.evaluate(() =>
     window.TAGOnlineHooks?.getPlayerStates?.()?.find(player => player.isBot) || null);
   assert(botStart && botEnd && Math.hypot(botEnd.x - botStart.x, botEnd.y - botStart.y) > 0.012,
-    "V15 hard bot did not traverse the arena during active play. Start=" + JSON.stringify(botStart) + " End=" + JSON.stringify(botEnd) + " Debug=" + JSON.stringify(await second.page.evaluate(() => window.TAGOnlineHooks?.getBotDebug?.())));
+    "V15 hard bot did not traverse the arena during active play. Start=" + JSON.stringify(botStart) + " End=" + JSON.stringify(botEnd) + " Debug=" + JSON.stringify(await localBotPage.evaluate(() => window.TAGOnlineHooks?.getBotDebug?.())));
   assert(botEnd.y > 0.10 && botEnd.y < 0.96,
     "V15 hard bot moved outside the playable arena.");
-  await second.page.evaluate(() => window.TAGOnlineHooks?.leaveLocalBotMatch?.());
-  await second.page.evaluate(() => window.TAGAppScreens?.show("online"));
+  await localBotPage.evaluate(() => window.TAGOnlineHooks?.leaveLocalBotMatch?.());
+  await localBotPage.evaluate(() => window.TAGAppScreens?.show("online"));
   results.push("PASS: V15 hard bot uses active platform navigation and moves across the arena");
 
   // 7. A published community map is searchable and starts with three replaceable bots.
