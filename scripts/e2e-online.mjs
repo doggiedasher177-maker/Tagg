@@ -367,6 +367,8 @@ try {
     const firstMapState = await waitForMapState(() => mapStateA,
       state => Array.isArray(state.players) && state.players.length === 4,
       "a public map match with one human and three bots");
+    assert(firstMapState.public_map === true && firstMapState.bot_match === true,
+      "The server did not mark this as an online bot match. State=" + JSON.stringify(firstMapState));
     assert(firstMapState.players.filter(player => player.is_bot).length === 3,
       "A new public map match did not fill all three open slots with bots.");
     assert(firstMapState.players.filter(player => player.is_bot).every(player => Math.abs(Number(player.y) - 0.82) < 0.025),
@@ -381,7 +383,7 @@ try {
       const after = serverBotEnds.find(player => player.user_id === before.id);
       return after && Number(after.bot_ai_ticks || 0) > before.aiTicks &&
         Math.hypot(Number(after.x) - before.x, Number(after.y) - before.y) > 0.006;
-    }), "V15 online public-map bots did not navigate their arena platforms. Starts=" + JSON.stringify(serverBotStarts) + " Ends=" + JSON.stringify(serverBotEnds));
+    }), "V15 online public-map bots did not navigate their arena platforms. Flags=" + JSON.stringify({public_map:mapStateA.public_map,bot_match:mapStateA.bot_match}) + " Starts=" + JSON.stringify(serverBotStarts) + " Ends=" + JSON.stringify(serverBotEnds));
     results.push("PASS: V15 online public-map bots actively navigate and move between arena locations");
     await mapSocketB.joinMatch(matchId);
     const replacementState = await waitForMapState(() => mapStateA,
