@@ -16,7 +16,14 @@ async function waitForPublishedClient() {
       const response = await fetch(SITE_URL, { cache: "no-store", signal: AbortSignal.timeout(12000) });
       if (response.ok) {
         const html = await response.text();
-        if (html.includes("const setButtons=on=>{[") && html.includes("async function responseErrorMessage(error){") && html.includes("nextSocket.rpc('tag_online_presence','{}')") && html.includes("oldSocket.rpc('tag_online_leave','{}')") && html.includes("getBotPlayers(){return botPlayers.slice(0,activePlayerCount);}") && html.includes("getMatchId(){return onlineMatchId;}") && html.includes("startLocalBotMatch(info)") && html.includes('id="avatarsScreen"') && html.includes("function resolvePlatformPlacements") && html.includes("function botRoute") && html.includes("getMapLayoutDiagnostics()") && html.includes("V15 · SMART BOTS & ARENA ARCHITECTURE")) return;
+        if (html.includes("const setButtons=on=>{[") && html.includes("async function responseErrorMessage(error){") && html.includes("nextSocket.rpc('tag_online_presence','{}')") && html.includes("oldSocket.rpc('tag_online_leave','{}')") && html.includes("getBotPlayers(){return botPlayers.slice(0,activePlayerCount);}") && html.includes("getMatchId(){return onlineMatchId;}") && html.includes("startLocalBotMatch(info)") && html.includes('id="avatarsScreen"') && html.includes("function resolvePlatformPlacements") && html.includes("function botRoute") && html.includes("getMapLayoutDiagnostics()") &&
+          html.includes("V15 · SMART BOTS & ARENA ARCHITECTURE") &&
+          html.includes("V16 · MOBILE PLAY, SOLID ARENAS & FRIEND MAILBOX") &&
+          html.includes("TAG! — Zyron Studios v16 Online") &&
+          html.includes('id="mobilePauseBtn"') &&
+          html.includes("if(!mobile||mode!=='playing')") &&
+          html.includes("getOnlinePlayers(){return Array.from({length:activePlayerCount}") &&
+          html.includes("async function refreshMatchFriendTargets()")) return;
       }
     } catch {}
     await sleep(2500);
