@@ -840,8 +840,7 @@ function applyLanguage(){
     zh:{full:'⛶ 全屏',shop:'🛍 道具商店 · 即将推出',skins:'✦ 外观即将推出',shopTitle:'TAG! 道具商店',shopHeading:'道具商店即将推出',shopBody:'在线获胜获得的 Tagpoint 将会保存。皮肤、配件和其他外观物品将在未来更新中开放。',shopBack:'返回标题页',maps:'🌐 在线地图库',mapsInfo:'发布自己的竞技场，或搜索其他 TAG! 创作者分享的地图。先与三个机器人对战，其他玩家可以加入并替换机器人。',searchMaps:'搜索在线地图',publish:'在线发布',playBots:'开始游戏 · 3 个机器人',elo:'⚡ 全球 ELO 排行'},
     arg:{full:'⛶ PANTALLA COMPLETA',shop:'🛍 TIENDA · YA SE VIENE',skins:'✦ SKINS PRÓXIMAMENTE',shopTitle:'TIENDA DE TAG!',shopHeading:'LA TIENDA ESTÁ POR LLEGAR',shopBody:'Tus Tagpoints se guardan cada vez que ganás online. Los skins, accesorios y otros cosméticos llegan en una próxima actualización.',shopBack:'VOLVER AL TÍTULO',maps:'🌐 MAPAS ONLINE DE LA COMUNIDAD',mapsInfo:'Publicá tus arenas o buscá mapas de otros creadores de TAG!. Jugá contra tres bots; otros jugadores pueden ocupar sus lugares.',searchMaps:'BUSCAR MAPAS ONLINE',publish:'PUBLICAR ONLINE',playBots:'JUGAR · 3 BOTS',elo:'⚡ RANKING GLOBAL DE ELO'}
   }[language]||null;
-  const u=u15||u15en;
-  const x=u||({full:'⛶ FULLSCREEN',shop:'🛍 ITEM SHOP · COMING SOON',skins:'✦ SKINS COMING SOON',shopBack:'BACK TO TITLE',searchMaps:'SEARCH ONLINE MAPS',publish:'PUBLISH ONLINE',playBots:'PLAY · 3 BOTS',elo:'⚡ GLOBAL ELO RANKING'});
+  const x=u15||({full:'⛶ FULLSCREEN',shop:'🛍 ITEM SHOP · COMING SOON',skins:'✦ SKINS COMING SOON',shopBack:'BACK TO TITLE',searchMaps:'SEARCH ONLINE MAPS',publish:'PUBLISH ONLINE',playBots:'PLAY · 3 BOTS',elo:'⚡ GLOBAL ELO RANKING'});
   if($('menuFullscreenBtn'))$('menuFullscreenBtn').textContent=x.full;
   if($('itemShopBtn'))$('itemShopBtn').textContent=x.shop;
   if(document.querySelector('.skins-coming-soon'))document.querySelector('.skins-coming-soon').textContent=x.skins;
