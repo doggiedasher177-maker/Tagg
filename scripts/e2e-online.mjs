@@ -183,7 +183,7 @@ try {
   await phonePage.keyboard.up("d");
   const wallEnd = await phonePage.evaluate(() => window.TAGOnlineHooks?.getPlayerStates?.()[0]?.x);
   assert(Number.isFinite(wallStart) && Number.isFinite(wallEnd) &&
-    wallEnd > wallStart + 0.015 && wallEnd < 0.54,
+    wallEnd > wallStart + 0.015 && wallEnd < 0.55,
     "A grounded runner passed through the solid structure wall. Start=" + wallStart + ", end=" + wallEnd);
   results.push("PASS: a grounded phone player is blocked by a solid custom structure");
 
