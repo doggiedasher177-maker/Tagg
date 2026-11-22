@@ -256,11 +256,6 @@ try {
     },
     "the local bot to appear inside the arena rather than above the ceiling",
     12000);
-  await sleep(4200);
-  const botTimerBefore = (await first.page.locator("#timer").textContent()).trim();
-  await sleep(1400);
-  const botTimerAfter = (await first.page.locator("#timer").textContent()).trim();
-  assert(botTimerBefore !== botTimerAfter, "The local bot-match round timer did not advance.");
   assert(await first.page.evaluate(() => window.TAGOnlineHooks?.isLocalBotMatch?.() === true && window.TAGOnlineHooks?.isOnline?.() === false),
     "The fallback bot was not simulated locally.");
   results.push("PASS: Quick Match timeout starts a local-physics bot match with no ranked server match");
@@ -275,11 +270,14 @@ try {
       window.TAGOnlineHooks?.isLocalBotMatch?.() === true,
     "V15 local bot round to enter active play",
     12000);
+  const localTimerBefore = (await second.page.locator("#timer").textContent()).trim();
   const botStart = await second.page.evaluate(() =>
     window.TAGOnlineHooks?.getPlayerStates?.()?.find(player => player.isBot) || null);
   await sleep(2200);
   const botEnd = await second.page.evaluate(() =>
     window.TAGOnlineHooks?.getPlayerStates?.()?.find(player => player.isBot) || null);
+  const localTimerAfter = (await second.page.locator("#timer").textContent()).trim();
+  assert(localTimerBefore !== localTimerAfter, "V15 local bot round timer did not advance on the normal animation clock.");
   assert(botStart && botEnd && Math.hypot(botEnd.x - botStart.x, botEnd.y - botStart.y) > 0.012,
     "V15 hard bot did not traverse the arena during active play. Start=" + JSON.stringify(botStart) + " End=" + JSON.stringify(botEnd) + " Debug=" + JSON.stringify(await second.page.evaluate(() => window.TAGOnlineHooks?.getBotDebug?.())));
   assert(botEnd.y > 0.10 && botEnd.y < 0.96,
