@@ -448,7 +448,8 @@ function M.match_init(context, params)
     local choices = { "forge", "archive", "tidal", "moon", "greenland", "city", "mall", "dojo", "desert", "glacier", "skyport", "carnival", "volcano", "bombonera", "monumental", "hell", "heaven" }
     map = choices[math.random(1, #choices)]
   end
-  local length = clamp(math.floor(valid_number(params.length) or DEFAULT_LENGTH), 60, 1800)
+  local minimum_length = params.public_map == true and 32 or 60
+  local length = clamp(math.floor(valid_number(params.length) or DEFAULT_LENGTH), minimum_length, 1800)
   local state = {
     players = {},
     sessions = {},
