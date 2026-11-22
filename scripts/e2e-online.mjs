@@ -291,43 +291,6 @@ try {
   accounts.push({ deviceId: deviceB, username: nameB });
   results.push("PASS: the second player can claim a different username");
 
-  // V16 friend mailbox: send by username, decline, then send again and accept.
-  await first.page.locator("details.online-more summary").click();
-  await second.page.locator("details.online-more summary").click();
-  await first.page.locator("#friendName").fill(nameB);
-  await first.page.locator("#addFriendBtn").click();
-  await first.page.waitForFunction(name =>
-    [...document.querySelectorAll("#onlineFriendList .online-chat-line")].some(row => row.textContent.includes(name)),
-    nameB, { timeout });
-  await second.page.locator("#refreshFriendsBtn").click();
-  await second.page.waitForFunction(name =>
-    [...document.querySelectorAll("#onlineFriendList .online-chat-line")].some(row => row.textContent.includes(name)),
-    nameA, { timeout });
-  await second.page.locator("#onlineFriendList .online-chat-line")
-    .filter({ hasText: nameA + " · DECLINE" }).locator("button").click();
-  await first.page.locator("#refreshFriendsBtn").click();
-  await first.page.waitForFunction(name =>
-    ![...document.querySelectorAll("#onlineFriendList .online-chat-line")].some(row => row.textContent.includes(name)),
-    nameB, { timeout });
-
-  await first.page.locator("#friendName").fill(nameB);
-  await first.page.locator("#addFriendBtn").click();
-  await second.page.locator("#refreshFriendsBtn").click();
-  await second.page.waitForFunction(name =>
-    [...document.querySelectorAll("#onlineFriendList .online-chat-line")].some(row => row.textContent.includes(name)),
-    nameA, { timeout });
-  await second.page.locator("#onlineFriendList .online-chat-line")
-    .filter({ hasText: nameA }).first().locator("button").click();
-  await second.page.waitForFunction(name =>
-    [...document.querySelectorAll("#onlineFriendList .online-chat-line")].some(row =>
-      row.textContent.includes(name) && row.querySelector("button")?.textContent === "INVITE"),
-    nameA, { timeout });
-  await first.page.locator("#refreshFriendsBtn").click();
-  await first.page.waitForFunction(name =>
-    [...document.querySelectorAll("#onlineFriendList .online-chat-line")].some(row =>
-      row.textContent.includes(name) && row.querySelector("button")?.textContent === "INVITE"),
-    nameB, { timeout });
-  results.push("PASS: V16 friend requests are sent by username, appear in the mailbox, and can be declined or accepted");
 
   // 4. Existing accounts cannot rename themselves to another player's name.
   await first.page.locator("#backOnlineBtn").click();
@@ -367,6 +330,46 @@ try {
   assert(hostMatchId && guestMatchId === hostMatchId,
     "The host and joining player did not enter the same authoritative private room.");
   results.push("PASS: private room creation, share-code display, and second-player join");
+
+  // V16 friend request directly from a live online match, answered in the recipient's mailbox.
+  await first.page.locator("#onlineChatToggle").click();
+  await first.page.locator("#matchFriendToggleBtn").click();
+  await first.page.waitForFunction(name =>
+    [...document.querySelectorAll("#matchFriendList .online-chat-line")].some(row => row.textContent.includes(name)),
+    nameB, { timeout });
+  await first.page.locator("#matchFriendList .online-chat-line").filter({ hasText: nameB })
+    .locator("button").click();
+  await second.page.locator("#refreshFriendsBtn").click();
+  await second.page.waitForFunction(name =>
+    [...document.querySelectorAll("#onlineFriendList .online-chat-line")].some(row => row.textContent.includes(name + " · DECLINE")),
+    nameA, { timeout });
+  await second.page.locator("#onlineFriendList .online-chat-line")
+    .filter({ hasText: nameA + " · DECLINE" }).locator("button").click();
+  await first.page.locator("#refreshFriendsBtn").click();
+  await first.page.waitForFunction(name =>
+    ![...document.querySelectorAll("#onlineFriendList .online-chat-line")].some(row => row.textContent.includes(name)),
+    nameB, { timeout });
+
+  await first.page.locator("#matchFriendToggleBtn").click();
+  await first.page.locator("#matchFriendToggleBtn").click();
+  await first.page.locator("#matchFriendList .online-chat-line").filter({ hasText: nameB })
+    .locator("button").click();
+  await second.page.locator("#refreshFriendsBtn").click();
+  await second.page.waitForFunction(name =>
+    [...document.querySelectorAll("#onlineFriendList .online-chat-line")].some(row => row.textContent.includes(name)),
+    nameA, { timeout });
+  await second.page.locator("#onlineFriendList .online-chat-line")
+    .filter({ hasText: nameA }).first().locator("button").click();
+  await second.page.waitForFunction(name =>
+    [...document.querySelectorAll("#onlineFriendList .online-chat-line")].some(row =>
+      row.textContent.includes(name) && row.querySelector("button")?.textContent === "INVITE"),
+    nameA, { timeout });
+  await first.page.locator("#refreshFriendsBtn").click();
+  await first.page.waitForFunction(name =>
+    [...document.querySelectorAll("#onlineFriendList .online-chat-line")].some(row =>
+      row.textContent.includes(name) && row.querySelector("button")?.textContent === "INVITE"),
+    nameB, { timeout });
+  results.push("PASS: a player can send a friend request from a live online match, and the recipient can decline or accept it in the mailbox");
 
   // Ensure the room entered the authoritative round and the displayed timer advances.
   await sleep(4200);
