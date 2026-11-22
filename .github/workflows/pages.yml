@@ -7,6 +7,7 @@ on:
     paths:
       - "index.html"
       - ".github/workflows/pages.yml"
+      - "scripts/validate-client.mjs"
   workflow_dispatch:
 
 permissions:
@@ -28,10 +29,11 @@ jobs:
       - name: Check out TAG!
         uses: actions/checkout@v6
 
+      - name: Validate inline JavaScript
+        run: node scripts/validate-client.mjs
+
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
-        with:
-          enablement: true
 
       - name: Package the browser game
         run: |
