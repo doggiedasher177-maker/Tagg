@@ -2311,14 +2311,18 @@ import { Client } from 'https://esm.sh/@heroiclabs/nakama-js@2.8.0';
       return false;
     }
   })();
-  connectPromise=attempt.finally(()=>{connectPromise=null;});
-  return connectPromise;
+  let tracked;
+  tracked=attempt.finally(()=>{if(connectPromise===tracked)connectPromise=null;});
+  connectPromise=tracked;
+  return tracked;
 }
 async function disconnect(){
   // Capture the current connection before clearing UI state. Every cleanup operation
   // is isolated: a failed ticket removal must not prevent leaving the match/socket.
   const oldSocket=socket,oldClient=client,oldSession=session;
   connectionGeneration++;
+  // Let a fresh connect start immediately; the old promise only clears itself if still current.
+  connectPromise=null;
   const oldTicket=matchmakerTicket?.ticket,oldMatch=match?.match_id;
   queueActive=false;queueCancelRequested=true;queueGeneration++;
   clearQueueClocks();
