@@ -2177,7 +2177,9 @@ import { Client } from 'https://esm.sh/@heroiclabs/nakama-js@2.8.0';
  const rpcPayload=result=>{const payload=result?.payload??result??{};return typeof payload==='string'?JSON.parse(payload||'{}'):(payload||{});};
  const ROOM_CODE_ALPHABET='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
  function encodeRoomCode(matchId){
-   const hex=String(matchId||'').replace(/-/g,'').toLowerCase();
+   // Nakama runtime match IDs include the module suffix (for example .tagg).
+   // The share code encodes only the UUID portion; decodeRoomCode restores the suffix.
+   const hex=String(matchId||'').trim().replace(/\.tagg$/i,'').replace(/-/g,'').toLowerCase();
    if(!/^[0-9a-f]{32}$/.test(hex))throw new Error('The server returned an invalid room ID.');
    let value=BigInt('0x'+hex),encoded='';
    for(let i=0;i<26;i++){encoded=ROOM_CODE_ALPHABET[Number(value&31n)]+encoded;value>>=5n;}
@@ -2194,7 +2196,7 @@ import { Client } from 'https://esm.sh/@heroiclabs/nakama-js@2.8.0';
    for(const char of code){const digit=ROOM_CODE_ALPHABET.indexOf(char);if(digit<0)return null;value=(value<<5n)+BigInt(digit);}
    if(value>=(1n<<128n))return null;
    const hex=value.toString(16).padStart(32,'0');
-   return hex.slice(0,8)+'-'+hex.slice(8,12)+'-'+hex.slice(12,16)+'-'+hex.slice(16,20)+'-'+hex.slice(20);
+   return hex.slice(0,8)+'-'+hex.slice(8,12)+'-'+hex.slice(12,16)+'-'+hex.slice(16,20)+'-'+hex.slice(20)+'.tagg';
  }
  function clearQueueClocks(){if(queueTimer){clearTimeout(queueTimer);queueTimer=null;}if(queueInterval){clearInterval(queueInterval);queueInterval=null;}} function closeQuickMatchModal(){clearQueueClocks();const modal=$('quickMatchOverlay');if(modal)modal.classList.remove('show');}
  function showQuickMatchModal(title,message,subtext,buttons={}){const modal=$('quickMatchOverlay');if(!modal)return;$('quickMatchTitle').textContent=title;$('quickMatchMessage').textContent=message;$('quickMatchSubtext').textContent=subtext;$('queueSpinner').style.display=buttons.spinner===false?'none':'block';$('notifyFriendYesBtn').hidden=!buttons.yes;$('notifyFriendNoBtn').hidden=!buttons.no;$('keepQueueBtn').hidden=!buttons.keep;$('cancelQueueBtn').hidden=buttons.cancel===false;modal.classList.add('show');}
@@ -2443,13 +2445,20 @@ async function quickMatch(){
   const updateTimer=()=>{
     if(generation!==queueGeneration||!queueActive||queueCancelRequested||match){clearQueueClocks();return;}
     const left=Math.max(0,Math.ceil((queueDeadline-performance.now())/1000));
+    const label=left>0?('BOT MATCH IN '+left+' SECOND'+(left===1?'':'S')):'0 · STARTING BOT MATCH';
     const countdown=$('queueCountdown');
-    if(countdown&&left!==lastShown){countdown.textContent=left>0?('BOT MATCH IN '+left+' SECOND'+(left===1?'':'S')):'0 · STARTING BOT MATCH';lastShown=left;}
+    if(countdown&&left!==lastShown)countdown.textContent=label;
+    const subtext=$('quickMatchSubtext');
+    if(subtext)subtext.textContent=label+' · You can cancel the search at any time.';
+    lastShown=left;
     if(left===0){clearQueueClocks();void startBotFallback(generation);}
   };
   updateTimer();
   // A monotonic deadline means the visible counter catches up after browser tab throttling.
   queueInterval=window.setInterval(updateTimer,250);
+  // Independent deadline fallback: even if a browser throttles interval callbacks,
+  // the bot match still starts at the 30-second deadline.
+  queueTimer=window.setTimeout(()=>{if(generation===queueGeneration&&queueActive&&!queueCancelRequested&&!match)void startBotFallback(generation);},30000);
   try{
     status('Searching for 2–4 TAG! runners...');
     const properties={mode:pendingMode,map:pendingMap,length:String(pendingLength),modifiers:pendingModifiers.join(',')||'none'};
@@ -2640,16 +2649,25 @@ async function saveProfileName(){
       $('onlineName').removeAttribute('aria-readonly');
       await connect();
       if(!connected||!session)throw new Error('Could not create or connect to your TAG! account.');
-      const actual=session.username||username||requested;
-      if(actual.toLowerCase()!==requested.toLowerCase()&&actual!==requested){
-        $('profileNameInput').value=actual;
-        $('profileDisplayName').textContent=actual;
-        status('TAG! connected with your existing account name: '+actual+'.','connected');
-      }else{
-        $('profileNameInput').value=actual;
-        $('profileDisplayName').textContent=actual;
-        status('Your TAG! profile name is set to '+actual+'.','connected');
+      let actual=session.username||username||requested;
+      // Device authentication reuses an existing account and ignores a newly typed
+      // username. Apply the requested profile name after authentication as well.
+      if(actual!==requested){
+        await client.updateAccount(session,{username:requested});
+        await client.sessionRefresh(session);
+        const account=await client.getAccount(session);
+        actual=account?.user?.username||requested;
+        username=actual;
+        session.username=actual;
+        try{localStorage.setItem('tagOnlineName',actual);}catch(e){}
+        $('onlineName').value=actual;
+        $('onlineName').readOnly=true;
+        $('onlineName').setAttribute('aria-readonly','true');
       }
+      $('profileNameInput').value=actual;
+      $('profileDisplayName').textContent=actual;
+      if($('onlineProfileName'))$('onlineProfileName').textContent=actual;
+      status(actual===requested?'Your TAG! profile name is set to '+actual+'.':'TAG! connected with your existing account name: '+actual+'.','connected');
     }else{
       if(requested===session.username){
         status('That is already your current player name.','connected');
