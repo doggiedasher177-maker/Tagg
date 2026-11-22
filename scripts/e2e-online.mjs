@@ -18,8 +18,10 @@ async function waitForPublishedClient() {
         const html = await response.text();
         if (html.includes("const setButtons=on=>{[") && html.includes("async function responseErrorMessage(error){") && html.includes("nextSocket.rpc('tag_online_presence','{}')") && html.includes("oldSocket.rpc('tag_online_leave','{}')") && html.includes("getBotPlayers(){return botPlayers.slice(0,activePlayerCount);}") && html.includes("getMatchId(){return onlineMatchId;}") && html.includes("startLocalBotMatch(info)") && html.includes('id="avatarsScreen"') && html.includes("function resolvePlatformPlacements") && html.includes("function botRoute") && html.includes("getMapLayoutDiagnostics()") &&
           html.includes("V15 · SMART BOTS & ARENA ARCHITECTURE") &&
+          html.includes("V17 · COLLISION VERIFIED & IN-MATCH FRIENDS") &&
           html.includes("V16 · MOBILE PLAY, SOLID ARENAS & FRIEND MAILBOX") &&
-          html.includes("TAG! — Zyron Studios v16 Online") &&
+          html.includes("TAG! — Zyron Studios v17 Online") &&
+          html.includes('id="matchMailboxRefreshBtn"') &&
           html.includes('id="mobilePauseBtn"') &&
           html.includes("if(!mobile||mode!=='playing')") &&
           html.includes("getOnlinePlayers(){return Array.from({length:activePlayerCount}") &&
@@ -131,7 +133,7 @@ try {
   contexts.push(first.context, second.context);
   primaryPage = first.page;
 
-  // V16 touch controls: emulate a phone with three humans and one bot.
+  // V17 touch controls: emulate a phone with three humans and one bot.
   const phoneContext = await browser.newContext({
     viewport: { width: 390, height: 844 },
     deviceScaleFactor: 3,
@@ -162,7 +164,7 @@ try {
     "V16 round-start spawn positions were not clustered closely together.");
   assert((await phonePage.evaluate(() => window.TAGOnlineHooks?.getBotPlayers?.() || [])).filter(Boolean).length === 1,
     "V16 phone control check did not create exactly one bot player.");
-  results.push("PASS: V16 phone layout renders four touch directions for each human and none for the bot; round-start positions are clustered");
+  results.push("PASS: V17 phone layout renders four touch directions for each human and none for the bot; round-start positions are clustered");
 
   await phonePage.locator("#mobilePauseBtn").click();
   await phonePage.waitForFunction(() => document.querySelector("#mobileControls")?.style.display === "none" &&
@@ -171,7 +173,7 @@ try {
   await phonePage.locator("#resumeBtn").click();
   await phonePage.waitForFunction(() => document.querySelector("#mobileControls")?.style.display === "grid",
     null, { timeout: 5000 });
-  results.push("PASS: V16 touch controls hide while paused and return on resume");
+  results.push("PASS: V17 touch controls hide while paused and return on resume");
 
   // A grounded player must collide with a solid custom structure wall.
   const collisionMapId = "v16_collision_test";
@@ -228,7 +230,7 @@ try {
   assert(tabletLayout.document <= tabletLayout.viewport + 1 && tabletLayout.body <= tabletLayout.viewport + 1 &&
     tabletLayout.controls.length === 1 && tabletLayout.controls[0] === 4,
     "V16 tablet layout overflowed or rendered the wrong human touch controls: " + JSON.stringify(tabletLayout));
-  results.push("PASS: V16 tablet viewport fits without horizontal overflow and renders four buttons for the only human player");
+  results.push("PASS: V17 tablet viewport fits without horizontal overflow and renders four buttons for the only human player");
 
   // Online input on a phone should expose only the local human's control pad.
   await phonePage.evaluate(() => window.TAGOnlineHooks.startMatch({
@@ -245,8 +247,8 @@ try {
     document.querySelectorAll("#mobileControls .touch-player-pad").length === 1,
     null, { timeout: 20000 });
   const onlinePad = await phonePage.locator("#mobileControls .touch-player-label").innerText();
-  assert(onlinePad === "YOU", "V16 online phone controls were not restricted to the local player.");
-  results.push("PASS: V16 online phone controls are restricted to the local human player");
+  assert(onlinePad === "YOU", "V17 online phone controls were not restricted to the local player.");
+  results.push("PASS: V17 online phone controls are restricted to the local human player");
 
   // The title-menu cosmetic buttons must navigate to inert Coming Soon pages.
   await first.page.evaluate(() => window.TAGAppScreens?.show("menu"));
@@ -304,6 +306,41 @@ try {
   accounts.push({ deviceId: deviceB, username: nameB });
   results.push("PASS: the second player can claim a different username");
 
+  // Independent Nakama sessions verify server-side outgoing, incoming and mutual records.
+  const friendApiA = makeClient();
+  const friendApiB = makeClient();
+  const friendSessionA = await friendApiA.authenticateDevice(deviceA, false, nameA);
+  const friendSessionB = await friendApiB.authenticateDevice(deviceB, false, nameB);
+  const readFriendStates = async () => {
+    const [outgoingA, incomingA, mutualA, outgoingB, incomingB, mutualB] = await Promise.all([
+      friendApiA.listFriends(friendSessionA, 1, 100, null),
+      friendApiA.listFriends(friendSessionA, 2, 100, null),
+      friendApiA.listFriends(friendSessionA, 0, 100, null),
+      friendApiB.listFriends(friendSessionB, 1, 100, null),
+      friendApiB.listFriends(friendSessionB, 2, 100, null),
+      friendApiB.listFriends(friendSessionB, 0, 100, null)
+    ]);
+    const has = (rows, userId) => (rows.friends || []).some(row => row.user?.id === userId);
+    return {
+      aOutgoingB: has(outgoingA, friendSessionB.user_id),
+      aIncomingB: has(incomingA, friendSessionB.user_id),
+      aMutualB: has(mutualA, friendSessionB.user_id),
+      bOutgoingA: has(outgoingB, friendSessionA.user_id),
+      bIncomingA: has(incomingB, friendSessionA.user_id),
+      bMutualA: has(mutualB, friendSessionA.user_id)
+    };
+  };
+  const waitForFriendRecords = async (predicate, description, ms = 10000) => {
+    const deadline = Date.now() + ms;
+    let last = null;
+    while (Date.now() < deadline) {
+      last = await readFriendStates();
+      if (predicate(last)) return last;
+      await sleep(300);
+    }
+    throw new Error("Timed out waiting for Nakama friend records for " + description + ". Last state: " + JSON.stringify(last));
+  };
+
 
   // 4. Existing accounts cannot rename themselves to another player's name.
   await first.page.locator("#backOnlineBtn").click();
@@ -344,7 +381,7 @@ try {
     "The host and joining player did not enter the same authoritative private room.");
   results.push("PASS: private room creation, share-code display, and second-player join");
 
-  // V16 friend request directly from a live online match, answered in the recipient's mailbox.
+  // V17 friend request directly from a live online match, answered in the recipient's mailbox.
   await first.page.locator("#onlineChatToggle").click();
   await first.page.locator("#matchFriendToggleBtn").click();
   await first.page.waitForFunction(name =>
@@ -352,8 +389,12 @@ try {
     nameB, { timeout });
   await first.page.locator("#matchFriendList .online-chat-line").filter({ hasText: nameB })
     .locator("button").click();
+  const pendingRecords = await waitForFriendRecords(state => state.aOutgoingB && state.bIncomingA, "first outgoing/incoming request");
+  assert(!pendingRecords.aMutualB && !pendingRecords.bMutualA,
+    "A pending request was incorrectly recorded as an accepted friendship.");
   await second.page.locator("#onlineChatToggle").click();
   await second.page.locator("#matchMailboxToggleBtn").click();
+  await second.page.locator("#matchMailboxRefreshBtn").click();
   await second.page.waitForFunction(name =>
     [...document.querySelectorAll("#matchMailbox .online-chat-line")].some(row => row.textContent.includes(name)),
     nameA, { timeout });
@@ -361,13 +402,20 @@ try {
     .locator("button").filter({ hasText: "DECLINE" }).click();
   await second.page.waitForFunction(() => (document.querySelector("#matchMailbox")?.textContent || "").includes("empty"),
     null, { timeout });
+  const declinedRecords = await waitForFriendRecords(state => !state.aOutgoingB && !state.bIncomingA, "declined request cleanup");
+  assert(!declinedRecords.aMutualB && !declinedRecords.bMutualA,
+    "Declining a request incorrectly created a mutual friendship.");
 
   await first.page.locator("#matchFriendToggleBtn").click();
   await first.page.locator("#matchFriendToggleBtn").click();
   await first.page.locator("#matchFriendList .online-chat-line").filter({ hasText: nameB })
     .locator("button").click();
+  const resentRecords = await waitForFriendRecords(state => state.aOutgoingB && state.bIncomingA, "resent outgoing/incoming request");
+  assert(!resentRecords.aMutualB && !resentRecords.bMutualA,
+    "The resent request was incorrectly recorded as accepted before the recipient responded.");
   await second.page.locator("#matchMailboxToggleBtn").click();
   await second.page.locator("#matchMailboxToggleBtn").click();
+  await second.page.locator("#matchMailboxRefreshBtn").click();
   await second.page.waitForFunction(name =>
     [...document.querySelectorAll("#matchMailbox .online-chat-line")].some(row => row.textContent.includes(name)),
     nameA, { timeout });
@@ -375,7 +423,11 @@ try {
     .locator("button").filter({ hasText: "ACCEPT" }).click();
   await second.page.waitForFunction(() => (document.querySelector("#matchMailbox")?.textContent || "").includes("empty"),
     null, { timeout });
-  results.push("PASS: a player can send a friend request from a live online match, and the recipient can decline or accept it in the mailbox");
+  const acceptedRecords = await waitForFriendRecords(state => state.aMutualB && state.bMutualA, "mutual friendship after acceptance");
+  assert(!acceptedRecords.aOutgoingB && !acceptedRecords.bIncomingA &&
+    !acceptedRecords.bOutgoingA && !acceptedRecords.aIncomingB,
+    "Accepted friendship still appears as a pending request.");
+  results.push("PASS: V17 two-account friend flow verifies outgoing, incoming, declined, resent, accepted and mutual Nakama records from inside a live match");
 
   // Ensure the room entered the authoritative round and the displayed timer advances.
   await sleep(4200);
