@@ -67,6 +67,7 @@ if (
 if (
   !source.includes("V16 · MOBILE PLAY, SOLID ARENAS & FRIEND MAILBOX") ||
   !source.includes("function refreshMobileControls()") ||
+  !source.includes("id=\"mobilePauseBtn\"") ||
   !source.includes("await client.addFriends(session,[],[name])") ||
   !source.includes("MAILBOX · INCOMING FRIEND REQUESTS") ||
   !source.includes("refreshFriends().catch(()=>{})") ||
