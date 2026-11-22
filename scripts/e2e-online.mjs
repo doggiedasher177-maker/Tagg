@@ -16,7 +16,7 @@ async function waitForPublishedClient() {
       const response = await fetch(SITE_URL, { cache: "no-store", signal: AbortSignal.timeout(12000) });
       if (response.ok) {
         const html = await response.text();
-        if (html.includes("const setButtons=on=>{[") && html.includes("async function responseErrorMessage(error){") && html.includes("nextSocket.rpc('tag_online_presence','{}')") && html.includes("oldSocket.rpc('tag_online_leave','{}')") && html.includes("getBotPlayers(){return botPlayers.slice(0,activePlayerCount);}")) return;
+        if (html.includes("const setButtons=on=>{[") && html.includes("async function responseErrorMessage(error){") && html.includes("nextSocket.rpc('tag_online_presence','{}')") && html.includes("oldSocket.rpc('tag_online_leave','{}')") && html.includes("getBotPlayers(){return botPlayers.slice(0,activePlayerCount);}") && html.includes("getMatchId(){return onlineMatchId;}")) return;
       }
     } catch {}
     await sleep(2500);
@@ -165,9 +165,6 @@ try {
   assert(!(await first.page.locator("#copyRoomCodeBtn").isDisabled()), "Copy room code was not enabled.");
   await second.page.locator("#joinRoomCode").fill(roomCode);
   await second.page.locator("#joinRoomBtn").click();
-  await waitFor(second.page,
-    () => (document.querySelector("#onlineStatus")?.textContent || "").includes("server-authoritative countdown"),
-    "second player joining the private room");
   await waitFor(first.page,
     () => window.TAGOnlineHooks?.isOnline?.() === true,
     "private room starting for the host",
@@ -176,6 +173,10 @@ try {
     () => window.TAGOnlineHooks?.isOnline?.() === true,
     "private room starting for the joining player",
     12000);
+  const hostMatchId = await first.page.evaluate(() => window.TAGOnlineHooks?.getMatchId?.());
+  const guestMatchId = await second.page.evaluate(() => window.TAGOnlineHooks?.getMatchId?.());
+  assert(hostMatchId && guestMatchId === hostMatchId,
+    "The host and joining player did not enter the same authoritative private room.");
   results.push("PASS: private room creation, share-code display, and second-player join");
 
   // Ensure the room entered the authoritative round and the displayed timer advances.
