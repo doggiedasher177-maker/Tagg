@@ -2188,7 +2188,7 @@ import { Client } from 'https://esm.sh/@heroiclabs/nakama-js@2.8.0';
    const raw=String(input||'').trim();
    const uuid=raw.replace(/-/g,'').toLowerCase();
    if(/^[0-9a-f]{32}$/.test(uuid))return uuid.slice(0,8)+'-'+uuid.slice(8,12)+'-'+uuid.slice(12,16)+'-'+uuid.slice(16,20)+'-'+uuid.slice(20);
-   const code=raw.toUpperCase().replace(/^TAG[\\s-]*/,'').replace(/[\\s-]/g,'');
+   const code=raw.toUpperCase().replace(/^TAG[\s-]*/,'').replace(/[\s-]/g,'');
    if(code.length!==26)return null;
    let value=0n;
    for(const char of code){const digit=ROOM_CODE_ALPHABET.indexOf(char);if(digit<0)return null;value=(value<<5n)+BigInt(digit);}
@@ -2436,13 +2436,13 @@ async function quickMatch(){
   if(queueActive||matchmakerTicket?.ticket){showQuickMatchModal('FINDING OPPONENTS','You are already in the matchmaking queue.','Cancel the current search before starting another.',{keep:true});return;}
   if(match){status('Leave your current online room before starting Quick Match.','error');return;}
   readOnlineOptions();matchStarted=false;queueActive=true;queueCancelRequested=false;queueBotFallbackStarted=false;
-  const generation=++queueGeneration;queueDeadline=Date.now()+30000;
+  const generation=++queueGeneration;queueDeadline=performance.now()+30000;
   showQuickMatchModal('FINDING OPPONENTS','Searching for other TAG! players...','You can cancel the search at any time.',{spinner:true,keep:true});
   clearQueueClocks();
   let lastShown=-1;
   const updateTimer=()=>{
     if(generation!==queueGeneration||!queueActive||queueCancelRequested||match){clearQueueClocks();return;}
-    const left=Math.max(0,Math.ceil((queueDeadline-Date.now())/1000));
+    const left=Math.max(0,Math.ceil((queueDeadline-performance.now())/1000));
     const countdown=$('queueCountdown');
     if(countdown&&left!==lastShown){countdown.textContent=left>0?('BOT MATCH IN '+left+' SECOND'+(left===1?'':'S')):'0 · STARTING BOT MATCH';lastShown=left;}
     if(left===0){clearQueueClocks();void startBotFallback(generation);}
