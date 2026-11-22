@@ -489,14 +489,16 @@ try {
     display: (document.querySelector("#timer")?.textContent || "").trim(),
     remaining: Number(window.TAGOnlineHooks?.getHostState?.()?.remaining)
   }));
+  await second.page.evaluate(start => { window.__tagBotTimerStart = start; }, localClockStart);
   const botStart = await second.page.evaluate(() =>
     window.TAGOnlineHooks?.getPlayerStates?.()?.find(player => player.isBot) || null);
   await waitFor(second.page, () => {
     const state = window.TAGOnlineHooks?.getHostState?.();
     const display = (document.querySelector("#timer")?.textContent || "").trim();
-    return Number.isFinite(state?.remaining) &&
-      state.remaining < localClockStart.remaining - 0.75 &&
-      display !== localClockStart.display;
+    const start = window.__tagBotTimerStart;
+    return Number.isFinite(state?.remaining) && Number.isFinite(start?.remaining) &&
+      state.remaining < start.remaining - 0.75 &&
+      display !== start.display;
   }, "V15 local bot round timer to advance on the normal animation clock", 12000);
   await sleep(2200);
   const botEnd = await second.page.evaluate(() =>
