@@ -9,6 +9,12 @@ local LEADERBOARD_LOSSES = "tag_online_losses_v2"
 local LEADERBOARD_MATCHES = "tag_online_matches_v2"
 local LEADERBOARD_TAGS = "tag_online_tags_v2"
 local WEEKLY_TOURNAMENT = "tag_weekly_v2"
+local ONLINE_STREAM = {
+  mode = 100,
+  subject = "tag-online-global",
+  subcontext = "",
+  label = "TAG! Online Players"
+}
 
 local function clamp(value, low, high)
   return math.max(low, math.min(high, value))
@@ -650,6 +656,44 @@ local function create_private_match(context, payload)
   })
 end
 
+local function online_player_count()
+  local presences, err = nk.stream_user_list(ONLINE_STREAM, false, true)
+  if err then error(err) end
+  local unique = {}
+  for _, presence in ipairs(presences or {}) do
+    if presence.user_id then unique[presence.user_id] = true end
+  end
+  local count = 0
+  for _ in pairs(unique) do count = count + 1 end
+  return count
+end
+
+local function register_online_presence(context, payload)
+  if not context.user_id or not context.session_id then
+    error("A valid online session is required.")
+  end
+  local existing_ok, existing = pcall(nk.stream_user_get, context.user_id, context.session_id, ONLINE_STREAM)
+  if not existing_ok or not existing then
+    local joined, join_err = nk.stream_user_join(
+      context.user_id,
+      context.session_id,
+      ONLINE_STREAM,
+      false,
+      false,
+      "TAG! Online"
+    )
+    if not joined and join_err then error(join_err) end
+  end
+  return nk.json_encode({ online_count = online_player_count() })
+end
+
+local function unregister_online_presence(context, payload)
+  if context.user_id and context.session_id then
+    pcall(nk.stream_user_leave, context.user_id, context.session_id, ONLINE_STREAM)
+  end
+  return nk.json_encode({ online_count = online_player_count() })
+end
+
 local function create_tournament(context, payload)
   local options = {}
   if payload and payload ~= "" then options = nk.json_decode(payload) or {} end
@@ -708,6 +752,8 @@ nk.register_rpc(create_private_match, "tag_create_private_match")
 nk.register_rpc(create_tournament, "tag_create_tournament")
 nk.register_rpc(list_tournaments, "tag_list_tournaments")
 nk.register_rpc(start_tournament, "tag_start_tournament")
+nk.register_rpc(register_online_presence, "tag_online_presence")
+nk.register_rpc(unregister_online_presence, "tag_online_leave")
 
 nk.run_once(function(context)
   local leaderboard_ids = { LEADERBOARD_WINS, LEADERBOARD_LOSSES, LEADERBOARD_MATCHES, LEADERBOARD_TAGS }
