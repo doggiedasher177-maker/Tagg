@@ -24,6 +24,29 @@ local function valid_number(value)
   return n
 end
 
+local ALLOWED_MODIFIERS = {
+  doublejump = true, superspeed = true, decoys = true, chained = true,
+  sentinels = true, parry = true, munci = true
+}
+
+local function clean_modifiers(value)
+  local result, seen = {}, {}
+  if type(value) == "string" then
+    local parsed = {}
+    for item in string.gmatch(value, "[^,]+") do table.insert(parsed, item) end
+    value = parsed
+  end
+  if type(value) ~= "table" then return result end
+  for _, item in ipairs(value) do
+    local name = tostring(item):lower()
+    if ALLOWED_MODIFIERS[name] and not seen[name] and #result < 3 then
+      seen[name] = true
+      table.insert(result, name)
+    end
+  end
+  return result
+end
+
 local function ordered_players(state)
   local ids = {}
   for user_id, player in pairs(state.players) do
@@ -71,6 +94,8 @@ local function public_state(state)
   return {
     status = state.status,
     tournament_mode = state.tournament_mode or false,
+    bot_match = state.bot_match or false,
+    modifiers = state.modifiers or {},
     players = players,
     host_user_id = state.host_user_id,
     mode = state.mode,
@@ -289,7 +314,7 @@ end
 
 function M.match_init(context, params)
   params = params or {}
-  local mode = params.mode == "infection" and "infection" or "classic"
+  local mode = (params.mode == "infection" or params.mode == "hotpotato") and params.mode or "classic"
   local map = tostring(params.map or "random"):sub(1, 32)
   if map == "random" then
     local choices = { "forge", "archive", "tidal", "moon", "greenland", "city", "mall", "dojo", "desert", "glacier", "skyport", "carnival", "volcano", "bombonera", "monumental", "hell", "heaven" }
@@ -302,6 +327,8 @@ function M.match_init(context, params)
     order = {},
     expected_users = {},
     tournament_mode = params.tournament_mode == true,
+    bot_match = params.bot_match == true,
+    modifiers = clean_modifiers(params.modifiers),
     tournament_title = tostring(params.tournament_title or "Community Tournament"):sub(1, 32),
     target_count = params.tournament_mode == true and 4 or clamp(math.floor(valid_number(params.target_count) or 2), 2, MAX_PLAYERS),
     owner_id = params.owner_id,
@@ -379,6 +406,23 @@ function M.match_join(context, dispatcher, tick, state, presences)
     player.connected = true
     state.players[presence.user_id] = player
     state.sessions[presence.session_id] = presence.user_id
+  end
+
+  if state.bot_match then
+    local human_count, has_bot = 0, false
+    for _, player in pairs(state.players) do
+      if player and player.connected then
+        if player.is_bot then has_bot = true else human_count = human_count + 1 end
+      end
+    end
+    if human_count > 0 and not has_bot then
+      local bot_id = "tagbot_" .. tostring(state.match_id):gsub("[^%w]", ""):sub(1, 12)
+      state.players[bot_id] = {
+        user_id = bot_id, username = "ARENA BOT", is_bot = true,
+        connected = true, tags = 0, violations = 0,
+        x = 0.78, y = 0.7, vx = 0, vy = 0, face = -1
+      }
+    end
   end
 
   local ids = ordered_players(state)
@@ -484,7 +528,7 @@ function M.match_loop(context, dispatcher, tick, state, messages)
       nk.logger_info("TAG! authoritative round started: " .. tostring(context.match_id))
     end
   elseif state.status == "playing" then
-    if state.tournament_mode then
+    if state.tournament_mode or state.bot_match then
       for slot, user_id in ipairs(ordered_players(state)) do
         local bot = state.players[user_id]
         if bot and bot.is_bot then
@@ -634,15 +678,17 @@ end
 local function create_private_match(context, payload)
   local options = {}
   if payload and payload ~= "" then options = nk.json_decode(payload) or {} end
-  local mode = options.mode == "infection" and "infection" or "classic"
+  local mode = (options.mode == "infection" or options.mode == "hotpotato") and options.mode or "classic"
   local map = tostring(options.map or "random"):sub(1, 32)
   local length = clamp(math.floor(valid_number(options.length) or DEFAULT_LENGTH), 60, 1800)
+  local modifiers = clean_modifiers(options.modifiers)
   local match_id = nk.match_create("tag_match", {
     created_by = "private_room",
     owner_id = context.user_id,
     mode = mode,
     map = map,
     length = length,
+    modifiers = modifiers,
     target_count = 2
   })
   return nk.json_encode({
@@ -650,7 +696,32 @@ local function create_private_match(context, payload)
     owner_id = context.user_id,
     mode = mode,
     map = map,
-    length = length
+    length = length,
+    modifiers = modifiers
+  })
+end
+
+local function create_bot_match(context, payload)
+  local options = {}
+  if payload and payload ~= "" then options = nk.json_decode(payload) or {} end
+  local mode = (options.mode == "infection" or options.mode == "hotpotato") and options.mode or "classic"
+  local map = tostring(options.map or "random"):sub(1, 32)
+  local length = clamp(math.floor(valid_number(options.length) or DEFAULT_LENGTH), 60, 1800)
+  local modifiers = clean_modifiers(options.modifiers)
+  local match_id = nk.match_create("tag_match", {
+    created_by = "quick_match_bot_fallback",
+    owner_id = context.user_id,
+    mode = mode,
+    map = map,
+    length = length,
+    modifiers = modifiers,
+    bot_match = true,
+    target_count = 2
+  })
+  return nk.json_encode({
+    match_id = match_id, owner_id = context.user_id,
+    mode = mode, map = map, length = length,
+    modifiers = modifiers, bot_match = true
   })
 end
 
@@ -753,6 +824,7 @@ end
 
 nk.register_matchmaker_matched(matchmaker_matched)
 nk.register_rpc(create_private_match, "tag_create_private_match")
+nk.register_rpc(create_bot_match, "tag_create_bot_match")
 nk.register_rpc(create_tournament, "tag_create_tournament")
 nk.register_rpc(list_tournaments, "tag_list_tournaments")
 nk.register_rpc(start_tournament, "tag_start_tournament")
