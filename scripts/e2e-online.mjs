@@ -163,6 +163,77 @@ try {
     null, { timeout: 5000 });
   results.push("PASS: V16 touch controls hide while paused and return on resume");
 
+  // A grounded player must collide with a solid custom structure wall.
+  const collisionMapId = "v16_collision_test";
+  await phonePage.evaluate(mapId => {
+    const ok = window.TAGOnlineHooks.loadCustomMap({
+      id: mapId, name: "V16 Collision Test", description: "Temporary automated QA wall",
+      modifiers: [],
+      objects: [{ type: "structure", x: 520, y: 280, w: 90, h: 420 }]
+    });
+    if (!ok) throw new Error("Could not register the temporary collision test map.");
+    window.TAGOnlineHooks.startLocalBotMatch({ playerName: "QA", botLevel: "easy", mapId, roundLength: 120 });
+  }, collisionMapId);
+  await phonePage.waitForFunction(() => document.querySelector("#mobileControls")?.style.display === "grid",
+    null, { timeout: 20000 });
+  const wallStart = await phonePage.evaluate(() => window.TAGOnlineHooks?.getPlayerStates?.()[0]?.x);
+  await phonePage.keyboard.down("d");
+  await phonePage.waitForTimeout(1400);
+  await phonePage.keyboard.up("d");
+  const wallEnd = await phonePage.evaluate(() => window.TAGOnlineHooks?.getPlayerStates?.()[0]?.x);
+  assert(Number.isFinite(wallStart) && Number.isFinite(wallEnd) &&
+    wallEnd > wallStart && wallEnd < 0.45,
+    "A grounded runner passed through the solid structure wall. Start=" + wallStart + ", end=" + wallEnd);
+  results.push("PASS: a grounded phone player is blocked by a solid custom structure");
+
+  // Tablet viewport regression: controls render and the page does not overflow horizontally.
+  const tabletContext = await browser.newContext({
+    viewport: { width: 820, height: 1180 },
+    deviceScaleFactor: 2,
+    isMobile: true,
+    hasTouch: true
+  });
+  contexts.push(tabletContext);
+  const tabletPage = await tabletContext.newPage();
+  await tabletPage.goto(SITE_URL, { waitUntil: "domcontentloaded", timeout: 45000 });
+  await tabletPage.locator("#playMenuBtn").click();
+  await tabletPage.locator("#count").selectOption("2");
+  await tabletPage.locator("#botCount").selectOption("1");
+  await tabletPage.locator("#startBtn").click();
+  await tabletPage.locator('[data-ready="0"]').click();
+  await tabletPage.waitForFunction(() =>
+    document.querySelector("#mobileControls")?.style.display === "grid" &&
+    document.querySelectorAll("#mobileControls .touch-player-pad").length === 1,
+    null, { timeout: 20000 });
+  const tabletLayout = await tabletPage.evaluate(() => ({
+    viewport: window.innerWidth,
+    document: document.documentElement.scrollWidth,
+    body: document.body.scrollWidth,
+    controls: [...document.querySelectorAll("#mobileControls .touch-player-pad")].map(p => p.querySelectorAll(".touch-key").length)
+  }));
+  assert(tabletLayout.document <= tabletLayout.viewport + 1 && tabletLayout.body <= tabletLayout.viewport + 1 &&
+    tabletLayout.controls.length === 1 && tabletLayout.controls[0] === 4,
+    "V16 tablet layout overflowed or rendered the wrong human touch controls: " + JSON.stringify(tabletLayout));
+  results.push("PASS: V16 tablet viewport fits without horizontal overflow and renders four buttons for the only human player");
+
+  // Online input on a phone should expose only the local human's control pad.
+  await phonePage.evaluate(() => window.TAGOnlineHooks.startMatch({
+    localIndex: 2, isHost: false, matchId: "v16-touch-online-test", mapId: "forge",
+    players: [
+      { userId: "v16-test-a", username: "RUNNER A" },
+      { userId: "v16-test-b", username: "RUNNER B" },
+      { userId: "v16-test-c", username: "RUNNER C" },
+      { userId: "v16-test-d", username: "RUNNER D" }
+    ]
+  }));
+  await phonePage.waitForFunction(() =>
+    document.querySelector("#mobileControls")?.style.display === "grid" &&
+    document.querySelectorAll("#mobileControls .touch-player-pad").length === 1,
+    null, { timeout: 20000 });
+  const onlinePad = await phonePage.locator("#mobileControls .touch-player-label").innerText();
+  assert(onlinePad === "YOU", "V16 online phone controls were not restricted to the local player.");
+  results.push("PASS: V16 online phone controls are restricted to the local human player");
+
   // The title-menu cosmetic buttons must navigate to inert Coming Soon pages.
   await first.page.evaluate(() => window.TAGAppScreens?.show("menu"));
   await first.page.locator("#itemShopBtn").click();
