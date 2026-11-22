@@ -64,6 +64,18 @@ if (
   throw new Error("V15 bot pathfinding or non-overlapping arena layout features are missing.");
 }
 
+if (
+  !source.includes("V16 · MOBILE PLAY, SOLID ARENAS & FRIEND MAILBOX") ||
+  !source.includes("function refreshMobileControls()") ||
+  !source.includes("await client.addFriends(session,[],[name])") ||
+  !source.includes("MAILBOX · INCOMING FRIEND REQUESTS") ||
+  !source.includes("refreshFriends().catch(()=>{})") ||
+  !source.includes("if(solid.id==='floor'||p.potionTime>0) continue;") ||
+  source.includes("(p.id===tagged&&remaining<=10)")
+) {
+  throw new Error("V16 touch controls, friend mailbox, username request, or Green Drink collision guards are missing.");
+}
+
 const directory = join(tmpdir(), "tag-client-check-" + process.pid);
 mkdirSync(directory, { recursive: true });
 
