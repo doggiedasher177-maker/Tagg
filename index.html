@@ -2175,6 +2175,17 @@ import { Client } from 'https://esm.sh/@heroiclabs/nakama-js@2.8.0';
  async function refreshOnlinePlayerCount(){if(!connected||!client||!session)return;try{const data=rpcPayload(await client.rpc(session,'tag_online_count',{}));setOnlinePlayerCount(data.online_count);}catch(e){setOnlinePlayerCount('—');}}
 
  const rpcPayload=result=>{const payload=result?.payload??result??{};return typeof payload==='string'?JSON.parse(payload||'{}'):(payload||{});};
+ async function responseErrorMessage(error){
+  let message=String(error?.message||error||'Unknown error');
+  if(error&&typeof error.clone==='function'&&Number.isFinite(Number(error.status))){
+    try{
+      const payload=await error.clone().json();
+      message=String(payload?.message||payload?.error||message);
+    }catch(ignore){}
+    if(Number(error.status)===409&&!/username/i.test(message))message='Username is already in use.';
+  }
+  return message;
+ }
  const ROOM_CODE_ALPHABET='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
  function encodeRoomCode(matchId){
    // Nakama runtime match IDs include the module suffix (for example .tagg).
@@ -2324,7 +2335,7 @@ import { Client } from 'https://esm.sh/@heroiclabs/nakama-js@2.8.0';
       if(generation===connectionGeneration){
         if(socket===nextSocket){socket=null;session=null;client=null;}
         connected=false;setButtons(false);
-        const message=String(e.message||e);
+        const message=await responseErrorMessage(e);
         if(/username/i.test(message)&&/(taken|in use|exist|already)/i.test(message)){
           if($('onlineName')){$('onlineName').readOnly=false;$('onlineName').value='';}
           try{localStorage.removeItem('tagOnlineName');}catch(ignore){}
@@ -2695,7 +2706,7 @@ async function saveProfileName(){
     }
     if($('profileConnectionState'))$('profileConnectionState').textContent='CONNECTED · '+(session?.username||username);
   }catch(e){
-    const message=String(e?.message||e);
+    const message=await responseErrorMessage(e);
     if(/username.{0,100}(already|taken|in use|exist|duplicate)|(already|taken|in use|duplicate).{0,100}username/i.test(message)||Number(e?.status)===409||Number(e?.code)===409){
       const nameError='That name is already taken. Your current username has not changed.';
       if($('profileConnectionState'))$('profileConnectionState').textContent=nameError;
