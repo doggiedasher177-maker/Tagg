@@ -169,6 +169,8 @@ local function public_state(state)
       connected = true,
       violations = p.violations or 0,
       is_bot = p.is_bot or false,
+      bot_ai_ticks = p.ai_ticks or 0,
+      bot_goal_surface = p.goal_surface,
       tags = p.tags or 0
     }
   end
@@ -550,6 +552,9 @@ local function bot_find_path(surfaces, start_surface, goal_surface)
 end
 
 local function update_server_bot(bot, target, is_hunter, state, surfaces, dt)
+  bot.ai_ticks = (bot.ai_ticks or 0) + 1
+  bot.ai_target = target and target.user_id or nil
+  bot.ai_hunter = is_hunter
   bot.x = clamp(tonumber(bot.x) or 0.5, 0.02, 0.98)
   bot.y = clamp(tonumber(bot.y) or 0.819, 0.05, 0.96)
   bot.vx, bot.vy = tonumber(bot.vx) or 0, tonumber(bot.vy) or 0
@@ -680,6 +685,19 @@ local function update_match_bots(state, dt)
         end
       end
       update_server_bot(bot, target, is_hunter, state, surfaces, dt)
+      if bot.ai_ticks == 1 then
+        nk.logger_info("TAG! V15 bot AI active: match=" .. tostring(state.match_id) .. " bot=" .. tostring(user_id) .. " target=" .. tostring(bot.ai_target) .. " hunter=" .. tostring(bot.ai_hunter))
+      end
+    end
+  end
+  state.bot_trace_elapsed = (state.bot_trace_elapsed or 0) + dt
+  if state.bot_trace_elapsed >= 2 then
+    state.bot_trace_elapsed = 0
+    for _, user_id in ipairs(ids) do
+      local bot = state.players[user_id]
+      if bot and bot.is_bot then
+        nk.logger_info("TAG! V15 bot position: match=" .. tostring(state.match_id) .. " bot=" .. tostring(user_id) .. " ai_ticks=" .. tostring(bot.ai_ticks) .. " target=" .. tostring(bot.ai_target) .. " goal=" .. tostring(bot.goal_surface) .. " x=" .. tostring(bot.x) .. " y=" .. tostring(bot.y) .. " vx=" .. tostring(bot.vx) .. " vy=" .. tostring(bot.vy))
+      end
     end
   end
 end
