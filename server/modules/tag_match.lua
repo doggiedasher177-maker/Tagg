@@ -1186,7 +1186,7 @@ local function start_public_map_match(context, payload)
     public_map_key = key,
     mode = "classic",
     map = level.id,
-    length = 120,
+    length = clamp(math.floor(valid_number(request.length) or 120), 32, 180),
     target_count = MAX_PLAYERS
   })
   if not match_id then error("The server could not create a public map match.") end
