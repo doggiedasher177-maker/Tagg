@@ -16,7 +16,7 @@ async function waitForPublishedClient() {
       const response = await fetch(SITE_URL, { cache: "no-store", signal: AbortSignal.timeout(12000) });
       if (response.ok) {
         const html = await response.text();
-        if (html.includes("const setButtons=on=>{[") && html.includes("async function responseErrorMessage(error){")) return;
+        if (html.includes("const setButtons=on=>{[") && html.includes("async function responseErrorMessage(error){") && html.includes("nextSocket.rpc('tag_online_presence','{}')") && html.includes("oldSocket.rpc('tag_online_leave','{}')")) return;
       }
     } catch {}
     await sleep(2500);
@@ -75,6 +75,9 @@ async function connectWithName(page, name) {
     "online account connection");
   const saved = await page.locator("#onlineName").inputValue();
   assert(saved === name, "The server changed the selected player name unexpectedly.");
+  await waitFor(page,
+    () => /^\d+$/.test((document.querySelector("#onlinePlayerCount")?.textContent || "").trim()),
+    "session-bound online presence registration");
 }
 
 async function readDeviceId(page) {
