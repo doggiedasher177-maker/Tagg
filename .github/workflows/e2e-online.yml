@@ -1,0 +1,42 @@
+name: TAG! Online End-to-End Tests
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "scripts/e2e-online.mjs"
+      - ".github/workflows/e2e-online.yml"
+      - "index.html"
+      - "docs/index.html"
+      - "server/modules/tag_match.lua"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  online-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Check out TAG!
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Install browser and test dependencies
+        run: |
+          npm init -y
+          npm install --no-save @heroiclabs/nakama-js@2.8.0 playwright
+          npx playwright install --with-deps chromium
+
+      - name: Exercise the published site and production online services
+        run: node scripts/e2e-online.mjs
+        env:
+          TAG_SITE_URL: https://doggiedasher177-maker.github.io/Tagg/
+          NAKAMA_URL: https://nakama-production-2d60f8a9.up.railway.app
+          NAKAMA_SERVER_KEY: tagg-public-client-key-2026
