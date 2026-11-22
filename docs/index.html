@@ -1334,7 +1334,8 @@ function buildWorld() {
   // Floating boost orbs: touch while airborne to get a gentle upward burst.
   const orbColor=spec.glow;const orbPlatforms=platforms.filter(p=>p.id!=='floor');orbs=customLevel?customLevel.objects.filter(o=>o.type==='orb').map((o,i)=>({x:o.x/1200*worldW,y:o.y/700*height,r:o.r||12,phase:i*1.4,cool:0,color:o.color||orbColor,forceX:o.forceX||0,forceY:o.forceY??-610})):orbPlatforms.slice(0,Math.min(orbPlatforms.length,9)).map((p,i)=>({x:clamp(p.x+p.w+18,24,worldW-24),y:Math.max(62,p.y-32),r:12,phase:i*1.4,cool:0,color:orbColor,forceX:0,forceY:-610}));
   const moving=platforms.filter(p=>p.motion);
-  if(moving.length){
+  // Custom maps may contain moving structures without three jump pads.
+  if(moving.length&&pads[2]){
     const anchor=moving[0], pad=pads[2];
     pad.anchorId=anchor.id;
     pad.baseX=anchor.x+anchor.w*.5-pad.w*.5;

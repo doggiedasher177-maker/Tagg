@@ -74,6 +74,7 @@ if (
   !source.includes("getStructureStates(){return platforms.filter(p=>p.kind==='structure')") ||
   !source.includes("const previousSolidX=Number.isFinite(solid.prevX)?solid.prevX:solid.x-(solid.dx||0)") ||
   !source.includes("const previousClearance=previousTop-previousUnderside") ||
+  !source.includes("if(moving.length&&pads[2]){") ||
   !source.includes("V16 · MOBILE PLAY, SOLID ARENAS & FRIEND MAILBOX") ||
   !source.includes('id="matchMailboxRefreshBtn"') ||
   !source.includes("if($('matchMailbox')?.style.display==='block')refreshMatchMailbox().catch(()=>{});") ||
