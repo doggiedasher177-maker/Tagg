@@ -1211,11 +1211,17 @@ function planBotMovement(player,target,isHunter,skill,level){
     const center=next.x+next.w*.5,gap=Math.max(0,next.x-(current.x+current.w),current.x-(next.x+next.w));
     const sameLane=player.x+HALF_W>next.x&&player.x-HALF_W<next.x+next.w;
     if(next.y<current.y-34||gap>22){
-      const toRight=center>current.x+current.w*.5;
-      const takeoff=toRight?current.x+current.w-HALF_W-12:current.x+HALF_W+12;
       const landingX=clamp(isHunter?predictedX:center,next.x+HALF_W+5,next.x+next.w-HALF_W-5);
-      if(player.onGround&&!sameLane&&Math.abs(player.x-takeoff)>30){goalX=takeoff;}
-      else{goalX=landingX;if(player.onGround)jump=true;}
+      if(current.id==='floor'){
+        goalX=landingX;
+        if(player.onGround&&Math.abs(player.x-landingX)<Math.max(72,worldWidth*.12))jump=true;
+      }else{
+        const toRight=center>current.x+current.w*.5;
+        const takeoff=toRight?current.x+current.w-HALF_W-12:current.x+HALF_W+12;
+        if(player.x+HALF_W>next.x&&player.x-HALF_W<next.x+next.w){goalX=landingX;if(player.onGround)jump=true;}
+        else if(Math.abs(player.x-takeoff)>30){goalX=takeoff;}
+        else{goalX=landingX;if(player.onGround)jump=true;}
+      }
     }else if(next.y>current.y+90&&gap>18){
       goalX=clamp(center,next.x+HALF_W+5,next.x+next.w-HALF_W-5);
     }else goalX=clamp(isHunter?predictedX:center,next.x+HALF_W+4,next.x+next.w-HALF_W-4);
