@@ -140,20 +140,132 @@ try {
   await first.page.locator("#onlineName").waitFor({ state: "visible", timeout });
   results.push("PASS: Item Shop and Avatars open Coming Soon pages with working back buttons");
 
-  // V15: every built-in arena must retain distinct, non-overlapping platform layouts.
+  // V15 layout regression: built-in arenas must remain distinct and collision-free.
   const arenaLayouts = await first.page.evaluate(() => window.TAGOnlineHooks?.getMapLayoutDiagnostics?.() || []);
   assert(arenaLayouts.length >= 17,
-    "V15 arena diagnostics did not include all built-in maps. Count=" + arenaLayouts.length + " Maps=" + JSON.stringify(arenaLayouts.map(layout => layout.map)));
+    "V15 arena diagnostics did not include all built-in maps. Count=" + arenaLayouts.length);
   const crowdedLayouts = arenaLayouts.filter(layout => layout.overlaps !== 0 || layout.placed < 12);
   assert(crowdedLayouts.length === 0,
     "V15 arena platforms still overlap or were excessively dropped: " + JSON.stringify(crowdedLayouts));
-  const uniqueLayouts = new Set(arenaLayouts.map(layout => JSON.stringify(layout.signature)));
-  assert(uniqueLayouts.size >= 15, "V15 arenas do not have sufficiently distinct platform placements.");
+  assert(new Set(arenaLayouts.map(layout => JSON.stringify(layout.signature))).size >= 15,
+    "V15 realms do not have sufficiently distinct platform layouts.");
   results.push("PASS: V15 built-in realms have non-overlapping, distinct platform layouts");
 
-  // V15: measure bot movement on the normal-clock browser context. The first
-  // context accelerates performance.now() for Quick Match timeout, so its RAF
-  // countdown is deliberately not used for gameplay-motion assertions.
+  const nameA = makeName();
+  const nameB = makeName();
+
+  // 2. First user claims a new username.
+  await connectWithName(first.page, nameA);
+  const deviceA = await readDeviceId(first.page);
+  assert(deviceA, "The first test device ID was not saved.");
+  accounts.push({ deviceId: deviceA, username: nameA });
+  results.push("PASS: a player can claim an available username");
+
+  // 3. A second device cannot register with that same username.
+  await second.page.locator("#onlineName").fill(nameA);
+  await second.page.locator("#onlineConnectBtn").evaluate(el => el.click());
+  await waitFor(second.page,
+    () => (document.querySelector("#onlineStatus")?.textContent || "").includes("already taken"),
+    "duplicate username rejection");
+  assert(await second.page.locator("#onlineName").inputValue() === "",
+    "The rejected duplicate username remained selected as an authenticated identity.");
+  results.push("PASS: duplicate username registration is rejected");
+
+  // The second device can choose a different, available name.
+  await connectWithName(second.page, nameB);
+  const deviceB = await readDeviceId(second.page);
+  assert(deviceB && deviceB !== deviceA, "The second device did not receive its own device identity.");
+  accounts.push({ deviceId: deviceB, username: nameB });
+  results.push("PASS: the second player can claim a different username");
+
+  // 4. Existing accounts cannot rename themselves to another player's name.
+  await first.page.locator("#backOnlineBtn").click();
+  await first.page.locator("#profileBtn").click();
+  await first.page.locator("#profileNameInput").waitFor({ state: "visible", timeout });
+  await first.page.locator("#profileNameInput").fill(nameB);
+  await first.page.locator("#saveProfileNameBtn").click();
+  await waitFor(first.page,
+    () => (document.querySelector("#onlineStatus")?.textContent || "").includes("already taken"),
+    "duplicate username rename rejection");
+  assert(await first.page.locator("#onlineName").inputValue() === nameA,
+    "The current account username changed after a duplicate-name rejection.");
+  results.push("PASS: duplicate username changes are rejected without changing the existing name");
+
+  // 5. Private room creation returns a TAG code; another account joins with that code.
+  await first.page.locator("#backProfileBtn").click();
+  await first.page.locator("#onlineSoonBtn").click();
+  await first.page.locator("#createRoomBtn").click();
+  await waitFor(first.page,
+    () => /^TAG-[A-Z2-9-]{26,}$/.test((document.querySelector("#roomCode")?.textContent || "").trim()),
+    "shareable private room code");
+  const roomCode = (await first.page.locator("#roomCode").textContent()).trim();
+  assert(roomCode.startsWith("TAG-") && roomCode.length >= 30, "The private room code is malformed.");
+  assert(!(await first.page.locator("#copyRoomCodeBtn").isDisabled()), "Copy room code was not enabled.");
+  await second.page.locator("#joinRoomCode").fill(roomCode);
+  await second.page.locator("#joinRoomBtn").click();
+  await waitFor(first.page,
+    () => window.TAGOnlineHooks?.isOnline?.() === true,
+    "private room starting for the host",
+    12000);
+  await waitFor(second.page,
+    () => window.TAGOnlineHooks?.isOnline?.() === true,
+    "private room starting for the joining player",
+    12000);
+  const hostMatchId = await first.page.evaluate(() => window.TAGOnlineHooks?.getMatchId?.());
+  const guestMatchId = await second.page.evaluate(() => window.TAGOnlineHooks?.getMatchId?.());
+  assert(hostMatchId && guestMatchId === hostMatchId,
+    "The host and joining player did not enter the same authoritative private room.");
+  results.push("PASS: private room creation, share-code display, and second-player join");
+
+  // Ensure the room entered the authoritative round and the displayed timer advances.
+  await sleep(4200);
+  const roomTimerBefore = (await first.page.locator("#timer").textContent()).trim();
+  await sleep(1400);
+  const roomTimerAfter = (await first.page.locator("#timer").textContent()).trim();
+  assert(roomTimerBefore !== roomTimerAfter, "The private-room round timer did not advance.");
+  results.push("PASS: private-room server timer advances during a live round");
+
+  // 6. Leave the friend room and let the Quick Match fallback reach its accelerated
+  // 30-second deadline (fake browser clock only; the production server remains real-time).
+  await leaveMatch(second.page);
+  await leaveMatch(first.page);
+  // Use a distinctive ruleset so another simultaneous test or normal player is
+  // unlikely to match this Quick Match before the 30-second bot fallback.
+  await first.page.evaluate(() => {
+    document.querySelector("#onlineMap").value = "heaven";
+    document.querySelector("#onlineMode").value = "infection";
+    document.querySelector("#onlineLength").value = "180";
+    document.querySelector("#onlineModifier1").value = "none";
+    document.querySelector("#onlineModifier2").value = "none";
+    document.querySelector("#onlineModifier3").value = "none";
+  });
+  await first.page.locator("#quickMatchBtn").click();
+  await waitFor(first.page,
+    () => window.TAGOnlineHooks?.isLocalBotMatch?.() === true &&
+      window.TAGOnlineHooks?.isOnline?.() === false &&
+      Array.isArray(window.TAGOnlineHooks?.getBotPlayers?.()) &&
+      window.TAGOnlineHooks.getBotPlayers().some(Boolean),
+    "30-second Quick Match local bot fallback",
+    18000);
+  assert(await first.page.evaluate(() => window.TAGOnlineHooks?.getMatchId?.() === null),
+    "A local fallback bot unexpectedly created a ranked server match.");
+  await waitFor(first.page,
+    () => {
+      const bot = window.TAGOnlineHooks?.getPlayerStates?.()?.find(player => player.isBot);
+      return !!bot && Number.isFinite(bot.y) && bot.y > 0.18 && bot.y < 0.96;
+    },
+    "the local bot to appear inside the arena rather than above the ceiling",
+    12000);
+  await sleep(4200);
+  const botTimerBefore = (await first.page.locator("#timer").textContent()).trim();
+  await sleep(1400);
+  const botTimerAfter = (await first.page.locator("#timer").textContent()).trim();
+  assert(botTimerBefore !== botTimerAfter, "The local bot-match round timer did not advance.");
+  assert(await first.page.evaluate(() => window.TAGOnlineHooks?.isLocalBotMatch?.() === true && window.TAGOnlineHooks?.isOnline?.() === false),
+    "The fallback bot was not simulated locally.");
+  results.push("PASS: Quick Match timeout starts a local-physics bot match with no ranked server match");
+
+  // V15: verify local hard-bot traversal on the normal-clock second browser context.
   await second.page.evaluate(() => window.TAGOnlineHooks?.startLocalBotMatch?.({
     playerName: "QA HUMAN", mapId: "forge", gameMode: "classic",
     roundLength: 180, modifiers: [], botLevel: "hard"
@@ -175,7 +287,6 @@ try {
   await second.page.evaluate(() => window.TAGOnlineHooks?.leaveLocalBotMatch?.());
   await second.page.evaluate(() => window.TAGAppScreens?.show("online"));
   results.push("PASS: V15 hard bot uses active platform navigation and moves across the arena");
-
 
   // 7. A published community map is searchable and starts with three replaceable bots.
   await leaveMatch(first.page);
@@ -262,6 +373,17 @@ try {
       "A new public map match did not fill all three open slots with bots.");
     assert(firstMapState.players.filter(player => player.is_bot).every(player => Math.abs(Number(player.y) - 0.82) < 0.025),
       "A server arena bot did not spawn on the ground line.");
+    await waitForMapState(() => mapStateA, state => state.status === "playing",
+      "V15 public-map bot round to enter active play");
+    const serverBotStarts = mapStateA.players.filter(player => player.is_bot)
+      .map(player => ({ id: player.user_id, x: Number(player.x), y: Number(player.y) }));
+    await sleep(1800);
+    const serverBotEnds = mapStateA.players.filter(player => player.is_bot);
+    assert(serverBotStarts.some(before => {
+      const after = serverBotEnds.find(player => player.user_id === before.id);
+      return after && Math.hypot(Number(after.x) - before.x, Number(after.y) - before.y) > 0.006;
+    }), "V15 online public-map bots did not navigate their arena platforms. Starts=" + JSON.stringify(serverBotStarts) + " Ends=" + JSON.stringify(serverBotEnds));
+    results.push("PASS: V15 online public-map bots actively navigate and move between arena locations");
     await mapSocketB.joinMatch(matchId);
     const replacementState = await waitForMapState(() => mapStateA,
       state => Array.isArray(state.players) && state.players.some(player => player.user_id === mapSessionB.user_id),
@@ -271,14 +393,6 @@ try {
       "The joining human did not replace exactly one bot slot.");
     await waitForMapState(() => mapStateA, state => state.status === "playing",
       "public map match countdown to complete");
-    const onlineBotPositionsBefore = mapStateA.players.filter(player => player.is_bot).map(player => ({ id: player.user_id, x: player.x, y: player.y }));
-    await sleep(1800);
-    const onlineBotPositionsAfter = mapStateA.players.filter(player => player.is_bot);
-    assert(onlineBotPositionsBefore.some(before => {
-      const after = onlineBotPositionsAfter.find(player => player.user_id === before.id);
-      return after && Math.hypot(Number(after.x) - Number(before.x), Number(after.y) - Number(before.y)) > 0.006;
-    }), "V15 server-side public-map bots did not traverse their arena platforms.");
-    results.push("PASS: V15 online public-map bots actively navigate and move between arena locations");
     const bSlotBeforeQuit = mapStateA.players.findIndex(player => player.user_id === mapSessionB.user_id);
     const scoreBeforeEarlyQuit = Number(mapStateA.scores?.[bSlotBeforeQuit] || 0);
     await mapSocketA.leaveMatch(matchId);
