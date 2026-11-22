@@ -672,8 +672,9 @@ local function register_online_presence(context, payload)
   if not context.user_id or not context.session_id then
     error("A valid online session is required.")
   end
-  local existing_ok, existing = pcall(nk.stream_user_get, context.user_id, context.session_id, ONLINE_STREAM)
-  if not existing_ok or not existing then
+  local existing, get_err = nk.stream_user_get(context.user_id, context.session_id, ONLINE_STREAM)
+  if get_err then error(get_err) end
+  if not existing then
     local joined, join_err = nk.stream_user_join(
       context.user_id,
       context.session_id,
@@ -689,8 +690,13 @@ end
 
 local function unregister_online_presence(context, payload)
   if context.user_id and context.session_id then
-    pcall(nk.stream_user_leave, context.user_id, context.session_id, ONLINE_STREAM)
+    local leave_err = nk.stream_user_leave(context.user_id, context.session_id, ONLINE_STREAM)
+    if leave_err then error(leave_err) end
   end
+  return nk.json_encode({ online_count = online_player_count() })
+end
+
+local function get_online_player_count(context, payload)
   return nk.json_encode({ online_count = online_player_count() })
 end
 
@@ -754,6 +760,7 @@ nk.register_rpc(list_tournaments, "tag_list_tournaments")
 nk.register_rpc(start_tournament, "tag_start_tournament")
 nk.register_rpc(register_online_presence, "tag_online_presence")
 nk.register_rpc(unregister_online_presence, "tag_online_leave")
+nk.register_rpc(get_online_player_count, "tag_online_count")
 
 nk.run_once(function(context)
   local leaderboard_ids = { LEADERBOARD_WINS, LEADERBOARD_LOSSES, LEADERBOARD_MATCHES, LEADERBOARD_TAGS }
