@@ -2637,7 +2637,7 @@ async function joinRoom(){
   const el=$('onlinePlayerStats');
   try{
     const ids=['tag_online_wins_v2','tag_online_losses_v2','tag_online_matches_v2','tag_online_tags_v2','tag_online_elo_v1','tag_online_tagpoints_v1'];
-    const results=await Promise.all(ids.map(id=>client.listLeaderboardRecords(session,id,[session.user_id],null,1,null).catch(()=>({records:[]}))));
+    const results=await Promise.all(ids.map(id=>client.listLeaderboardRecords(session,id,[session.user_id],1,null,null).catch(()=>({records:[]}))));
     const values=results.map((r,i)=>r.records?.[0]?.score===undefined?(i===4?100:0):Number(r.records[0].score||0));
     let rankValue='UNRANKED';
     try{
