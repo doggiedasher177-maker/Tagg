@@ -170,7 +170,7 @@ try {
     const ok = window.TAGOnlineHooks.loadCustomMap({
       id: mapId, name: "V16 Collision Test", description: "Temporary automated QA wall",
       modifiers: [],
-      objects: [{ type: "structure", x: 520, y: 280, w: 90, h: 420 }]
+      objects: [{ type: "structure", x: 660, y: 280, w: 90, h: 420 }]
     });
     if (!ok) throw new Error("Could not register the temporary collision test map.");
     window.TAGOnlineHooks.startLocalBotMatch({ playerName: "QA", botLevel: "easy", mapId, roundLength: 120 });
@@ -183,7 +183,7 @@ try {
   await phonePage.keyboard.up("d");
   const wallEnd = await phonePage.evaluate(() => window.TAGOnlineHooks?.getPlayerStates?.()[0]?.x);
   assert(Number.isFinite(wallStart) && Number.isFinite(wallEnd) &&
-    wallEnd > wallStart && wallEnd < 0.45,
+    wallEnd > wallStart + 0.015 && wallEnd < 0.54,
     "A grounded runner passed through the solid structure wall. Start=" + wallStart + ", end=" + wallEnd);
   results.push("PASS: a grounded phone player is blocked by a solid custom structure");
 
