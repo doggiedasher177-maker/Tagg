@@ -338,6 +338,7 @@ function M.match_init(context, params)
     status = "lobby",
     mode = mode,
     map = map,
+    modifiers = clean_modifiers(params.modifiers),
     length = length,
     remaining = length,
     countdown = 0,
@@ -678,7 +679,7 @@ end
 local function create_private_match(context, payload)
   local options = {}
   if payload and payload ~= "" then options = nk.json_decode(payload) or {} end
-  local mode = (options.mode == "infection" or options.mode == "hotpotato") and options.mode or "classic"
+  local mode = options.mode == "infection" and "infection" or "classic"
   local map = tostring(options.map or "random"):sub(1, 32)
   local length = clamp(math.floor(valid_number(options.length) or DEFAULT_LENGTH), 60, 1800)
   local modifiers = clean_modifiers(options.modifiers)
@@ -704,7 +705,7 @@ end
 local function create_bot_match(context, payload)
   local options = {}
   if payload and payload ~= "" then options = nk.json_decode(payload) or {} end
-  local mode = (options.mode == "infection" or options.mode == "hotpotato") and options.mode or "classic"
+  local mode = options.mode == "infection" and "infection" or "classic"
   local map = tostring(options.map or "random"):sub(1, 32)
   local length = clamp(math.floor(valid_number(options.length) or DEFAULT_LENGTH), 60, 1800)
   local modifiers = clean_modifiers(options.modifiers)
