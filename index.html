@@ -354,6 +354,10 @@ body.argentina-mode #menuScreen{background:linear-gradient(180deg,#75bde9 0 32%,
 .profile-photo-frame{position:relative;width:156px;aspect-ratio:4/5;padding:7px;background:linear-gradient(145deg,#f5fbff,#9fb8c8 48%,#eaf5fa);border-radius:13px;box-shadow:0 9px 24px #0008,0 0 0 1px #ffffff99;transform:rotate(-1.4deg);overflow:hidden}
 .profile-photo-frame svg,.profile-photo-frame img{display:block;width:100%;height:100%;object-fit:cover;border-radius:6px;background:#203b55}
 .profile-custom-photo{display:none}
+.profile-photo-picker-label{display:block;text-align:center;cursor:pointer;user-select:none}
+.profile-photo-picker-label:focus-visible{outline:3px solid #8cecff;outline-offset:3px}
+.profile-file-input{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+.profile-file-input:focus-visible+.profile-photo-note{outline:2px solid #8cecff}
 .photo-flash{position:absolute;top:12px;right:12px;width:9px;height:9px;border-radius:50%;background:#eaffff;box-shadow:0 0 13px 4px #b7f5ff99;pointer-events:none}
 .profile-photo-column button{width:100%;max-width:160px;padding:10px}
 .profile-photo-note{color:#8ea6bd;font-size:9px;text-align:center;line-height:1.4}
@@ -523,9 +527,9 @@ body.argentina-mode #menuScreen{background:linear-gradient(180deg,#75bde9 0 32%,
           <img id="profileCustomPhoto" class="profile-custom-photo" alt="Your custom profile picture">
           <span class="photo-flash"></span>
         </div>
-        <button class="secondary-btn" id="chooseProfilePhotoBtn" type="button">CHANGE PHOTO</button>
+        <label class="secondary-btn profile-photo-picker-label" id="chooseProfilePhotoBtn" for="profilePhotoInput">CHANGE PHOTO</label>
         <button class="secondary-btn profile-remove-photo" id="removeProfilePhotoBtn" type="button" hidden>USE DEFAULT</button>
-        <input id="profilePhotoInput" type="file" accept="image/*" hidden>
+        <input id="profilePhotoInput" class="profile-file-input" type="file" accept="image/*" aria-label="Choose profile picture from your computer">
         <small class="profile-photo-note">Custom photo is saved on this device.</small>
       </div>
       <div class="profile-identity">
@@ -2175,14 +2179,22 @@ import { Client } from 'https://esm.sh/@heroiclabs/nakama-js@2.8.0';
  function showQuickMatchModal(title,message,subtext,buttons={}){const modal=$('quickMatchOverlay');if(!modal)return;$('quickMatchTitle').textContent=title;$('quickMatchMessage').textContent=message;$('quickMatchSubtext').textContent=subtext;$('queueSpinner').style.display=buttons.spinner===false?'none':'block';$('notifyFriendYesBtn').hidden=!buttons.yes;$('notifyFriendNoBtn').hidden=!buttons.no;$('keepQueueBtn').hidden=!buttons.keep;$('cancelQueueBtn').hidden=buttons.cancel===false;modal.classList.add('show');}
  async function revealQueueStatus(){if(!queueActive||match)return;try{await refreshFriends();}catch(e){}if(!queueActive||match)return;if(cachedOnlineFriends.length){showQuickMatchModal('YOUR FRIEND IS ONLINE','Would you like to notify your friend and battle against them?','You can invite them to a private TAG! room, or keep waiting for a random opponent.',{spinner:false,yes:true,no:true,keep:true});}else{showQuickMatchModal('NO OPPONENTS YET','No one is playing as of right now.','You are still in the matchmaking queue. Other players can join while you wait.',{spinner:false,keep:true});}}
  async function cancelQuickMatch(){
-  // Invalidate every outstanding queue callback before awaiting network cleanup.
+  if(!queueActive&&!matchmakerTicket?.ticket)return;
+  // Invalidate the queue synchronously so neither the 30s fallback nor a late ticket
+  // response can start a match after the player has cancelled.
   queueCancelRequested=true;queueActive=false;queueGeneration++;
   clearQueueClocks();
+  const button=$('cancelQueueBtn');if(button){button.disabled=true;button.textContent='CANCELLING...';}
   const ticket=matchmakerTicket?.ticket;matchmakerTicket=null;
-  if(ticket&&socket){try{await socket.removeMatchmaker(ticket);}catch(e){status('Search cancelled. The server may take a moment to clear its ticket.','error');}}
-  const modal=$('quickMatchOverlay');if(modal)modal.classList.remove('show');
-  const countdown=$('queueCountdown');if(countdown)countdown.textContent='';
-  const spinner=$('queueSpinner');if(spinner)spinner.style.display='none';
+  try{
+    if(ticket&&socket)await socket.removeMatchmaker(ticket);
+  }catch(e){status('Search cancelled locally. The server is clearing the matchmaking ticket.','error');}
+  finally{
+    const modal=$('quickMatchOverlay');if(modal)modal.classList.remove('show');
+    const countdown=$('queueCountdown');if(countdown)countdown.textContent='';
+    const spinner=$('queueSpinner');if(spinner)spinner.style.display='none';
+    if(button){button.disabled=false;button.textContent='CANCEL SEARCH';}
+  }
   status('Matchmaking cancelled. You are no longer in the queue.');
 }
  
@@ -2248,24 +2260,52 @@ async function quickMatch(){
 }
 async function createRoom(){
   const createButton=$('createRoomBtn'),codeBox=$('roomCode'),copyButton=$('copyRoomCodeBtn');
-  if(createButton){createButton.disabled=true;createButton.textContent='CREATING ROOM...';}
-  if(codeBox)codeBox.textContent='Creating your room code...';
+  const setRoomCode=(value)=>{if(codeBox){codeBox.textContent=value;codeBox.dataset.roomCode=value;}};
+  if(createButton){if(createButton.disabled)return null;createButton.disabled=true;createButton.textContent='CREATING ROOM...';}
+  setRoomCode('Connecting and creating your room...');
   if(copyButton)copyButton.disabled=true;
-  queueActive=false;queueCancelRequested=true;queueGeneration++;clearQueueClocks();const pendingTicket=matchmakerTicket?.ticket;matchmakerTicket=null;if(pendingTicket&&socket)await socket.removeMatchmaker(pendingTicket).catch(()=>{});
-  if(!connected&&!$('onlineName')?.value?.trim()){if(codeBox)codeBox.textContent='Choose a player name first.';status('Choose a unique player name before creating a room.','error');$('onlineName')?.focus();if(createButton){createButton.disabled=false;createButton.textContent='CREATE ROOM';}return null;}
-  if(!connected){status('Connecting to TAG! before creating your room...');await connect();if(!connected){if(codeBox)codeBox.textContent='Could not connect. Try again.';if(createButton){createButton.disabled=false;createButton.textContent='CREATE ROOM';}return null;}}
-  if(!client||!session||!socket){status('Online connection is not ready. Please reconnect.','error');return null;}
-  if(match){try{await socket.leaveMatch(match.match_id);}catch(e){}match=null;}
-  readOnlineOptions();matchStarted=false;
+  queueActive=false;queueCancelRequested=true;queueGeneration++;clearQueueClocks();
+  const pendingTicket=matchmakerTicket?.ticket;matchmakerTicket=null;
   try{
-    status('Creating secure TAG! room...');if(codeBox)codeBox.textContent='Creating your room code...';if(copyButton)copyButton.disabled=true;
-    const response=await client.rpc(session,'tag_create_private_match',{mode:pendingMode,map:pendingMap,length:String(pendingLength),modifiers:pendingModifiers});
-    const roomData=rpcPayload(response);if(!roomData.match_id)throw new Error('The server did not return a room code.');
-    if(codeBox)codeBox.textContent=roomData.match_id;if(copyButton)copyButton.disabled=false;
-    const m=normalizeMatch(await socket.joinMatch(roomData.match_id));match=m;matchPresences=sortedPresences(m.presences);matchStarted=false;
-    if(codeBox)codeBox.textContent=m.match_id;if(copyButton)copyButton.disabled=false;activeTournamentMatchId=null;isTournamentHost=false;if($('startTournamentBtn'))$('startTournamentBtn').disabled=true;
-    status('Private room ready. Your friend can join using this code. The match starts automatically when they arrive.','connected');await enterMatch(m);return m;
-  }catch(e){if(codeBox&&codeBox.textContent==='Creating your room code...')codeBox.textContent='Room creation failed. Try again.';status('Could not create room: '+(e.message||e),'error');return null;}finally{if(createButton){createButton.disabled=false;createButton.textContent='CREATE ROOM';}}
+    if(pendingTicket&&socket)await socket.removeMatchmaker(pendingTicket).catch(()=>{});
+    if(!connected){
+      const name=$('onlineName')?.value?.trim();
+      if(!name)throw new Error('Choose your player name in Online before creating a room.');
+      status('Connecting to TAG! before creating your room...');
+      await connect();
+      if(!connected)throw new Error('Could not connect to TAG! Online. Check your connection and try again.');
+    }
+    if(!client||!session||!socket)throw new Error('Online connection is not ready. Please reconnect.');
+    if(match){try{await socket.leaveMatch(match.match_id);}catch(e){}match=null;matchPresences=[];window.TAGOnlineHooks?.endMatch();}
+    readOnlineOptions();matchStarted=false;
+    setRoomCode('Generating room code...');
+    status('Creating your private TAG! room...');
+    const response=await client.rpc(session,'tag_create_private_match',{
+      mode:pendingMode,map:pendingMap,length:String(pendingLength),modifiers:pendingModifiers
+    });
+    const roomData=rpcPayload(response);
+    const roomId=String(roomData.match_id||roomData.matchId||'').trim();
+    if(!roomId)throw new Error('The server did not return a room ID. Please retry.');
+    // Display the actual Nakama match ID immediately; do not wait for the socket join.
+    setRoomCode(roomId);
+    if(copyButton)copyButton.disabled=false;
+    activeTournamentMatchId=null;isTournamentHost=false;
+    if($('startTournamentBtn'))$('startTournamentBtn').disabled=true;
+    status('Room created. Share the code with your friend; the match starts when they join.','connected');
+    const joined=normalizeMatch(await socket.joinMatch(roomId));
+    if(!joined?.match_id)throw new Error('Room was created, but joining it failed. Your room code is still shown above.');
+    match=joined;matchPresences=sortedPresences(joined.presences);matchStarted=false;
+    setRoomCode(roomId);
+    await enterMatch(joined);
+    return joined;
+  }catch(e){
+    const message=String(e?.message||e);
+    if(codeBox&&(!codeBox.dataset.roomCode||codeBox.textContent==='Connecting and creating your room...'||codeBox.textContent==='Generating room code...'))setRoomCode('Room not created · '+message);
+    status('Could not create room: '+message,'error');
+    return null;
+  }finally{
+    if(createButton){createButton.disabled=false;createButton.textContent='CREATE ROOM';}
+  }
 }
 async function joinRoom(){if(!connected){await connect();if(!connected)return;}matchStarted=false;const id=$('joinRoomCode').value.trim();activeTournamentMatchId=null;isTournamentHost=false;if($('startTournamentBtn'))$('startTournamentBtn').disabled=true;if(!id){status('Paste the room code first.','error');return;}try{status('Joining private room...');const m=normalizeMatch(await socket.joinMatch(id));await enterMatch(m);}catch(e){status('Could not join room: '+e.message,'error');}}
  function onMatchData(md){if(!match)return;const incomingId=md.match_id||md.matchId;if(incomingId&&incomingId!==match.match_id)return;const op=md.opCode??md.op_code;let data;try{const raw=md.data??md.state;const payload=raw instanceof Uint8Array?new TextDecoder().decode(raw):(typeof raw==='string'?raw:JSON.stringify(raw));data=typeof payload==='string'?JSON.parse(payload):payload;}catch(e){return;}if(op===11&&data&&Array.isArray(data.players)){const onlinePlayers=data.players,local=onlinePlayers.findIndex(p=>p.user_id===session.user_id);if(local<0)return;if(data.status==='lobby'){if(data.tournament_mode){activeTournamentMatchId=match.match_id;isTournamentHost=data.host_user_id===session.user_id;if($('startTournamentBtn'))$('startTournamentBtn').disabled=!isTournamentHost;status(isTournamentHost?'Community tournament lobby open. Start whenever you are ready.':'Tournament lobby · waiting for the host to start.','connected');}else{status('Private room / matchmaker lobby · waiting for another runner...','connected');}return;}const alreadyStarted=!!window.TAGOnlineHooks?.isOnline();if(!alreadyStarted){localIndex=local;isHost=data.host_user_id===session.user_id;}const infoPlayers=onlinePlayers.map((p,i)=>({username:p.username||'RUNNER '+(i+1),userId:p.user_id,isBot:!!p.is_bot}));if(!alreadyStarted){pendingMap=data.map||'forge';pendingMode=data.mode||'classic';pendingLength=data.length||120;window.TAGOnlineHooks?.startMatch({localIndex,isHost,matchId:match.match_id,players:infoPlayers,mapId:pendingMap,gameMode:pendingMode,roundLength:pendingLength,modifiers:data.modifiers||[]});}const winnerSlot=data.status==='result'?(data.winner_user_id===session.user_id?localIndex:Math.max(0,window.__tagOnlinePlayerIds?.indexOf(data.winner_user_id)??infoPlayers.findIndex(p=>p.userId===data.winner_user_id))):data.winner_slot;window.TAGOnlineHooks?.applyNetworkState({...data,winner_slot:winnerSlot});if(data.status==='result'&&Number.isInteger(winnerSlot)){status(`Round complete · ${infoPlayers.find(p=>p.userId===data.winner_user_id)?.username||'Winner'} wins.`,'connected');window.dispatchEvent(new CustomEvent('tag-online-result'));}else if(data.status==='closed'){status('This TAG! room was closed before the round could start.','error');}return;}}
@@ -2439,8 +2479,8 @@ async function saveProfileName(){
 async function refreshTournaments(){if(!client||!session)return;const el=$('onlineTournamentList');try{const data=rpcPayload(await client.rpc(session,'tag_list_tournaments',{}));el.innerHTML='';const tournaments=data.tournaments||[];if(!tournaments.length){const empty=document.createElement('div');empty.textContent='No community tournaments are open. Host the first one!';el.append(empty);}tournaments.forEach(t=>{const row=document.createElement('div');row.className='online-chat-line';const title=document.createElement('span');title.textContent=t.title+' · '+t.players+'/'+t.max_players+' players · '+t.map;const join=document.createElement('button');join.className='secondary-btn';join.textContent='JOIN';join.onclick=()=>joinCommunityTournament(t.match_id);row.append(title,join);el.append(row);});}catch(e){el.textContent='Community tournament list is unavailable: '+e.message;}}
  $('onlineChatToggle')?.addEventListener('click',()=>{$('matchChatPanel').style.display=$('matchChatPanel').style.display==='none'?'block':'none';});$('matchChatClose')?.addEventListener('click',()=>{$('matchChatPanel').style.display='none';});$('matchChatSendBtn')?.addEventListener('click',sendMatchChat);$('matchChatInput')?.addEventListener('keydown',e=>{if(e.key==='Enter')sendMatchChat();});$('notifyFriendYesBtn')?.addEventListener('click',notifyOnlineFriendAndBattle);$('notifyFriendNoBtn')?.addEventListener('click',()=>showQuickMatchModal('NO OPPONENT AVAILABLE','No opponent available right now.','You remain in the matchmaking queue. Keep waiting for another player to join.',{spinner:false,keep:true}));$('keepQueueBtn')?.addEventListener('click',()=>{if(queueActive)showQuickMatchModal('STILL SEARCHING','No opponent available yet.','You are still in the queue. Another player can join at any moment.',{spinner:true,keep:true});});$('cancelQueueBtn')?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();cancelQuickMatch();});
 $('cancelQueueBtn')?.addEventListener('pointerup',e=>{if(queueActive){e.preventDefault();e.stopPropagation();cancelQuickMatch();}});$('createCommunityTournamentBtn')?.addEventListener('click',createCommunityTournament);$('startTournamentBtn')?.addEventListener('click',startCommunityTournament);$('openOnlineLeaderboardBtn')?.addEventListener('click',async()=>{if(!connected){await connect();if(!connected)return;}await Promise.allSettled([refreshLeaderboard(),refreshOnlineStats()]);window.TAGAppScreens?.show('leaderboard');});window.addEventListener('tag-open-profile',openPlayerProfile);$('copyRoomCodeBtn')?.addEventListener('click',async()=>{const code=$('roomCode')?.textContent?.trim();if(!code||code==='Not created yet')return;try{await navigator.clipboard.writeText(code);status('Room code copied. Send it to your friend.','connected');}catch(e){status('Select and copy the room code manually.','error');}});$('backProfileBtn')?.addEventListener('click',()=>window.TAGAppScreens?.show('menu'));$('saveProfileNameBtn')?.addEventListener('click',saveProfileName);$('profileNameInput')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();saveProfileName();}});$('profileNameInput')?.addEventListener('input',()=>{const el=$('profileNameInput');if(el)el.value=el.value.replace(/[^A-Za-z0-9_]/g,'').slice(0,16);});$('profileConnectBtn')?.addEventListener('click',async()=>{if(!$('onlineName').value.trim()){window.TAGAppScreens?.show('online');return;}await connect();if(connected)await refreshOnlineStats();});$('profileLeaderboardBtn')?.addEventListener('click',async()=>{if(connected)await Promise.allSettled([refreshOnlineStats(),refreshLeaderboard()]);window.TAGAppScreens?.show('leaderboard');});const openPhotoPicker=()=>{const picker=$('profilePhotoInput');if(!picker)return;try{if(typeof picker.showPicker==='function')picker.showPicker();else picker.click();}catch(e){picker.click();}};
-$('chooseProfilePhotoBtn')?.addEventListener('click',e=>{e.preventDefault();openPhotoPicker();});
-$('profilePhotoFrame')?.addEventListener('click',openPhotoPicker);
+$('chooseProfilePhotoBtn')?.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openPhotoPicker();}});
+$('profilePhotoFrame')?.addEventListener('click',e=>{if(e.target?.closest?.('button,label'))return;openPhotoPicker();});
 $('profilePhotoFrame')?.setAttribute('tabindex','0');
 $('profilePhotoFrame')?.setAttribute('role','button');
 $('profilePhotoFrame')?.setAttribute('aria-label','Choose a custom profile picture');
