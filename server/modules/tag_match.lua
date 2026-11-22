@@ -184,6 +184,7 @@ local function public_state(state)
     status = state.status,
     tournament_mode = state.tournament_mode or false,
     bot_match = state.bot_match or false,
+    public_map = state.public_map or false,
     modifiers = state.modifiers or {},
     players = players,
     host_user_id = state.host_user_id,
@@ -659,7 +660,12 @@ local function update_server_bot(bot, target, is_hunter, state, surfaces, dt)
 end
 
 local function update_match_bots(state, dt)
-  if not (state.public_map or state.tournament_mode or state.bot_match) then return end
+  if not (state.public_map or state.tournament_mode or state.bot_match) then
+    if state.status == "playing" then
+      nk.logger_warn("TAG! V15 bot updater skipped: public_map=" .. tostring(state.public_map) .. " tournament=" .. tostring(state.tournament_mode) .. " bot_match=" .. tostring(state.bot_match))
+    end
+    return
+  end
   local ids, surfaces = ordered_players(state), bot_surfaces(state)
   for slot, user_id in ipairs(ids) do
     local bot = state.players[user_id]
@@ -1091,7 +1097,9 @@ function M.match_loop(context, dispatcher, tick, state, messages)
       nk.logger_info("TAG! authoritative round started: " .. tostring(context.match_id))
     end
   elseif state.status == "playing" then
-    update_match_bots(state, dt);
+    if state.public_map or state.tournament_mode or state.bot_match then
+      update_match_bots(state, dt);
+    end
     state.remaining = math.max(0, state.remaining - dt)
     state.tag_cooldown = math.max(0, state.tag_cooldown - dt)
     state.score_tick = (state.score_tick or 0) + dt
