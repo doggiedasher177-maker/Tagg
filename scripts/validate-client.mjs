@@ -3,8 +3,16 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 
-const html = readFileSync("index.html", "utf8");
-const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi)]
+const sourcePath = "index.html";
+const publishPath = "docs/index.html";
+const source = readFileSync(sourcePath, "utf8");
+const published = readFileSync(publishPath, "utf8");
+
+if (source !== published) {
+  throw new Error(publishPath + " is out of sync with " + sourcePath + ". Copy the latest browser client into docs/index.html before publishing.");
+}
+
+const scripts = [...source.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi)]
   .map((match) => ({ attributes: match[1] || "", source: match[2] || "" }))
   .filter((item) => item.source.trim().length > 0);
 
@@ -31,7 +39,7 @@ try {
     }
   });
 
-  console.log("Validated " + scripts.length + " inline JavaScript block(s).");
+  console.log("Validated matching source/published HTML and " + scripts.length + " inline JavaScript block(s).");
 } finally {
   rmSync(directory, { recursive: true, force: true });
 }
