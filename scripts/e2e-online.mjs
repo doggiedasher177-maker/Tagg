@@ -365,9 +365,9 @@ try {
     const finalEloA = await mapClientA.listLeaderboardRecords(mapSessionA, "tag_online_elo_v1", [mapSessionA.user_id], 1, null, null);
     const finalEloB = await mapClientB.listLeaderboardRecords(mapSessionB, "tag_online_elo_v1", [mapSessionB.user_id], 1, null, null);
     const tagpointsB = await mapClientB.listLeaderboardRecords(mapSessionB, "tag_online_tagpoints_v1", [mapSessionB.user_id], 1, null, null);
-    assert(Number((finalEloA.owner_records?.[0] || finalEloA.records?.[0])?.score ?? 100) === 100 &&
-      Number((finalEloB.owner_records?.[0] || finalEloB.records?.[0])?.score ?? 100) === 100 &&
-      Number((tagpointsB.owner_records?.[0] || tagpointsB.records?.[0])?.score ?? 0) === 0,
+    assert(Number(finalEloA.owner_records?.[0]?.score ?? 100) === 100 &&
+      Number(finalEloB.owner_records?.[0]?.score ?? 100) === 100 &&
+      Number(tagpointsB.owner_records?.[0]?.score ?? 0) === 0,
       "An early opponent quit incorrectly awarded ELO or Tagpoints.");
     results.push("PASS: public map publishing, search, three-bot fill, and human bot-slot replacement");
     results.push("PASS: opponent quit awards the remaining player the win without ELO or Tagpoints when more than 30 seconds remain");
@@ -408,9 +408,9 @@ try {
     const lateEloA = await mapClientA.listLeaderboardRecords(mapSessionA, "tag_online_elo_v1", [mapSessionA.user_id], 1, null, null);
     const lateEloB = await mapClientB.listLeaderboardRecords(mapSessionB, "tag_online_elo_v1", [mapSessionB.user_id], 1, null, null);
     const lateTagpointsB = await mapClientB.listLeaderboardRecords(mapSessionB, "tag_online_tagpoints_v1", [mapSessionB.user_id], 1, null, null);
-    const lateScoreA = Number((lateEloA.owner_records?.[0] || lateEloA.records?.[0])?.score ?? 100);
-    const lateScoreB = Number((lateEloB.owner_records?.[0] || lateEloB.records?.[0])?.score ?? 100);
-    const latePointsB = Number((lateTagpointsB.owner_records?.[0] || lateTagpointsB.records?.[0])?.score ?? 0);
+    const lateScoreA = Number(lateEloA.owner_records?.[0]?.score ?? 100);
+    const lateScoreB = Number(lateEloB.owner_records?.[0]?.score ?? 100);
+    const latePointsB = Number(lateTagpointsB.owner_records?.[0]?.score ?? 0);
     assert(lateScoreA === 95 && lateScoreB === 110 && latePointsB === 1,
       "Final-30-second quit progression was incorrect: A=" + lateScoreA + ", B=" + lateScoreB + ", Tagpoints=" + latePointsB + ".");
     results.push("PASS: final-30-second quit awards 100 round points, +10 winner ELO, -5 quitter ELO, and +1 Tagpoint");
