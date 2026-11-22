@@ -1197,7 +1197,6 @@ function planBotMovement(player,target,isHunter,skill,level){
   const targetSurface=botSurfaceNode(target);
   let destination=targetSurface;
   if(!isHunter){
-    player.botWanderTimer=Math.max(0,(player.botWanderTimer||0)-.18);
     const currentGoal=platforms.find(n=>n.id===player.botGoalPlatform);
     if(player.botWanderTimer<=0||!currentGoal||currentGoal.id===current.id){
       const choice=chooseBotPlatform(player,target,current,skill);
