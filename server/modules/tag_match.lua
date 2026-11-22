@@ -11,9 +11,7 @@ local LEADERBOARD_TAGS = "tag_online_tags_v2"
 local WEEKLY_TOURNAMENT = "tag_weekly_v2"
 local ONLINE_STREAM = {
   mode = 100,
-  subject = "tag-online-global",
-  subcontext = "",
-  label = "TAG! Online Players"
+  label = "tag-online-global"
 }
 
 local function clamp(value, low, high)
