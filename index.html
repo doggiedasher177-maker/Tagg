@@ -2560,6 +2560,7 @@ async function quickMatch(){
     await connect();
     if(!connected){showQuickMatchModal('CONNECTION UNAVAILABLE','TAG! could not connect to the online server.','Check the connection message and try again.',{spinner:false,keep:false,cancel:true});return;}
   }
+  if(localBotMatchActive){status('Finish or leave your local bot match before starting another Quick Match.','error');return;}
   if(queueActive||matchmakerTicket?.ticket){showQuickMatchModal('FINDING OPPONENTS','You are already in the matchmaking queue.','Cancel the current search before starting another.',{keep:true});return;}
   if(match){status('Leave your current online room before starting Quick Match.','error');return;}
   readOnlineOptions();matchStarted=false;queueActive=true;queueCancelRequested=false;queueBotFallbackStarted=false;
@@ -2587,7 +2588,9 @@ async function quickMatch(){
   try{
     status('Searching for 2–4 TAG! runners...');
     const properties={mode:pendingMode,map:pendingMap,length:String(pendingLength),modifiers:pendingModifiers.join(',')||'none'};
-    const query='+properties.mode:'+pendingMode+' +properties.map:'+pendingMap+' +properties.length:'+String(pendingLength)+' +properties.modifiers:'+(pendingModifiers.join(',')||'none');
+    // Match compatible game modes first; differing map, timer, and modifier preferences
+    // must not strand players in separate queues. The first matched player supplies the arena settings.
+    const query='+properties.mode:'+pendingMode;
     const ticket=await socket.addMatchmaker(query,2,4,properties);
     if(!queueActive||generation!==queueGeneration||queueCancelRequested||queueBotFallbackStarted){if(ticket?.ticket){try{await socket.removeMatchmaker(ticket.ticket);}catch(e){}}return;}
     matchmakerTicket=ticket;status('You are in the TAG! matchmaking queue.','connected');
