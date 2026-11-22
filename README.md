@@ -26,14 +26,16 @@ The runtime initializes the `tag_online_wins_v2`, `tag_online_losses_v2`, `tag_o
 
 ## Publish the browser client
 
-The browser game is published separately from the Nakama backend.
+The browser game is published separately from the Nakama backend. The publish copy lives in `docs/index.html`; keep it identical to the root `index.html`.
+
+One-time GitHub Pages setup:
 
 1. Open **Settings → Pages** in this repository.
-2. Under **Build and deployment**, set **Source** to **GitHub Actions** once.
-3. Push changes to `index.html` or the publishing workflow. GitHub Actions validates the inline JavaScript and publishes the client automatically.
+2. Under **Build and deployment**, set **Source** to **Deploy from a branch**.
+3. Choose branch `main` and folder `/docs`, then click **Save**.
 
-The expected project-site URL is:
+GitHub Pages then publishes updates whenever `docs/` changes on `main`. The expected project-site URL is:
 
 `https://doggiedasher177-maker.github.io/Tagg/`
 
-The Pages workflow only publishes `index.html`; Railway continues to host the Nakama backend. A successful workflow run is required before the Pages URL is live.
+The Nakama multiplayer backend remains hosted separately on Railway. The GitHub Actions validation workflow checks that the published copy matches the source and that both browser scripts parse successfully.
