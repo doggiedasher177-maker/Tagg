@@ -622,7 +622,7 @@ function M.match_join(context, dispatcher, tick, state, presences)
           user_id = bot_id,
           username = "ARENA BOT " .. tostring(bot_number),
           is_bot = true, connected = true, tags = 0, violations = 0,
-          x = 0.18 + bot_number * 0.20, y = 0.68, vx = 0, vy = 0, face = -1
+          x = 0.18 + bot_number * 0.20, y = 0.82, vx = 0, vy = 0, face = -1
         }
         table.insert(state.slot_order, bot_id)
         bot_number = bot_number + 1
@@ -673,7 +673,7 @@ function M.match_join(context, dispatcher, tick, state, presences)
       state.players[bot_id] = {
         user_id = bot_id, username = "ARENA BOT", is_bot = true,
         connected = true, tags = 0, violations = 0,
-        x = 0.78, y = 0.7, vx = 0, vy = 0, face = -1
+        x = 0.78, y = 0.82, vx = 0, vy = 0, face = -1
       }
     end
   end
@@ -851,11 +851,15 @@ function M.match_loop(context, dispatcher, tick, state, messages)
             local holder = state.players[(state.order or {})[state.tagged]]
             if holder then target = holder end
           end
+          -- Server bots are ground runners, not free-flying coordinate markers.
+          -- Keep their feet on TAG!'s floor line; local fallback bots use the full
+          -- browser physics engine instead.
           bot.x = bot.x or math.random(15, 85) / 100
-          bot.y = bot.y or math.random(15, 85) / 100
-          if target and target.x and target.y then
-            local dx, dy = target.x - bot.x, target.y - bot.y
-            local distance = math.sqrt(dx * dx + dy * dy)
+          bot.y = 0.82
+          bot.vy = 0
+          if target and target.x then
+            local dx = target.x - bot.x
+            local distance = math.abs(dx)
             if distance > 0.001 then
               local direction = 1
               if state.mode == "infection" and not state.infected[user_id] then
@@ -863,12 +867,14 @@ function M.match_loop(context, dispatcher, tick, state, messages)
               elseif state.mode ~= "infection" and slot ~= state.tagged then
                 direction = -1
               end
-              local speed = 0.24 * dt * direction
-              bot.vx = (dx / distance) * 0.24 * direction
-              bot.vy = (dy / distance) * 0.24 * direction
-              bot.x = clamp(bot.x + (dx / distance) * speed, 0.04, 0.96)
-              bot.y = clamp(bot.y + (dy / distance) * speed, 0.06, 0.94)
+              local step = (dx > 0 and 1 or -1) * 0.24 * dt * direction
+              bot.vx = (dx > 0 and 1 or -1) * 0.24 * direction
+              bot.x = clamp(bot.x + step, 0.04, 0.96)
+            else
+              bot.vx = 0
             end
+          else
+            bot.vx = 0
           end
         end
       end
@@ -931,7 +937,7 @@ function M.match_signal(context, dispatcher, tick, state, data)
           user_id = bot_id,
           username = ({ "IRON BOT", "WAR BOT", "VOID BOT", "STORM BOT" })[bot_number] or ("ARENA BOT " .. bot_number),
           is_bot = true, connected = true, tags = 0, violations = 0,
-          x = math.random(15, 85) / 100, y = math.random(15, 85) / 100,
+          x = math.random(15, 85) / 100, y = 0.82,
           vx = 0, vy = 0, face = 1
         }
         table.insert(humans, bot_id)
