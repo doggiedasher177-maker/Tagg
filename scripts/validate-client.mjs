@@ -71,6 +71,8 @@ if (
   !source.includes("MAILBOX · INCOMING FRIEND REQUESTS") ||
   !source.includes("refreshFriends().catch(()=>{})") ||
   !source.includes("if(solid.id==='floor'||p.potionTime>0) continue;") ||
+  !source.includes("!(p.potionTime>0&&s.id!=='floor')") ||
+  !source.includes("(!landing||landing.id!==solid.id)") ||
   source.includes("(p.id===tagged&&remaining<=10)")
 ) {
   throw new Error("V16 touch controls, friend mailbox, username request, or Green Drink collision guards are missing.");
