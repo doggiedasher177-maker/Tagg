@@ -335,6 +335,49 @@ try {
     results.push("PASS: public map publishing, search, three-bot fill, and human bot-slot replacement");
     results.push("PASS: opponent quit awards the remaining player the win without ELO or Tagpoints when more than 30 seconds remain");
     await mapSocketB.leaveMatch(matchId).catch(() => {});
+
+    // A second, short arena round proves the final-30-second rewards and exact ELO deltas.
+    mapStateA = null;
+    mapStateB = null;
+    const lateStart = await callRpc(mapClientA, mapSessionA, "tag_start_public_map_match",
+      { key: published.key, owner_id: published.owner_id, length: 32 });
+    assert(lateStart.match_id, "The server did not create the short public map match.");
+    await mapSocketA.joinMatch(lateStart.match_id);
+    await waitForMapState(() => mapStateA,
+      state => Array.isArray(state.players) && state.players.length === 4,
+      "the short public map match with three bots");
+    await mapSocketB.joinMatch(lateStart.match_id);
+    await waitForMapState(() => mapStateA,
+      state => Array.isArray(state.players) && state.players.some(player => player.user_id === mapSessionB.user_id),
+      "the second human joining the short public map match");
+    await waitForMapState(() => mapStateA, state => state.status === "playing",
+      "the short public map match to start");
+    await waitForMapState(() => mapStateA,
+      state => state.status === "playing" && Number(state.remaining) <= 30,
+      "the final 30 seconds of the short public map match");
+    const bSlotBeforeLateQuit = mapStateA.players.findIndex(player => player.user_id === mapSessionB.user_id);
+    const scoreBeforeLateQuit = Number(mapStateA.scores?.[bSlotBeforeLateQuit] || 0);
+    await mapSocketA.leaveMatch(lateStart.match_id);
+    const lateQuitResult = await waitForMapState(() => mapStateB,
+      state => state.status === "result",
+      "the remaining human winning after a final-30-second quit");
+    assert(lateQuitResult.winner_user_id === mapSessionB.user_id,
+      "The remaining human did not win after a final-30-second quit.");
+    const bSlotAfterLateQuit = lateQuitResult.players.findIndex(player => player.user_id === mapSessionB.user_id);
+    const scoreAfterLateQuit = Number(lateQuitResult.scores?.[bSlotAfterLateQuit] || 0);
+    assert(scoreAfterLateQuit - scoreBeforeLateQuit >= 100,
+      "A quit in the final 30 seconds did not award the 100-point round bonus.");
+    await sleep(700);
+    const lateEloA = await mapClientA.listLeaderboardRecords(mapSessionA, "tag_online_elo_v1", [mapSessionA.user_id], 1, null, null);
+    const lateEloB = await mapClientB.listLeaderboardRecords(mapSessionB, "tag_online_elo_v1", [mapSessionB.user_id], 1, null, null);
+    const lateTagpointsB = await mapClientB.listLeaderboardRecords(mapSessionB, "tag_online_tagpoints_v1", [mapSessionB.user_id], 1, null, null);
+    const lateScoreA = Number((lateEloA.owner_records?.[0] || lateEloA.records?.[0])?.score ?? 100);
+    const lateScoreB = Number((lateEloB.owner_records?.[0] || lateEloB.records?.[0])?.score ?? 100);
+    const latePointsB = Number((lateTagpointsB.owner_records?.[0] || lateTagpointsB.records?.[0])?.score ?? 0);
+    assert(lateScoreA === 95 && lateScoreB === 110 && latePointsB === 1,
+      "Final-30-second quit progression was incorrect: A=" + lateScoreA + ", B=" + lateScoreB + ", Tagpoints=" + latePointsB + ".");
+    results.push("PASS: final-30-second quit awards 100 round points, +10 winner ELO, -5 quitter ELO, and +1 Tagpoint");
+    await mapSocketB.leaveMatch(lateStart.match_id).catch(() => {});
     await callRpc(mapClientA, mapSessionA, "tag_unpublish_map", { key: published.key }).catch(() => {});
   } finally {
     try { mapSocketA.disconnect(false); } catch {}
