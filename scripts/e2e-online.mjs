@@ -110,6 +110,7 @@ try {
   results.push("PASS: the second player can claim a different username");
 
   // 4. Existing accounts cannot rename themselves to another player's name.
+  await first.page.locator("#backOnlineBtn").click();
   await first.page.locator("#profileBtn").click();
   await first.page.locator("#profileNameInput").waitFor({ state: "visible", timeout });
   await first.page.locator("#profileNameInput").fill(nameB);
