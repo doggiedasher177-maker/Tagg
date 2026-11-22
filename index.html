@@ -796,7 +796,7 @@ window.TAGAppAchievements={unlock:id=>unlockAchievement(id)};
 const translations={en:{prepare:'Prepare your round',choose:'Choose a realm',start:'START THE ROUND',ready:'Ready, runners?',length:'Round length',players:'Players',champions:'Realm champions'},es:{prepare:'Prepara tu ronda',choose:'Elige un mapa',start:'EMPEZAR LA RONDA',ready:'¿Listos, corredores?',length:'Duración',players:'Jugadores',champions:'Campeones'},fr:{prepare:'Préparez votre manche',choose:'Choisir une carte',start:'LANCER LA MANCHE',ready:'Prêts, coureurs ?',length:'Durée',players:'Joueurs',champions:'Champions'},pt:{prepare:'Prepare sua rodada',choose:'Escolha um mapa',start:'INICIAR RODADA',ready:'Prontos, corredores?',length:'Duração',players:'Jogadores',champions:'Campeões'},it:{prepare:'Prepara il round',choose:'Scegli una mappa',start:'INIZIA IL ROUND',ready:'Pronti, corridori?',length:'Durata',players:'Giocatori',champions:'Campioni'},zh:{prepare:'准备你的回合',choose:'选择地图',start:'开始回合',ready:'准备好了吗？',length:'回合时长',players:'玩家',champions:'冠军'},arg:{prepare:'Armá tu partida, che',choose:'Elegí la cancha, ¡dale!',start:'ARRANCAR LA PARTIDA',ready:'¿Todo listo, gente?',length:'Duración',players:'Jugadores',champions:'Campeones'}};
 const argSlang=['¡Dale, che!','Alta corrida, boludo','No te regalés','Vamos, campeón','Qué quilombo de persecución'];
 function applyLanguage(){
-  language=$('settingsLanguage')?.value||language||'en';if($('settingsLanguage'))$('settingsLanguage').value=language;try{localStorage.setItem('tagLanguage',language)}catch(e){}
+  language=$('settingsLanguage')?.value||language||'en';window.tagLanguage=language;if($('settingsLanguage'))$('settingsLanguage').value=language;try{localStorage.setItem('tagLanguage',language)}catch(e){}
   const t=translations[language];
   const h=document.querySelector('.setup-head h2');if(h)h.textContent=t.prepare;
   const label=$('labelChoose');if(label)label.textContent=t.choose;
@@ -919,7 +919,7 @@ function editorImportLevelFile(file){
   };
   reader.onerror=()=>alert('Could not read that file.');reader.readAsText(file);
 }
-function editorRenderSaved(){const q=($('editorSearchInput').value||'').toLowerCase();const list=userLevels.filter(l=>(l.name+' '+l.description).toLowerCase().includes(q));$('editorSavedList').innerHTML=list.map(l=>`<div class="editor-list-item"><div><b>${escapeHtml(l.name)}</b><br><small>${escapeHtml(l.description||'No description')} · ${l.objects?.length||0} objects</small></div><div><button data-edit-level="${escapeHtml(l.id)}">EDIT</button> <button data-export-level="${escapeHtml(l.id)}">EXPORT</button> <button data-publish-level="${escapeHtml(l.id)}">PUBLISH ONLINE</button></div></div>`).join('')||'<div class="editor-empty">No saved levels match that search yet.</div>';}
+function editorRenderSaved(){const q=($('editorSearchInput').value||'').toLowerCase();const list=userLevels.filter(l=>(l.name+' '+l.description).toLowerCase().includes(q));const publishText=({en:'PUBLISH ONLINE',es:'PUBLICAR EN LÍNEA',fr:'PUBLIER EN LIGNE',pt:'PUBLICAR ONLINE',it:'PUBBLICA ONLINE',zh:'在线发布',arg:'PUBLICAR ONLINE'})[window.tagLanguage||'en']||'PUBLISH ONLINE';$('editorSavedList').innerHTML=list.map(l=>`<div class="editor-list-item"><div><b>${escapeHtml(l.name)}</b><br><small>${escapeHtml(l.description||'No description')} · ${l.objects?.length||0} objects</small></div><div><button data-edit-level="${escapeHtml(l.id)}">EDIT</button> <button data-export-level="${escapeHtml(l.id)}">EXPORT</button> <button data-publish-level="${escapeHtml(l.id)}">${publishText}</button></div></div>`).join('')||'<div class="editor-empty">No saved levels match that search yet.</div>';}
 function editorExit(save=false){if(save&&editorDirty&&!editorSave())return;editorPreview=false;$('editorWorkspace').style.display='none';$('editorHome').style.display='grid';$('editorSearchView').style.display='none';activeScreen('blockCreator');}
 function editorExport(id){const l=userLevels.find(x=>x.id===id);if(!l)return;const blob=new Blob([JSON.stringify(l,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=(l.name.replace(/[^a-z0-9-_]+/gi,'_')||'tag-level')+'.taglevel.json';a.click();URL.revokeObjectURL(url);}
 function editorTick(){if(!editorPreview)return;editorBots.forEach((b,i)=>{b.x+=b.dir*2.2;if(b.x<45||b.x>1155)b.dir*=-1;if(Math.random()<.012)b.dir*=-1;const nearby=editorItems.filter(o=>['platform','structure'].includes(o.type)&&Math.abs(o.x-b.x)<70&&Math.abs(o.y-b.y)<60);if(nearby.length&&Math.random()<.08)b.y=clamp(b.y-35,60,610);else b.y=lerp(b.y,620,.025);});editorDraw();requestAnimationFrame(editorTick);}
@@ -2654,7 +2654,7 @@ async function joinRoom(){
       localWins=Array.isArray(saved)?saved.reduce((sum,n)=>sum+(Number(n)||0),0):0;
     }catch(e){}
     const displayName=session.username||username||'RUNNER';
-    if(el)el.textContent='YOUR VERIFIED ONLINE RECORD · '+values[0]+' WINS · '+values[1]+' LOSSES · '+values[2]+' MATCHES · '+values[3]+' TAGS';
+    if(el)el.textContent='YOUR VERIFIED ONLINE RECORD · '+values[0]+' WINS · '+values[1]+' LOSSES · '+values[2]+' MATCHES · '+values[3]+' TAGS · '+values[4]+' ELO · '+values[5]+' TAGPOINTS';
     if($('onlineProfileName'))$('onlineProfileName').textContent=displayName;
     if($('onlineProfileId'))$('onlineProfileId').textContent='PLAYER ID · '+session.user_id;
     if($('profileDisplayName'))$('profileDisplayName').textContent=displayName;
@@ -2825,7 +2825,7 @@ async function refreshTournaments(){if(!client||!session)return;const el=$('onli
        const info=document.createElement('div');const name=document.createElement('b');name.textContent=item.name||'Community Arena';
        const details=document.createElement('small');details.textContent=(item.creator||'TAG! Player')+' · '+(Number(item.object_count)||0)+' objects'+(item.description?' · '+item.description:'');
        info.append(name,details);
-       const join=document.createElement('button');join.type='button';join.className='secondary-btn';join.textContent='PLAY · 3 BOTS';join.dataset.startPublicMap='true';join.dataset.key=item.key;join.dataset.ownerId=item.owner_id;
+       const join=document.createElement('button');join.type='button';join.className='secondary-btn';join.textContent=({en:'PLAY · 3 BOTS',es:'JUGAR · 3 BOTS',fr:'JOUER · 3 BOTS',pt:'JOGAR · 3 BOTS',it:'GIOCA · 3 BOT',zh:'开始游戏 · 3 个机器人',arg:'JUGAR · 3 BOTS'})[window.tagLanguage||'en']||'PLAY · 3 BOTS';join.dataset.startPublicMap='true';join.dataset.key=item.key;join.dataset.ownerId=item.owner_id;
        row.append(info,join);list.append(row);
      });
    }catch(e){list.textContent='Online map search failed: '+(await responseErrorMessage(e));}
