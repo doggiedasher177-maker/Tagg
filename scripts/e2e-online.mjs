@@ -374,12 +374,13 @@ try {
     await waitForMapState(() => mapStateA, state => state.status === "playing",
       "V15 public-map bot round to enter active play");
     const serverBotStarts = mapStateA.players.filter(player => player.is_bot)
-      .map(player => ({ id: player.user_id, x: Number(player.x), y: Number(player.y) }));
+      .map(player => ({ id: player.user_id, x: Number(player.x), y: Number(player.y), aiTicks: Number(player.bot_ai_ticks || 0), goal: player.bot_goal_surface }));
     await sleep(1800);
     const serverBotEnds = mapStateA.players.filter(player => player.is_bot);
     assert(serverBotStarts.some(before => {
       const after = serverBotEnds.find(player => player.user_id === before.id);
-      return after && Math.hypot(Number(after.x) - before.x, Number(after.y) - before.y) > 0.006;
+      return after && Number(after.bot_ai_ticks || 0) > before.aiTicks &&
+        Math.hypot(Number(after.x) - before.x, Number(after.y) - before.y) > 0.006;
     }), "V15 online public-map bots did not navigate their arena platforms. Starts=" + JSON.stringify(serverBotStarts) + " Ends=" + JSON.stringify(serverBotEnds));
     results.push("PASS: V15 online public-map bots actively navigate and move between arena locations");
     await mapSocketB.joinMatch(matchId);
