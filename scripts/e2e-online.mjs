@@ -365,10 +365,11 @@ try {
     const finalEloA = await mapClientA.listLeaderboardRecords(mapSessionA, "tag_online_elo_v1", [mapSessionA.user_id], 1, null, null);
     const finalEloB = await mapClientB.listLeaderboardRecords(mapSessionB, "tag_online_elo_v1", [mapSessionB.user_id], 1, null, null);
     const tagpointsB = await mapClientB.listLeaderboardRecords(mapSessionB, "tag_online_tagpoints_v1", [mapSessionB.user_id], 1, null, null);
-    assert(Number(finalEloA.owner_records?.[0]?.score ?? 100) === 100 &&
-      Number(finalEloB.owner_records?.[0]?.score ?? 100) === 100 &&
-      Number(tagpointsB.owner_records?.[0]?.score ?? 0) === 0,
-      "An early opponent quit incorrectly awarded ELO or Tagpoints.");
+    const earlyEloA = Number(finalEloA.owner_records?.[0]?.score ?? 100);
+    const earlyEloB = Number(finalEloB.owner_records?.[0]?.score ?? 100);
+    const earlyPointsB = Number(tagpointsB.owner_records?.[0]?.score ?? 0);
+    assert(earlyEloA === 100 && earlyEloB === 100 && earlyPointsB === 0,
+      "Early-quit progression was incorrect: ELO A=" + earlyEloA + ", ELO B=" + earlyEloB + ", Tagpoints B=" + earlyPointsB + ".");
     results.push("PASS: public map publishing, search, three-bot fill, and human bot-slot replacement");
     results.push("PASS: opponent quit awards the remaining player the win without ELO or Tagpoints when more than 30 seconds remain");
     await mapSocketB.leaveMatch(matchId).catch(() => {});
