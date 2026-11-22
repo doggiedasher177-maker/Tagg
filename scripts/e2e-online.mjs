@@ -178,9 +178,13 @@ try {
   await phonePage.waitForFunction(() => document.querySelector("#mobileControls")?.style.display === "grid",
     null, { timeout: 20000 });
   const wallStart = await phonePage.evaluate(() => window.TAGOnlineHooks?.getPlayerStates?.()[0]?.x);
-  await phonePage.keyboard.down("d");
+  const rightControl = phonePage.locator("#mobileControls .touch-player-pad").first().locator(".touch-right");
+  const rightBox = await rightControl.boundingBox();
+  assert(rightBox, "The phone player's right touch button is not visible.");
+  await phonePage.mouse.move(rightBox.x + rightBox.width / 2, rightBox.y + rightBox.height / 2);
+  await phonePage.mouse.down();
   await phonePage.waitForTimeout(1400);
-  await phonePage.keyboard.up("d");
+  await phonePage.mouse.up();
   const wallEnd = await phonePage.evaluate(() => window.TAGOnlineHooks?.getPlayerStates?.()[0]?.x);
   assert(Number.isFinite(wallStart) && Number.isFinite(wallEnd) &&
     wallEnd > wallStart + 0.015 && wallEnd < 0.55,
