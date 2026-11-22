@@ -243,6 +243,16 @@ try {
     const raw = response?.payload ?? response;
     return typeof raw === "string" ? JSON.parse(raw) : raw;
   };
+  const callRpc = async (client, auth, id, payload) => {
+    try { return rpcJson(await client.rpc(auth, id, payload)); }
+    catch (error) {
+      if (typeof error?.clone === "function") {
+        const body = await error.clone().text().catch(() => "unreadable response body");
+        throw new Error("RPC " + id + " failed with HTTP " + error.status + ": " + body);
+      }
+      throw new Error("RPC " + id + " failed: " + String(error?.stack || error));
+    }
+  };
   const waitForMapState = async (getter, predicate, description, ms = 18000) => {
     const deadline = Date.now() + ms;
     while (Date.now() < deadline) {
@@ -256,8 +266,8 @@ try {
     await mapSocketA.connect(mapSessionA, true);
     await mapSocketB.connect(mapSessionB, true);
 
-    const eloA = rpcJson(await mapClientA.rpc(mapSessionA, "tag_ensure_elo", "{}"));
-    const eloB = rpcJson(await mapClientB.rpc(mapSessionB, "tag_ensure_elo", "{}"));
+    const eloA = await callRpc(mapClientA, mapSessionA, "tag_ensure_elo", {});
+    const eloB = await callRpc(mapClientB, mapSessionB, "tag_ensure_elo", {});
     assert(Number(eloA.elo) === 100 && Number(eloB.elo) === 100,
       "New online accounts did not initialize at 100 ELO.");
 
@@ -274,15 +284,15 @@ try {
         { type: "orb", x: 600, y: 320, r: 12, forceX: 0, forceY: -610 }
       ]
     };
-    const published = rpcJson(await mapClientA.rpc(mapSessionA, "tag_publish_map", JSON.stringify({ level })));
+    const published = await callRpc(mapClientA, mapSessionA, "tag_publish_map", { level });
     assert(published.ok && published.key && published.owner_id,
       "The server did not publish the community map.");
-    const listing = rpcJson(await mapClientB.rpc(mapSessionB, "tag_list_public_maps", JSON.stringify({ query: mapName })));
+    const listing = await callRpc(mapClientB, mapSessionB, "tag_list_public_maps", { query: mapName });
     assert((listing.maps || []).some(item => item.key === published.key),
       "The published community map could not be found by search.");
 
-    const started = rpcJson(await mapClientA.rpc(mapSessionA, "tag_start_public_map_match",
-      JSON.stringify({ key: published.key, owner_id: published.owner_id })));
+    const started = await callRpc(mapClientA, mapSessionA, "tag_start_public_map_match",
+      { key: published.key, owner_id: published.owner_id });
     assert(started.match_id, "The server did not create or locate a public map match.");
     mapSocketA.onmatchdata = message => { const state = decodeState(message); if (state) mapStateA = state; };
     mapSocketB.onmatchdata = message => { const state = decodeState(message); if (state) mapStateB = state; };
@@ -325,7 +335,7 @@ try {
     results.push("PASS: public map publishing, search, three-bot fill, and human bot-slot replacement");
     results.push("PASS: opponent quit awards the remaining player the win without ELO or Tagpoints when more than 30 seconds remain");
     await mapSocketB.leaveMatch(matchId).catch(() => {});
-    await mapClientA.rpc(mapSessionA, "tag_unpublish_map", JSON.stringify({ key: published.key })).catch(() => {});
+    await callRpc(mapClientA, mapSessionA, "tag_unpublish_map", { key: published.key }).catch(() => {});
   } finally {
     try { mapSocketA.disconnect(false); } catch {}
     try { mapSocketB.disconnect(false); } catch {}
