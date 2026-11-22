@@ -16,7 +16,7 @@ async function waitForPublishedClient() {
       const response = await fetch(SITE_URL, { cache: "no-store", signal: AbortSignal.timeout(12000) });
       if (response.ok) {
         const html = await response.text();
-        if (html.includes("const setButtons=on=>{[") && html.includes("async function responseErrorMessage(error){") && html.includes("nextSocket.rpc('tag_online_presence','{}')") && html.includes("oldSocket.rpc('tag_online_leave','{}')") && html.includes("getBotPlayers(){return botPlayers.slice(0,activePlayerCount);}") && html.includes("getMatchId(){return onlineMatchId;}") && html.includes("startLocalBotMatch(info)") && html.includes('id="avatarsScreen"')) return;
+        if (html.includes("const setButtons=on=>{[") && html.includes("async function responseErrorMessage(error){") && html.includes("nextSocket.rpc('tag_online_presence','{}')") && html.includes("oldSocket.rpc('tag_online_leave','{}')") && html.includes("getBotPlayers(){return botPlayers.slice(0,activePlayerCount);}") && html.includes("getMatchId(){return onlineMatchId;}") && html.includes("startLocalBotMatch(info)") && html.includes('id="avatarsScreen"') && html.includes("function resolvePlatformPlacements") && html.includes("function botRoute") && html.includes("getMapLayoutDiagnostics()") && html.includes("V15 · SMART BOTS & ARENA ARCHITECTURE")) return;
       }
     } catch {}
     await sleep(2500);
@@ -142,7 +142,8 @@ try {
 
   // V15: every built-in arena must retain distinct, non-overlapping platform layouts.
   const arenaLayouts = await first.page.evaluate(() => window.TAGOnlineHooks?.getMapLayoutDiagnostics?.() || []);
-  assert(arenaLayouts.length >= 17, "V15 arena diagnostics did not include all built-in maps.");
+  assert(arenaLayouts.length >= 17,
+    "V15 arena diagnostics did not include all built-in maps. Count=" + arenaLayouts.length + " Maps=" + JSON.stringify(arenaLayouts.map(layout => layout.map)));
   const crowdedLayouts = arenaLayouts.filter(layout => layout.overlaps !== 0 || layout.placed < 12);
   assert(crowdedLayouts.length === 0,
     "V15 arena platforms still overlap or were excessively dropped: " + JSON.stringify(crowdedLayouts));
