@@ -8,6 +8,9 @@ local LEADERBOARD_WINS = "tag_online_wins_v2"
 local LEADERBOARD_LOSSES = "tag_online_losses_v2"
 local LEADERBOARD_MATCHES = "tag_online_matches_v2"
 local LEADERBOARD_TAGS = "tag_online_tags_v2"
+local LEADERBOARD_ELO = "tag_online_elo_v1"
+local LEADERBOARD_TAGPOINTS = "tag_online_tagpoints_v1"
+local PUBLIC_MAPS_COLLECTION = "tag_public_maps"
 local WEEKLY_TOURNAMENT = "tag_weekly_v2"
 local ONLINE_STREAM = {
   mode = 100,
@@ -47,16 +50,100 @@ local function clean_modifiers(value)
   return result
 end
 
+local PUBLIC_OBJECT_TYPES = {
+  platform = true, structure = true, orb = true, pad = true, spawn = true,
+  npc = true, modifier = true, event = true, decoration = true
+}
+local PUBLIC_MODIFIERS = {
+  doublejump = true, superspeed = true, decoys = true, chained = true,
+  sentinels = true, parry = true, munci = true
+}
+
+local function sanitize_public_level(source)
+  if type(source) ~= "table" or type(source.objects) ~= "table" then
+    error("Invalid TAG! map data.")
+  end
+  if #source.objects < 1 or #source.objects > 350 then
+    error("A public map must contain between 1 and 350 objects.")
+  end
+  local id = tostring(source.id or ""):gsub("[^%w_-]", ""):sub(1, 48)
+  if id == "" then error("This map is missing its local map ID.") end
+  local level = {
+    id = id,
+    name = tostring(source.name or "Community Arena"):gsub("[%c]", " "):sub(1, 32),
+    description = tostring(source.description or ""):gsub("[%c]", " "):sub(1, 220),
+    music = "",
+    modifiers = {},
+    objects = {}
+  }
+  if level.name == "" then level.name = "Community Arena" end
+  for _, object in ipairs(source.objects) do
+    if type(object) == "table" and PUBLIC_OBJECT_TYPES[object.type] then
+      local o = {
+        type = object.type,
+        x = clamp(valid_number(object.x) or 0, 18, 1182),
+        y = clamp(valid_number(object.y) or 0, 20, 680),
+        w = clamp(valid_number(object.w) or 28, 6, 500),
+        h = clamp(valid_number(object.h) or 16, 6, 180)
+      }
+      if type(object.color) == "string" and object.color:match("^#%x%x%x%x%x%x$") then
+        o.color = object.color
+      end
+      if object.type == "orb" then
+        o.r = clamp(valid_number(object.r) or 14, 6, 48)
+        o.forceX = clamp(valid_number(object.forceX) or 0, -1600, 1600)
+        o.forceY = clamp(valid_number(object.forceY) or -610, -1600, 1600)
+      elseif object.type == "platform" or object.type == "structure" then
+        o.motionAmp = clamp(valid_number(object.motionAmp) or 0, 0, 350)
+        o.motionSpeed = clamp(valid_number(object.motionSpeed) or 0.7, 0.1, 5)
+      elseif object.type == "modifier" and PUBLIC_MODIFIERS[tostring(object.modifier or "")] then
+        o.modifier = tostring(object.modifier)
+        local found = false
+        for _, item in ipairs(level.modifiers) do if item == o.modifier then found = true end end
+        if not found and #level.modifiers < 3 then table.insert(level.modifiers, o.modifier) end
+      elseif object.type == "decoration" then
+        o.decoration = tostring(object.decoration or "tree"):sub(1, 24)
+      elseif object.type == "event" then
+        o.event = tostring(object.event or "sandstorm"):sub(1, 24)
+      elseif object.type == "npc" then
+        o.npc = "munci"
+      end
+      table.insert(level.objects, o)
+    end
+  end
+  if #level.objects < 1 then error("This map has no supported objects.") end
+  local encoded = nk.json_encode(level)
+  if #encoded > 48000 then error("This map is too large to publish (48 KB maximum).") end
+  return level
+end
+
 local function ordered_players(state)
   local ids = {}
-  for user_id, player in pairs(state.players) do
-    if player and player.connected then table.insert(ids, user_id) end
+  if state.public_map and type(state.slot_order) == "table" then
+    local seen = {}
+    for _, user_id in ipairs(state.slot_order) do
+      local player = state.players[user_id]
+      if player and player.connected then
+        table.insert(ids, user_id)
+        seen[user_id] = true
+      end
+    end
+    local extras = {}
+    for user_id, player in pairs(state.players) do
+      if player and player.connected and not seen[user_id] then table.insert(extras, user_id) end
+    end
+    table.sort(extras)
+    for _, user_id in ipairs(extras) do table.insert(ids, user_id) end
+  else
+    for user_id, player in pairs(state.players) do
+      if player and player.connected then table.insert(ids, user_id) end
+    end
+    table.sort(ids, function(a, b)
+      if state.owner_id and a == state.owner_id then return true end
+      if state.owner_id and b == state.owner_id then return false end
+      return a < b
+    end)
   end
-  table.sort(ids, function(a, b)
-    if state.owner_id and a == state.owner_id then return true end
-    if state.owner_id and b == state.owner_id then return false end
-    return a < b
-  end)
   state.order = ids
   return ids
 end
@@ -115,7 +202,12 @@ local function public_state(state)
 end
 
 local function broadcast_state(dispatcher, state)
-  dispatcher.broadcast_message(11, nk.json_encode(public_state(state)), nil, nil)
+  local snapshot = public_state(state)
+  if state.public_map and state.custom_map_pending and state.custom_map then
+    snapshot.custom_map = state.custom_map
+    state.custom_map_pending = false
+  end
+  dispatcher.broadcast_message(11, nk.json_encode(snapshot), nil, nil)
 end
 
 local function write_progress_record(id, user_id, username, metadata, score_add)
@@ -127,12 +219,41 @@ local function write_progress_record(id, user_id, username, metadata, score_add)
   end
 end
 
+local function write_elo_progress(user_id, username, delta, metadata)
+  local current = 100
+  local ok, records, owner_records = pcall(
+    nk.leaderboard_records_list, LEADERBOARD_ELO, { user_id }, 1, "", 0
+  )
+  if ok then
+    local record = (owner_records and owner_records[1]) or (records and records[1])
+    if record and tonumber(record.score) then current = tonumber(record.score) end
+  else
+    nk.logger_warn("TAG! could not read current ELO for " .. tostring(user_id) .. ": " .. tostring(records))
+  end
+  local wrote, result, err = pcall(
+    nk.leaderboard_record_write, LEADERBOARD_ELO, user_id, username,
+    math.max(0, current + delta), 0, metadata, "set"
+  )
+  if not wrote then
+    nk.logger_error("TAG! ELO write threw: " .. tostring(result))
+  elseif err then
+    nk.logger_error("TAG! ELO write failed: " .. tostring(err))
+  end
+end
+
 local function award_match(state)
   if state.result_awarded then return end
   state.result_awarded = true
   local ids = ordered_players(state)
   local winner_user_id = state.winner_user_id
   local winner = winner_user_id and state.players[winner_user_id] or nil
+
+  -- A disconnect with more than 30 seconds remaining ends the match but awards
+  -- no competitive points. Disconnects at 30 seconds or less count as a result.
+  if state.end_reason == "opponent_disconnected" and (tonumber(state.remaining) or 0) > 30 then
+    nk.logger_info("TAG! early disconnect: result recorded without rewards for " .. tostring(state.match_id))
+    return
+  end
 
   local all_ids = {}
   for user_id, player in pairs(state.players) do
@@ -152,8 +273,11 @@ local function award_match(state)
     write_progress_record(LEADERBOARD_MATCHES, user_id, p.username, metadata)
     if user_id == winner_user_id then
       write_progress_record(LEADERBOARD_WINS, user_id, p.username, metadata)
+      write_elo_progress(user_id, p.username, 10, metadata)
+      write_progress_record(LEADERBOARD_TAGPOINTS, user_id, p.username, metadata, 1)
     else
       write_progress_record(LEADERBOARD_LOSSES, user_id, p.username, metadata)
+      write_elo_progress(user_id, p.username, -5, metadata)
     end
     if (p.tags or 0) > 0 then
       write_progress_record(LEADERBOARD_TAGS, user_id, p.username, metadata, p.tags)
@@ -328,8 +452,12 @@ function M.match_init(context, params)
     expected_users = {},
     tournament_mode = params.tournament_mode == true,
     bot_match = params.bot_match == true,
+    public_map = params.public_map == true,
+    custom_map = params.custom_map,
+    public_map_key = tostring(params.public_map_key or ""), 
+    slot_order = {},
     tournament_title = tostring(params.tournament_title or "Community Tournament"):sub(1, 32),
-    target_count = params.tournament_mode == true and 4 or clamp(math.floor(valid_number(params.target_count) or 2), 2, MAX_PLAYERS),
+    target_count = (params.tournament_mode == true or params.public_map == true) and 4 or clamp(math.floor(valid_number(params.target_count) or 2), 2, MAX_PLAYERS),
     owner_id = params.owner_id,
     host_user_id = params.owner_id,
     created_by = params.created_by or "unknown",
@@ -373,13 +501,35 @@ function M.match_init(context, params)
 
   nk.logger_info("TAG! authoritative match created: " .. tostring(context.match_id))
   local label = "TAG_MATCH"
-  if state.tournament_mode then
+  if state.public_map then
+    label = "TAG_PUBLIC_MAP|" .. state.public_map_key
+  elseif state.tournament_mode then
     label = "TAG_TOURNAMENT|" .. state.tournament_title:gsub("|", " ") .. "|" .. mode .. "|" .. map
   end
   return state, TICK_RATE, label
 end
 
 function M.match_join_attempt(context, dispatcher, tick, state, presence, metadata)
+  if state.public_map then
+    if state.status == "result" or state.status == "closed" then
+      return state, false, "This TAG! map match has already ended."
+    end
+    local bots = 0
+    for _, player in pairs(state.players) do
+      if player and player.connected and player.is_bot then bots = bots + 1 end
+    end
+    local humans = 0
+    for _, player in pairs(state.players) do
+      if player and player.connected and not player.is_bot then humans = humans + 1 end
+    end
+    if state.status == "lobby" then
+      if humans >= state.target_count then return state, false, "All player slots are taken." end
+      return state, true
+    end
+    if bots <= 0 then return state, false, "All three bot slots have been taken by players." end
+    return state, true
+  end
+
   if state.status ~= "lobby" then return state, false, "This TAG! round has already started." end
   local count = 0
   for _, player in pairs(state.players) do if player.connected then count = count + 1 end end
@@ -393,6 +543,104 @@ function M.match_join_attempt(context, dispatcher, tick, state, presence, metada
 end
 
 function M.match_join(context, dispatcher, tick, state, presences)
+  if state.public_map then
+    for _, presence in ipairs(presences) do
+      local replace_slot = nil
+      local previous_order = ordered_players(state)
+      local previous_scores = state.scores or {}
+      local previous_tagger = previous_order[state.tagged]
+      if state.status ~= "lobby" then
+        for slot, existing_id in ipairs(state.slot_order or {}) do
+          local existing = state.players[existing_id]
+          if existing and existing.connected and existing.is_bot then
+            replace_slot = slot
+            existing.connected = false
+            break
+          end
+        end
+        if not replace_slot then
+          nk.logger_warn("TAG! public map join rejected after slot check for " .. tostring(context.match_id))
+        end
+      end
+
+      local player = {
+        user_id = presence.user_id,
+        username = presence.username,
+        session_id = presence.session_id,
+        connected = true,
+        violations = 0,
+        tags = 0,
+        is_bot = false
+      }
+      if replace_slot then
+        local bot_id = previous_order[replace_slot] or state.slot_order[replace_slot]
+        local bot = state.players[bot_id]
+        if bot then
+          player.x, player.y = bot.x, bot.y
+          player.vx, player.vy = bot.vx, bot.vy
+          player.face = bot.face
+          player.tags = bot.tags or 0
+        end
+        state.slot_order[replace_slot] = presence.user_id
+      else
+        table.insert(state.slot_order, presence.user_id)
+      end
+      state.players[presence.user_id] = player
+      state.sessions[presence.session_id] = presence.user_id
+
+      local current_order = ordered_players(state)
+      if replace_slot then
+        local remapped = {}
+        local new_tagger_slot = 1
+        for slot, user_id in ipairs(current_order) do
+          if user_id == previous_tagger then new_tagger_slot = slot end
+          if user_id == presence.user_id then
+            remapped[slot] = previous_scores[replace_slot] or 0
+          else
+            for old_slot, old_id in ipairs(previous_order) do
+              if old_id == user_id then remapped[slot] = previous_scores[old_slot] or 0 break end
+            end
+          end
+        end
+        state.scores = remapped
+        state.tagged = new_tagger_slot
+      end
+    end
+
+    -- The first entrant gets three arena bots. Later entrants replace a bot in-place.
+    if state.status == "lobby" then
+      local bot_number = 1
+      while #state.slot_order < state.target_count do
+        local bot_id = "tagbot_" .. tostring(state.match_id):gsub("[^%w]", ""):sub(1, 10) .. "_" .. tostring(bot_number)
+        while state.players[bot_id] do bot_number = bot_number + 1; bot_id = "tagbot_" .. tostring(state.match_id):gsub("[^%w]", ""):sub(1, 10) .. "_" .. tostring(bot_number) end
+        state.players[bot_id] = {
+          user_id = bot_id,
+          username = "ARENA BOT " .. tostring(bot_number),
+          is_bot = true, connected = true, tags = 0, violations = 0,
+          x = 0.18 + bot_number * 0.20, y = 0.68, vx = 0, vy = 0, face = -1
+        }
+        table.insert(state.slot_order, bot_id)
+        bot_number = bot_number + 1
+      end
+      local ids = ordered_players(state)
+      state.status = "countdown"
+      state.countdown = 3
+      state.remaining = state.length
+      state.tagged = 1
+      state.tag_cooldown = 3
+      state.scores = {}
+      state.infected = {}
+      for slot, user_id in ipairs(ids) do
+        state.scores[slot] = 0
+        if slot == 1 and state.mode == "infection" then state.infected[user_id] = true end
+      end
+    end
+
+    state.custom_map_pending = true
+    broadcast_state(dispatcher, state)
+    return state
+  end
+
   for _, presence in ipairs(presences) do
     local player = state.players[presence.user_id] or {
       user_id = presence.user_id,
@@ -444,7 +692,6 @@ function M.match_join(context, dispatcher, tick, state, presences)
   broadcast_state(dispatcher, state)
   return state
 end
-
 function M.match_leave(context, dispatcher, tick, state, presences)
   local previous_order = state.order or ordered_players(state)
   for _, presence in ipairs(presences) do
@@ -453,6 +700,47 @@ function M.match_leave(context, dispatcher, tick, state, presences)
       player.connected = false
       state.sessions[presence.session_id] = nil
     end
+  end
+
+  if state.public_map then
+    local ids = ordered_players(state)
+    local human_ids = {}
+    for _, user_id in ipairs(ids) do
+      local p = state.players[user_id]
+      if p and not p.is_bot then table.insert(human_ids, user_id) end
+    end
+    if state.status == "playing" or state.status == "countdown" then
+      if #human_ids == 1 then
+        local winner_slot = 1
+        for slot, user_id in ipairs(ids) do if user_id == human_ids[1] then winner_slot = slot break end end
+        finish_match(state, winner_slot, "opponent_disconnected")
+        broadcast_state(dispatcher, state)
+        return state
+      elseif #human_ids == 0 then
+        state.status = "closed"
+        state.end_reason = "all_players_disconnected"
+        broadcast_state(dispatcher, state)
+        return state
+      end
+    end
+
+    -- In multi-human public-map matches, a disconnected human is replaced by a bot.
+    for slot, old_id in ipairs(state.slot_order or {}) do
+      local old_player = state.players[old_id]
+      if old_player and not old_player.connected and not old_player.is_bot then
+        local bot_id = "tagbot_" .. tostring(state.match_id):gsub("[^%w]", ""):sub(1, 10) .. "_rejoin_" .. tostring(tick) .. "_" .. tostring(slot)
+        state.players[bot_id] = {
+          user_id = bot_id, username = "ARENA BOT", is_bot = true,
+          connected = true, tags = 0, violations = 0,
+          x = old_player.x or 0.5, y = old_player.y or 0.7,
+          vx = 0, vy = 0, face = old_player.face or -1
+        }
+        state.slot_order[slot] = bot_id
+      end
+    end
+    state.order = ordered_players(state)
+    broadcast_state(dispatcher, state)
+    return state
   end
 
   local ids = ordered_players(state)
@@ -601,6 +889,21 @@ end
 function M.match_signal(context, dispatcher, tick, state, data)
   local ok, signal = pcall(nk.json_decode, data or "")
   if not ok or type(signal) ~= "table" then return state, nk.json_encode({ ok = false, error = "Invalid tournament signal." }) end
+  if signal.action == "public_map_status" then
+    if not state.public_map then
+      return state, nk.json_encode({ ok = false, joinable = false, error = "Not a public map match." })
+    end
+    local bots = 0
+    for _, player in pairs(state.players) do
+      if player and player.connected and player.is_bot then bots = bots + 1 end
+    end
+    return state, nk.json_encode({
+      ok = true,
+      status = state.status,
+      bots = bots,
+      joinable = (state.status == "countdown" or state.status == "playing") and bots > 0
+    })
+  end
   if signal.action == "start_tournament" then
     if not state.tournament_mode then return state, nk.json_encode({ ok = false, error = "This is not a community tournament." }) end
     if signal.user_id ~= state.owner_id then return state, nk.json_encode({ ok = false, error = "Only the host can start this tournament." }) end
@@ -727,6 +1030,113 @@ local function create_bot_match(context, payload)
   })
 end
 
+local function publish_public_map(context, payload)
+  if not context.user_id then error("Sign in before publishing a map.") end
+  local request = {}
+  if payload and payload ~= "" then request = nk.json_decode(payload) or {} end
+  local level = sanitize_public_level(request.level)
+  local key = context.user_id .. "_" .. level.id
+  local record = {
+    owner_id = context.user_id,
+    creator = context.username or "TAG! Player",
+    name = level.name,
+    description = level.description,
+    object_count = #level.objects,
+    updated_at = os.time(),
+    level = level
+  }
+  local ok, acks, err = pcall(nk.storage_write, {{
+    collection = PUBLIC_MAPS_COLLECTION,
+    key = key,
+    user_id = context.user_id,
+    value = record,
+    version = "*",
+    permission_read = 2,
+    permission_write = 0
+  }})
+  if not ok then error("Could not publish this map: " .. tostring(acks)) end
+  if err then error("Could not publish this map: " .. tostring(err)) end
+  return nk.json_encode({ ok = true, key = key, owner_id = context.user_id, name = level.name })
+end
+
+local function list_public_maps(context, payload)
+  local request = {}
+  if payload and payload ~= "" then request = nk.json_decode(payload) or {} end
+  local query = tostring(request.query or ""):lower():sub(1, 64)
+  local objects, cursor, err = nk.storage_list("", PUBLIC_MAPS_COLLECTION, 100, "", context.user_id)
+  if err then error(err) end
+  local maps = {}
+  for _, object in ipairs(objects or {}) do
+    local value = object.value or {}
+    local name = tostring(value.name or "")
+    local description = tostring(value.description or "")
+    local creator = tostring(value.creator or "TAG! Player")
+    local haystack = (name .. " " .. description .. " " .. creator):lower()
+    if query == "" or haystack:find(query, 1, true) then
+      table.insert(maps, {
+        key = object.key,
+        owner_id = object.user_id,
+        name = name,
+        description = description,
+        creator = creator,
+        object_count = tonumber(value.object_count) or 0,
+        updated_at = tonumber(value.updated_at) or 0
+      })
+    end
+  end
+  table.sort(maps, function(a, b) return (a.updated_at or 0) > (b.updated_at or 0) end)
+  return nk.json_encode({ maps = maps, next_cursor = cursor })
+end
+
+local function start_public_map_match(context, payload)
+  local request = {}
+  if payload and payload ~= "" then request = nk.json_decode(payload) or {} end
+  local owner_id = tostring(request.owner_id or "")
+  local key = tostring(request.key or "")
+  if owner_id == "" or key == "" or #key > 128 then error("Choose a published TAG! map first.") end
+  local objects, read_err = nk.storage_read({{
+    collection = PUBLIC_MAPS_COLLECTION,
+    key = key,
+    user_id = owner_id
+  }})
+  if read_err then error(read_err) end
+  if not objects or not objects[1] then error("That online map is no longer available.") end
+  local stored = objects[1].value or {}
+  local level = sanitize_public_level(stored.level)
+  local label = "TAG_PUBLIC_MAP|" .. key
+  local ok, matches, list_err = pcall(nk.match_list, 50, true, label, 1, MAX_PLAYERS)
+  if ok then
+    for _, item in ipairs(matches or {}) do
+      local signal_ok, _, response, signal_err = pcall(
+        nk.match_signal, item.match_id, nk.json_encode({ action = "public_map_status" })
+      )
+      if signal_ok and not signal_err and response then
+        local decoded_ok, info = pcall(nk.json_decode, response)
+        if decoded_ok and info and info.joinable then
+          return nk.json_encode({ match_id = item.match_id, map_name = level.name, joined_existing = true })
+        end
+      end
+    end
+  elseif list_err then
+    nk.logger_warn("TAG! public map match search failed: " .. tostring(matches))
+  end
+
+  local match_id = nk.match_create("tag_match", {
+    created_by = "public_map",
+    owner_id = context.user_id,
+    public_map = true,
+    bot_match = true,
+    custom_map = level,
+    public_map_key = key,
+    mode = "classic",
+    map = level.id,
+    length = 120,
+    target_count = MAX_PLAYERS
+  })
+  if not match_id then error("The server could not create a public map match.") end
+  return nk.json_encode({ match_id = match_id, map_name = level.name, joined_existing = false })
+end
+
 local function online_player_count()
   local presences, err = nk.stream_user_list(ONLINE_STREAM, false, true)
   if err then error(err) end
@@ -833,11 +1243,15 @@ nk.register_rpc(start_tournament, "tag_start_tournament")
 nk.register_rpc(register_online_presence, "tag_online_presence")
 nk.register_rpc(unregister_online_presence, "tag_online_leave")
 nk.register_rpc(get_online_player_count, "tag_online_count")
+nk.register_rpc(publish_public_map, "tag_publish_map")
+nk.register_rpc(list_public_maps, "tag_list_public_maps")
+nk.register_rpc(start_public_map_match, "tag_start_public_map_match")
 
 nk.run_once(function(context)
-  local leaderboard_ids = { LEADERBOARD_WINS, LEADERBOARD_LOSSES, LEADERBOARD_MATCHES, LEADERBOARD_TAGS }
+  local leaderboard_ids = { LEADERBOARD_WINS, LEADERBOARD_LOSSES, LEADERBOARD_MATCHES, LEADERBOARD_TAGS, LEADERBOARD_ELO, LEADERBOARD_TAGPOINTS }
   for _, id in ipairs(leaderboard_ids) do
-    local err = nk.leaderboard_create(id, true, "desc", "incr", "", {}, true)
+    local operator = id == LEADERBOARD_ELO and "set" or "incr"
+    local err = nk.leaderboard_create(id, true, "desc", operator, "", {}, true)
     if err then
       nk.logger_error("TAG! authoritative leaderboard setup failed for " .. id .. ": " .. tostring(err))
     else
