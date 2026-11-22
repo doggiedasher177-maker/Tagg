@@ -333,6 +333,28 @@ body.argentina-mode #menuScreen{background:linear-gradient(180deg,#75bde9 0 32%,
 .profile-stat-grid span{display:block;margin-top:4px;color:#9db0c5;font-size:8px;font-weight:950;letter-spacing:.14em}
 #onlineLeaderboard .leaderboard-entry{display:flex;justify-content:space-between;align-items:center;gap:12px}
 @media(max-width:520px){.quickmatch-box{padding:22px 16px}.profile-stat-grid{grid-template-columns:repeat(2,1fr)}}
+
+/* TAG! runner profile */
+.online-profile-pair{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+.hero-actions #profileBtn{background:linear-gradient(135deg,#224c6c,#287ea7)!important;color:#e7faff!important;border:1px solid #7ed9ff80!important;box-shadow:0 5px 0 #12344d!important;min-width:125px;min-height:54px;border-radius:12px;font-size:10px}
+.hero-actions #profileBtn:hover{background:linear-gradient(135deg,#2c6388,#329dca)!important;transform:translateY(-2px)}
+.profile-panel{width:min(820px,calc(100% - 26px));max-height:calc(100vh - 24px);overflow:auto;text-align:left;padding:clamp(20px,4vw,38px)}
+.profile-panel>h2{text-align:center;margin-bottom:22px}
+.profile-hero{display:grid;grid-template-columns:190px 1fr;gap:28px;align-items:center;padding:20px;border:1px solid #b3dff22d;border-radius:18px;background:linear-gradient(135deg,#1a2d43,#111c30)}
+.profile-photo-column{display:flex;flex-direction:column;align-items:center;gap:8px}
+.profile-photo-frame{position:relative;width:156px;aspect-ratio:4/5;padding:7px;background:linear-gradient(145deg,#f5fbff,#9fb8c8 48%,#eaf5fa);border-radius:13px;box-shadow:0 9px 24px #0008,0 0 0 1px #ffffff99;transform:rotate(-1.4deg);overflow:hidden}
+.profile-photo-frame svg,.profile-photo-frame img{display:block;width:100%;height:100%;object-fit:cover;border-radius:6px;background:#203b55}
+.profile-custom-photo{display:none}
+.photo-flash{position:absolute;top:12px;right:12px;width:9px;height:9px;border-radius:50%;background:#eaffff;box-shadow:0 0 13px 4px #b7f5ff99;pointer-events:none}
+.profile-photo-column button{width:100%;max-width:160px;padding:10px}
+.profile-photo-note{color:#8ea6bd;font-size:9px;text-align:center;line-height:1.4}
+.profile-identity h3{font-size:clamp(25px,4vw,38px);letter-spacing:.04em;margin:8px 0;color:#f0f8ff;overflow-wrap:anywhere}
+.profile-identity p{color:#9eb2c8;font-size:12px;line-height:1.6}
+.profile-stat-grid-five{grid-template-columns:repeat(5,minmax(0,1fr));margin:18px 0 8px}
+.profile-stat-grid-five div{border:1px solid #bfeaff1c;background:linear-gradient(145deg,#1a2b42,#101a2c);padding:15px 6px}
+.profile-stat-grid-five b{font-size:clamp(19px,3vw,27px)}
+.profile-footnote{color:#8297ad!important;font-size:10px!important;line-height:1.6!important;text-align:center;margin:10px 0 17px!important}
+@media(max-width:600px){.online-profile-pair{gap:6px}.hero-actions #profileBtn,.hero-actions #onlineSoonBtn{min-width:105px}.profile-hero{grid-template-columns:1fr;gap:15px;text-align:center}.profile-photo-frame{width:138px}.profile-stat-grid-five{grid-template-columns:repeat(2,minmax(0,1fr))}.profile-stat-grid-five div:last-child{grid-column:span 2}}
 </style>
 </head>
 <body>
@@ -365,7 +387,7 @@ body.argentina-mode #menuScreen{background:linear-gradient(180deg,#75bde9 0 32%,
         <button class="secondary-btn" id="blockEditorBtn" type="button">▦ BLOCK LEVEL CREATOR</button>
         <button class="secondary-btn" id="achievementsBtn" type="button">★ ACHIEVEMENTS</button>
         <button class="secondary-btn" id="leaderboardBtn" type="button">🏅 LEADERBOARDS</button>
-        <button class="secondary-btn" id="onlineSoonBtn" type="button">🌐 ONLINE</button>
+        <div class="online-profile-pair"><button class="secondary-btn" id="onlineSoonBtn" type="button">🌐 ONLINE</button><button class="secondary-btn" id="profileBtn" type="button">👤 PROFILE</button></div>
       </div>
       <div class="creator-line">CREATED BY <b>ZYRON STUDIOS</b> · GAME CREATOR: Wuzeum (Fernando) · TOMAS BASTERRA & ST JOHN’S STUDENTS</div>
       <div class="realm-ornament"><i></i></div>
@@ -433,6 +455,77 @@ body.argentina-mode #menuScreen{background:linear-gradient(180deg,#75bde9 0 32%,
 <details class="online-settings"><summary>GAME SETTINGS</summary><div class="setting-row"><label for="onlineMap">Arena</label><select id="onlineMap"><option value="random">Random map</option><option value="forge">Emberglass Foundry</option><option value="archive">Astral Archive</option><option value="tidal">Drowned Observatory</option><option value="moon">Lunar Frontier</option><option value="greenland">Greenland Trail</option><option value="city">Neon City Rush</option><option value="mall">Overgrown Mall</option><option value="dojo">Shadow Ninja Dojo</option><option value="desert">Sunscorch Canyon</option><option value="glacier">Frostfall Peak</option><option value="skyport">Cloudline Skyport</option><option value="carnival">Starlight Midway</option><option value="volcano">Ashen Caldera</option><option value="bombonera">La Bombonera</option><option value="monumental">El Monumental</option><option value="hell">The Infernal Gate</option><option value="heaven">The Celestial Altars</option></select></div><div class="setting-row"><label for="onlineMode">Game mode</label><select id="onlineMode"><option value="classic">Classic Tag</option><option value="infection">Infection Tag</option></select></div><div class="setting-row"><label for="onlineLength">Round length</label><select id="onlineLength"><option value="60">60 seconds</option><option value="90">90 seconds</option><option value="120" selected>2 minutes</option><option value="180">3 minutes</option></select></div></details>
 <details class="online-more"><summary>FRIENDS, CHAT & TOURNAMENTS</summary><div class="online-grid"><div class="online-card"><h3>💬 ONLINE CHAT</h3><p>Talk in the global lobby or in your match.</p><select id="onlineChatTarget"><option value="match">Current online match</option><option value="global">Global lobby</option><option value="local">Local players</option><option value="bots">Bot players</option><option value="munci">Angry Munci</option></select><div id="onlineChatLog" class="online-chat-log"></div><div class="room-join"><input id="onlineChatInput" maxlength="240" placeholder="Write a message..."><button class="secondary-btn" id="onlineChatSendBtn" disabled>SEND</button></div><button class="secondary-btn" id="joinGlobalChatBtn" disabled>JOIN GLOBAL CHAT</button></div><div class="online-card"><h3>👥 FRIENDS</h3><p>Add a friend by their TAG! username and invite them to your private room.</p><div class="room-join"><input id="friendName" maxlength="16" placeholder="Friend username"><button class="secondary-btn" id="addFriendBtn" disabled>ADD</button></div><div id="onlineFriendList" class="online-chat-log" style="height:180px">Connect to load friends.</div><button class="secondary-btn" id="refreshFriendsBtn" disabled>REFRESH FRIENDS</button></div><div class="online-card"><h3>🏆 COMMUNITY TOURNAMENTS</h3><p>Host a tournament or join another player's lobby. Any empty slots become arena bots when the host starts.</p><div class="room-join"><input id="tournamentTitleInput" maxlength="32" placeholder="Tournament name"><button class="primary-small" id="createCommunityTournamentBtn" disabled>HOST</button></div><div id="onlineTournamentList">Connect to discover tournaments.</div><div class="result-actions"><button class="secondary-btn" id="refreshTournamentsBtn" disabled>REFRESH</button><button class="primary-small" id="startTournamentBtn" disabled>START MY TOURNAMENT</button></div></div></div></details><div class="result-actions"><button class="secondary-btn" id="openOnlineLeaderboardBtn">🏅 LEADERBOARD & PROFILE</button><button class="secondary-btn" id="backOnlineBtn">BACK TO TITLE</button></div></div></section>
 </div></section>
+<section class="screen" id="profileScreen" aria-label="Player profile">
+  <div class="full-panel profile-panel">
+    <div class="eyebrow">ZYRON STUDIOS NETWORK</div>
+    <h2>PLAYER PROFILE</h2>
+    <div class="profile-hero">
+      <div class="profile-photo-column">
+        <div class="profile-photo-frame" id="profilePhotoFrame">
+          <svg id="profileAvatarPlaceholder" viewBox="0 0 220 270" role="img" aria-label="Blue TAG! runner portrait">
+            <defs>
+              <linearGradient id="portraitSky" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#203c5a"/><stop offset=".6" stop-color="#4e91b8"/><stop offset="1" stop-color="#a8d6dd"/></linearGradient>
+              <linearGradient id="portraitArmor" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d9f7ff"/><stop offset=".38" stop-color="#36c8ff"/><stop offset="1" stop-color="#147aa8"/></linearGradient>
+              <linearGradient id="portraitHelm" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8e8"/><stop offset=".5" stop-color="#c9d9df"/><stop offset="1" stop-color="#6e8798"/></linearGradient>
+              <filter id="portraitGlow"><feGaussianBlur stdDeviation="5"/></filter>
+            </defs>
+            <rect width="220" height="270" fill="url(#portraitSky)"/>
+            <circle cx="174" cy="47" r="24" fill="#dfffff" opacity=".22" filter="url(#portraitGlow)"/>
+            <circle cx="174" cy="47" r="9" fill="#e5fbff" opacity=".8"/>
+            <path d="M0 210 Q50 180 91 212 T220 194 V270 H0Z" fill="#18324c" opacity=".55"/>
+            <path d="M15 57 L29 49 L24 67Z M192 127 L203 120 L199 139Z M45 111 L51 104 L55 115Z" fill="#e4ffff" opacity=".8"/>
+            <ellipse cx="110" cy="244" rx="65" ry="13" fill="#0a1a2a" opacity=".35"/>
+            <!-- blue explorer mantle -->
+            <path d="M93 129 Q62 138 49 196 Q77 191 91 180 L110 160 L133 189 Q157 193 171 198 Q159 147 128 130Z" fill="#208cbd"/>
+            <path d="M91 142 Q66 167 62 205 L87 198 L111 176Z" fill="#36c8ff"/>
+            <path d="M126 143 Q152 166 158 205 L135 198 L110 176Z" fill="#1685b4"/>
+            <!-- legs and boots -->
+            <path d="M91 187 L87 222 L103 225 L109 192Z M114 192 L119 225 L137 222 L129 187Z" fill="#172a3d"/>
+            <path d="M83 220 Q95 215 105 225 L105 238 L76 238 Q72 230 83 220Z M118 225 Q131 215 141 220 L148 238 L118 238Z" fill="#0d1b2b"/>
+            <path d="M82 230 H104 M120 230 H143" stroke="#8beaff" stroke-width="3" stroke-linecap="round"/>
+            <!-- chest plate -->
+            <path d="M78 133 Q110 119 143 133 L153 186 Q110 211 67 186Z" fill="url(#portraitArmor)" stroke="#d7f7ff" stroke-width="3"/>
+            <path d="M86 145 Q110 155 134 145 L130 180 Q110 191 90 180Z" fill="#197ba7" opacity=".85"/>
+            <path d="M110 151 L102 167 L110 163 L118 167Z" fill="#dcfbff"/>
+            <!-- helmet and crest -->
+            <path d="M75 100 Q69 61 93 50 Q111 41 130 52 Q153 66 145 105 Q136 123 110 124 Q84 121 75 100Z" fill="url(#portraitHelm)" stroke="#f2ffff" stroke-width="3"/>
+            <path d="M125 65 Q142 39 158 53 Q157 78 128 84 Q118 76 125 65Z" fill="#36c8ff" stroke="#baf2ff" stroke-width="3"/>
+            <path d="M82 89 Q110 76 139 89 L136 107 Q110 119 84 107Z" fill="#14263b" stroke="#e4fbff" stroke-width="2"/>
+            <ellipse cx="99" cy="99" rx="5" ry="7" fill="#cfffff"/>
+            <ellipse cx="123" cy="99" rx="5" ry="7" fill="#cfffff"/>
+            <path d="M88 61 Q110 44 134 63" stroke="#fff" stroke-width="3" fill="none" opacity=".75" stroke-linecap="round"/>
+            <!-- photo gloss and frame detail -->
+            <path d="M9 12 H211 V258 H9Z" fill="none" stroke="#fff" stroke-width="2" opacity=".42"/>
+            <path d="M18 18 L68 18 L18 72Z" fill="#fff" opacity=".10"/>
+            <rect x="12" y="242" width="196" height="18" rx="3" fill="#071322" opacity=".72"/>
+            <text x="21" y="255" fill="#d9faff" font-size="8" font-family="Arial" letter-spacing="2">TAG! RUNNER · #002</text>
+          </svg>
+          <img id="profileCustomPhoto" class="profile-custom-photo" alt="Your custom profile picture">
+          <span class="photo-flash"></span>
+        </div>
+        <button class="secondary-btn" id="chooseProfilePhotoBtn" type="button">CHANGE PHOTO</button>
+        <button class="secondary-btn profile-remove-photo" id="removeProfilePhotoBtn" type="button" hidden>USE DEFAULT</button>
+        <input id="profilePhotoInput" type="file" accept="image/*" hidden>
+        <small class="profile-photo-note">Custom photo is saved on this device.</small>
+      </div>
+      <div class="profile-identity">
+        <div class="eyebrow">YOUR RUNNER CARD</div>
+        <h3 id="profileDisplayName">NOT CONNECTED</h3>
+        <p id="profileConnectionState">Connect to TAG! Online to load your account stats and global rank.</p>
+        <button class="primary-small" id="profileConnectBtn" type="button">CONNECT ONLINE</button>
+      </div>
+    </div>
+    <div class="profile-stat-grid profile-stat-grid-five">
+      <div><b id="profileWins">0</b><span>WINS</span></div>
+      <div><b id="profileTags">0</b><span>TAGS</span></div>
+      <div><b id="profileLosses">0</b><span>LOSSES</span></div>
+      <div><b id="profileOnlineWins">0</b><span>ONLINE WINS</span></div>
+      <div><b id="profileRank">—</b><span>GLOBAL RANK</span></div>
+    </div>
+    <p class="profile-footnote">WINS counts local TAG! victories saved in this browser. Online wins, tags, losses and rank are linked to your TAG! account.</p>
+    <div class="result-actions"><button class="secondary-btn" id="profileLeaderboardBtn">VIEW LEADERBOARD</button><button class="secondary-btn" id="backProfileBtn">BACK TO TITLE</button></div>
+  </div>
+</section>
 <section class="screen" id="leaderboardScreen" aria-label="Leaderboards"><div class="full-panel"><div class="eyebrow">TAG! HALL OF FAME</div><h2>Leaderboards</h2><p>Local wins and global online rankings.</p><div id="localLeaderboard" class="leaderboard-list"></div><div id="onlinePlayerStats" class="online-status">Connect to view your verified online wins, losses, matches and tags.</div><div class="online-profile-card"><div class="eyebrow">RUNNER PROFILE</div><h3 id="onlineProfileName">NOT CONNECTED</h3><small id="onlineProfileId">Your player profile will appear after connecting.</small><div class="profile-stat-grid"><div><b id="profileWins">0</b><span>WINS</span></div><div><b id="profileLosses">0</b><span>LOSSES</span></div><div><b id="profileTags">0</b><span>TAGS</span></div><div><b id="profileMatches">0</b><span>MATCHES</span></div></div></div><div id="onlineLeaderboard" class="leaderboard-list"><div class="online-soon"><span>🌐</span><div><b>GLOBAL ONLINE LEADERBOARD</b><small>Connect to Nakama to load worldwide rankings.</small></div></div></div><button class="secondary-btn" id="openOnlineFromBoard" type="button">CONNECT TO ONLINE</button><button class="primary-small" id="backLeaderboardBtn">BACK TO TITLE</button></div></section>
 <section class="screen" id="blockCreatorScreen" aria-label="Block level creator">
   <div class="editor-shell" id="editorHome">
@@ -529,7 +622,7 @@ const ctx = canvas.getContext('2d', { alpha: false });
 const $ = id => document.getElementById(id);
 const screens = {
   menu: $('menuScreen'), ready: $('readyScreen'), count: $('countScreen'),
-  pause: $('pauseScreen'), result: $('resultScreen'), changelog: $('changelogScreen'), settings: $('settingsScreen'), tournament: $('tournamentScreen'), achievement: $('achievementScreen'), leaderboard: $('leaderboardScreen'), online: $('onlineScreen'), blockCreator: $('blockCreatorScreen')
+  pause: $('pauseScreen'), result: $('resultScreen'), changelog: $('changelogScreen'), settings: $('settingsScreen'), tournament: $('tournamentScreen'), achievement: $('achievementScreen'), leaderboard: $('leaderboardScreen'), profile: $('profileScreen'), online: $('onlineScreen'), blockCreator: $('blockCreatorScreen')
 };
 
 const controls = [
