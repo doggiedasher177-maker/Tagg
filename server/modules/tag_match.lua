@@ -186,6 +186,7 @@ local function public_state(state)
     bot_match = state.bot_match or false,
     public_map = state.public_map or false,
     bot_loop_ticks = state.bot_loop_ticks or 0,
+    bot_ai_error = state.bot_ai_error,
     modifiers = state.modifiers or {},
     players = players,
     host_user_id = state.host_user_id,
@@ -1095,7 +1096,11 @@ function M.match_loop(context, dispatcher, tick, state, messages)
       nk.logger_info("TAG! authoritative round started: " .. tostring(context.match_id))
     end
   elseif state.status == "playing" then
-    update_match_bots(state, dt);
+    local bot_ok, bot_err = pcall(update_match_bots, state, dt)
+    if not bot_ok then
+      state.bot_ai_error = tostring(bot_err)
+      nk.logger_error("TAG! V15 server bot update failed: " .. tostring(bot_err))
+    end
     state.remaining = math.max(0, state.remaining - dt)
     state.tag_cooldown = math.max(0, state.tag_cooldown - dt)
     state.score_tick = (state.score_tick or 0) + dt
