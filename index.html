@@ -2225,13 +2225,32 @@ import { Client } from 'https://esm.sh/@heroiclabs/nakama-js@2.8.0';
   queueBotFallbackStarted=true;queueActive=false;clearQueueClocks();
   const ticket=matchmakerTicket?.ticket;matchmakerTicket=null;
   if(ticket&&socket){try{await socket.removeMatchmaker(ticket);}catch(e){}}
+  // A human match can arrive while the ticket is being removed or the bot RPC is pending.
+  // Re-check the queue generation after every async boundary so a late bot never wins that race.
+  if(generation!==queueGeneration||match||queueCancelRequested)return;
   try{
+    if(!client||!session||!socket)throw new Error('Your online connection is no longer ready. Reconnect and try again.');
     showQuickMatchModal('OPPONENT FOUND','No human opponent arrived. An arena bot is joining you now.','Starting a bot match with your selected map, mode, duration and modifiers.',{spinner:true,keep:false,cancel:false});
     const response=await client.rpc(session,'tag_create_bot_match',{mode:pendingMode,map:pendingMap,length:String(pendingLength),modifiers:pendingModifiers});
-    const data=rpcPayload(response);if(!data.match_id)throw new Error('The server did not return a bot match.');
-    if(generation!==queueGeneration||match)return;
-    const m=normalizeMatch(await socket.joinMatch(data.match_id));match=m;await enterMatch(m);closeQuickMatchModal();status('Bot opponent found. Your TAG! match is starting.','connected');
-  }catch(e){showQuickMatchModal('BOT MATCH UNAVAILABLE','Could not create the fallback bot match.','Please retry Quick Match or create a private room.',{spinner:false,keep:false,cancel:true});status('Bot match failed: '+e.message,'error');}
+    const data=rpcPayload(response);
+    if(!data.match_id)throw new Error('The server did not return a bot match.');
+    if(generation!==queueGeneration||match||queueCancelRequested)return;
+    const joined=normalizeMatch(await socket.joinMatch(data.match_id));
+    // The matchmaker callback may have joined a human room while joinMatch was in flight.
+    if(generation!==queueGeneration||match||queueCancelRequested){
+      if(joined?.match_id)try{await socket.leaveMatch(joined.match_id);}catch(e){}
+      return;
+    }
+    match=joined;
+    await enterMatch(joined);
+    closeQuickMatchModal();
+    status('Bot opponent found. Your TAG! match is starting.','connected');
+  }catch(e){
+    // Do not replace a newer human match or a cancelled search with a stale bot error.
+    if(generation!==queueGeneration||match||queueCancelRequested)return;
+    showQuickMatchModal('BOT MATCH UNAVAILABLE','Could not create the fallback bot match.','Please retry Quick Match or create a private room.',{spinner:false,keep:false,cancel:true});
+    status('Bot match failed: '+e.message,'error');
+  }
 }
 async function quickMatch(){
   if(!connected){
