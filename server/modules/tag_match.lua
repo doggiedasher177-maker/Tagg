@@ -1,7 +1,7 @@
 local nk = require("nakama")
 local M = {}
 
-local TICK_RATE = 10
+local TICK_RATE = 20
 local MAX_PLAYERS = 4
 local DEFAULT_LENGTH = 120
 local LEADERBOARD_WINS = "tag_online_wins_v2"
@@ -416,7 +416,7 @@ local function accept_player_snapshot(state, sender, data, tick)
   -- impossible teleports while allowing TAG!'s run, dash, jump and fall velocities.
   x, y = clamp(x, 0.015, 0.985), clamp(y, 0.015, 0.985)
   local last_tick = player.last_tick or tick
-  local elapsed = clamp((tick - last_tick) / TICK_RATE, 0.1, 0.6)
+  local elapsed = clamp((tick - last_tick) / TICK_RATE, 0.05, 0.6)
 
   if player.x ~= nil and player.y ~= nil then
     local max_dx = 0.82 * elapsed + 0.035
@@ -1123,6 +1123,8 @@ local function start_public_map_match(context, payload)
   if not objects or not objects[1] then error("That online map is no longer available.") end
   local stored = objects[1].value or {}
   local level = sanitize_public_level(stored.level)
+  -- Give every creator's copy a unique runtime map ID that fits match labels/state.
+  level.id = "cm_" .. key:gsub("[^%w]", ""):sub(-29)
   local label = "TAG_PUBLIC_MAP|" .. key
   local ok, matches, list_err = pcall(nk.match_list, 50, true, label, 1, MAX_PLAYERS)
   if ok then
