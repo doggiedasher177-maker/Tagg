@@ -1804,16 +1804,27 @@ function movePlayer(p,dt) {
     const currentTop=p.y-HALF_H;
     const previousUnderside=previousSolidY+solid.h;
     const currentUnderside=solid.y+solid.h;
+
+    // Swept underside collision. Use relative player/platform motion so a
+    // moving structure cannot be jumped through between animation frames.
+    // Also resolve a head already touching the underside (e.g. after spawn).
     const previousClearance=previousTop-previousUnderside;
     const currentClearance=currentTop-currentUnderside;
-    if(p.vy<0&&previousClearance>=-2&&currentClearance<=0){
+    const crossedUnderside=previousClearance>=-3&&currentClearance<=2;
+    const structureHeadOverlap=solid.kind==='structure'&&
+      currentTop<currentUnderside&&p.y+HALF_H>solid.y;
+    if((crossedUnderside||structureHeadOverlap)&&
+       (p.vy<0||solid.kind==='structure')){
       const travel=previousClearance-currentClearance;
       const hitTime=travel>0?clamp(previousClearance/travel,0,1):1;
       const playerXAtHit=previousX+(p.x-previousX)*hitTime;
       const solidXAtHit=previousSolidX+(solid.x-previousSolidX)*hitTime;
-      if(playerXAtHit+HALF_W>solidXAtHit&&playerXAtHit-HALF_W<solidXAtHit+solid.w){
+      const overlapsAtHit=playerXAtHit+HALF_W>solidXAtHit&&
+        playerXAtHit-HALF_W<solidXAtHit+solid.w;
+      const overlapsNow=p.x+HALF_W>solid.x&&p.x-HALF_W<solid.x+solid.w;
+      if(overlapsAtHit||overlapsNow){
         p.y=solid.y+solid.h+HALF_H;
-        p.vy=0;
+        p.vy=Math.max(0,p.vy);
         p.jumpBuffer=0;
         p.onGround=false;
         p.groundId=null;
