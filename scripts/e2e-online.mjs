@@ -190,6 +190,16 @@ try {
   // 30-second deadline (fake browser clock only; the production server remains real-time).
   await leaveMatch(second.page);
   await leaveMatch(first.page);
+  // Use a distinctive ruleset so another simultaneous test or normal player is
+  // unlikely to match this Quick Match before the 30-second bot fallback.
+  await first.page.evaluate(() => {
+    document.querySelector("#onlineMap").value = "heaven";
+    document.querySelector("#onlineMode").value = "infection";
+    document.querySelector("#onlineLength").value = "180";
+    document.querySelector("#onlineModifier1").value = "munci";
+    document.querySelector("#onlineModifier2").value = "parry";
+    document.querySelector("#onlineModifier3").value = "chained";
+  });
   await first.page.locator("#quickMatchBtn").click();
   await waitFor(first.page,
     () => (document.querySelector("#onlineStatus")?.textContent || "").includes("Bot opponent found"),
