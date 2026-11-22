@@ -1732,7 +1732,7 @@ function movePlayer(p,dt) {
   let landing=null;
   if(p.vy>=0) {
     const candidates = [
-      ...platforms.filter(s=>s.id!=='ceiling').map(s=>({...s,surfaceType:'platform'})),
+      ...platforms.filter(s=>s.id!=='ceiling'&&!(p.potionTime>0&&s.id!=='floor')).map(s=>({...s,surfaceType:'platform'})),
       ...pads.map((s,i)=>({...s,id:'pad-'+i,surfaceType:'pad'}))
     ];
     for(const s of candidates) {
@@ -1749,7 +1749,8 @@ function movePlayer(p,dt) {
     const overlapX=p.x+HALF_W>solid.x && p.x-HALF_W<solid.x+solid.w;
     const overlapY=p.y+HALF_H>solid.y && p.y-HALF_H<solid.y+solid.h;
     if(solid.oneWay && solid.kind!=='structure'){if(overlapX&&overlapY){const oldX=p.x-p.vx*dt;if(oldX+HALF_W<=solid.x+4){p.x=solid.x-HALF_W;p.vx=Math.min(0,p.vx);}else if(oldX-HALF_W>=solid.x+solid.w-4){p.x=solid.x+solid.w+HALF_W;p.vx=Math.max(0,p.vx);}}continue;}
-    if(overlapX&&overlapY&&!landing){
+    // A floor landing must not suppress side collision with a separate solid structure.
+    if(overlapX&&overlapY&&(!landing||landing.id!==solid.id)){
       const oldX=p.x-p.vx*dt, oldY=p.y-p.vy*dt;
       if(oldX+HALF_W<=solid.x+4){p.x=solid.x-HALF_W;p.vx=Math.min(0,p.vx);}
       else if(oldX-HALF_W>=solid.x+solid.w-4){p.x=solid.x+solid.w+HALF_W;p.vx=Math.max(0,p.vx);}
