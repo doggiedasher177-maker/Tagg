@@ -492,10 +492,13 @@ end
 
 local function bot_surface_at(player, surfaces)
   local half = 0.016
+  if type(player) ~= "table" then return nil end
+  local player_x, player_y = tonumber(player.x), tonumber(player.y)
+  if not player_x or not player_y then return nil end
   local best, best_score = surfaces[1], math.huge
   for _, surface in ipairs(surfaces) do
-    local horizontal_gap = math.max(0, surface.x - player.x, player.x - (surface.x + surface.w))
-    local vertical_gap = surface.y - (player.y + half)
+    local horizontal_gap = math.max(0, surface.x - player_x, player_x - (surface.x + surface.w))
+    local vertical_gap = surface.y - (player_y + half)
     if vertical_gap >= -0.04 and vertical_gap <= 0.30 then
       local score = math.abs(vertical_gap) * 1.3 + horizontal_gap * 0.9
       if player.bot_ground_id == surface.id and math.abs(vertical_gap) < 0.055 then score = score - 0.25 end
@@ -556,6 +559,9 @@ end
 
 local function update_server_bot(bot, target, is_hunter, state, surfaces, dt)
   bot.ai_ticks = (bot.ai_ticks or 0) + 1
+  -- New human presences have no authoritative position until their first
+  -- opcode-0 snapshot arrives. Treat those as temporarily untracked targets.
+  if target and (not tonumber(target.x) or not tonumber(target.y)) then target = nil end
   bot.ai_target = target and target.user_id or nil
   bot.ai_hunter = is_hunter
   bot.x = clamp(tonumber(bot.x) or 0.5, 0.02, 0.98)
@@ -619,8 +625,12 @@ local function update_server_bot(bot, target, is_hunter, state, surfaces, dt)
   end
 
   local current_center = current.x + current.w * 0.5
-  if bot_surface_at(bot, surfaces) and not next_surface and not destination and not is_hunter then
-    goal_x = current_center + ((bot.face or 1) * 0.12)
+  if not next_surface and not destination and not is_hunter then
+    -- Keep bot runners moving even while all opponents are waiting for their first snapshot.
+    local patrol_direction = bot.patrol_direction or (bot.face or 1)
+    if math.abs(goal_x - bot.x) < 0.025 then patrol_direction = -patrol_direction end
+    bot.patrol_direction = patrol_direction
+    goal_x = clamp(bot.x + patrol_direction * 0.18, 0.06, 0.94)
   end
   local desired = math.abs(goal_x - bot.x) < 0.025 and 0 or (goal_x > bot.x and 1 or -1)
   if not is_hunter and target and math.abs(target.x - bot.x) < 0.18 and bot.on_ground and math.random() < 0.05 then
