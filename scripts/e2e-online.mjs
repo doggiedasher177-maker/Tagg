@@ -302,12 +302,18 @@ try {
       "The joining human did not replace exactly one bot slot.");
     await waitForMapState(() => mapStateA, state => state.status === "playing",
       "public map match countdown to complete");
+    const bSlotBeforeQuit = mapStateA.players.findIndex(player => player.user_id === mapSessionB.user_id);
+    const scoreBeforeEarlyQuit = Number(mapStateA.scores?.[bSlotBeforeQuit] || 0);
     await mapSocketA.leaveMatch(matchId);
     const quitResult = await waitForMapState(() => mapStateB,
       state => state.status === "result",
       "the remaining human winning after the opponent quits");
     assert(quitResult.winner_user_id === mapSessionB.user_id,
       "The remaining human did not receive the win after the opponent disconnected.");
+    const bSlotAfterQuit = quitResult.players.findIndex(player => player.user_id === mapSessionB.user_id);
+    const scoreAfterEarlyQuit = Number(quitResult.scores?.[bSlotAfterQuit] || 0);
+    assert(scoreAfterEarlyQuit - scoreBeforeEarlyQuit < 100,
+      "An opponent who quit with more than 30 seconds remaining incorrectly granted the disconnect score bonus.");
     await sleep(700);
     const finalEloA = await mapClientA.listLeaderboardRecords(mapSessionA, "tag_online_elo_v1", [mapSessionA.user_id], null, 1, null);
     const finalEloB = await mapClientB.listLeaderboardRecords(mapSessionB, "tag_online_elo_v1", [mapSessionB.user_id], null, 1, null);
