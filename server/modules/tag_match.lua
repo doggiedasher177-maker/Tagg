@@ -496,7 +496,7 @@ function M.match_init(context, params)
     table.sort(expected_ids)
     state.host_user_id = state.host_user_id or expected_ids[1]
   else
-    state.target_count = state.tournament_mode and MAX_PLAYERS or 2
+    state.target_count = (state.tournament_mode or state.public_map) and MAX_PLAYERS or 2
   end
 
   nk.logger_info("TAG! authoritative match created: " .. tostring(context.match_id))
@@ -1030,6 +1030,26 @@ local function create_bot_match(context, payload)
   })
 end
 
+local function ensure_elo_account(context, payload)
+  if not context.user_id then error("Sign in before checking your ELO.") end
+  local ok, records, owner_records = pcall(
+    nk.leaderboard_records_list, LEADERBOARD_ELO, { context.user_id }, 1, "", 0
+  )
+  if not ok then error("Could not read your ELO: " .. tostring(records)) end
+  local existing = (owner_records and owner_records[1]) or (records and records[1])
+  local elo = existing and tonumber(existing.score) or nil
+  if not elo then
+    local wrote, result, err = pcall(
+      nk.leaderboard_record_write, LEADERBOARD_ELO, context.user_id,
+      context.username or "TAG! Player", 100, 0, { game = "TAG!", placement = "starting_elo" }, "set"
+    )
+    if not wrote then error("Could not initialize your ELO: " .. tostring(result)) end
+    if err then error("Could not initialize your ELO: " .. tostring(err)) end
+    elo = 100
+  end
+  return nk.json_encode({ ok = true, elo = elo })
+end
+
 local function publish_public_map(context, payload)
   if not context.user_id then error("Sign in before publishing a map.") end
   local request = {}
@@ -1243,6 +1263,7 @@ nk.register_rpc(start_tournament, "tag_start_tournament")
 nk.register_rpc(register_online_presence, "tag_online_presence")
 nk.register_rpc(unregister_online_presence, "tag_online_leave")
 nk.register_rpc(get_online_player_count, "tag_online_count")
+nk.register_rpc(ensure_elo_account, "tag_ensure_elo")
 nk.register_rpc(publish_public_map, "tag_publish_map")
 nk.register_rpc(list_public_maps, "tag_list_public_maps")
 nk.register_rpc(start_public_map_match, "tag_start_public_map_match")
