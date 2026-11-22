@@ -2175,6 +2175,27 @@ import { Client } from 'https://esm.sh/@heroiclabs/nakama-js@2.8.0';
  async function refreshOnlinePlayerCount(){if(!connected||!client||!session)return;try{const data=rpcPayload(await client.rpc(session,'tag_online_count',{}));setOnlinePlayerCount(data.online_count);}catch(e){setOnlinePlayerCount('—');}}
 
  const rpcPayload=result=>{const payload=result?.payload??result??{};return typeof payload==='string'?JSON.parse(payload||'{}'):(payload||{});};
+ const ROOM_CODE_ALPHABET='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+ function encodeRoomCode(matchId){
+   const hex=String(matchId||'').replace(/-/g,'').toLowerCase();
+   if(!/^[0-9a-f]{32}$/.test(hex))throw new Error('The server returned an invalid room ID.');
+   let value=BigInt('0x'+hex),encoded='';
+   for(let i=0;i<26;i++){encoded=ROOM_CODE_ALPHABET[Number(value&31n)]+encoded;value>>=5n;}
+   if(value!==0n)throw new Error('The room ID could not be encoded.');
+   return 'TAG-'+encoded.slice(0,5)+'-'+encoded.slice(5,10)+'-'+encoded.slice(10,15)+'-'+encoded.slice(15,20)+'-'+encoded.slice(20);
+ }
+ function decodeRoomCode(input){
+   const raw=String(input||'').trim();
+   const uuid=raw.replace(/-/g,'').toLowerCase();
+   if(/^[0-9a-f]{32}$/.test(uuid))return uuid.slice(0,8)+'-'+uuid.slice(8,12)+'-'+uuid.slice(12,16)+'-'+uuid.slice(16,20)+'-'+uuid.slice(20);
+   const code=raw.toUpperCase().replace(/^TAG[\\s-]*/,'').replace(/[\\s-]/g,'');
+   if(code.length!==26)return null;
+   let value=0n;
+   for(const char of code){const digit=ROOM_CODE_ALPHABET.indexOf(char);if(digit<0)return null;value=(value<<5n)+BigInt(digit);}
+   if(value>=(1n<<128n))return null;
+   const hex=value.toString(16).padStart(32,'0');
+   return hex.slice(0,8)+'-'+hex.slice(8,12)+'-'+hex.slice(12,16)+'-'+hex.slice(16,20)+'-'+hex.slice(20);
+ }
  function clearQueueClocks(){if(queueTimer){clearTimeout(queueTimer);queueTimer=null;}if(queueInterval){clearInterval(queueInterval);queueInterval=null;}} function closeQuickMatchModal(){clearQueueClocks();const modal=$('quickMatchOverlay');if(modal)modal.classList.remove('show');}
  function showQuickMatchModal(title,message,subtext,buttons={}){const modal=$('quickMatchOverlay');if(!modal)return;$('quickMatchTitle').textContent=title;$('quickMatchMessage').textContent=message;$('quickMatchSubtext').textContent=subtext;$('queueSpinner').style.display=buttons.spinner===false?'none':'block';$('notifyFriendYesBtn').hidden=!buttons.yes;$('notifyFriendNoBtn').hidden=!buttons.no;$('keepQueueBtn').hidden=!buttons.keep;$('cancelQueueBtn').hidden=buttons.cancel===false;modal.classList.add('show');}
  async function revealQueueStatus(){if(!queueActive||match)return;try{await refreshFriends();}catch(e){}if(!queueActive||match)return;if(cachedOnlineFriends.length){showQuickMatchModal('YOUR FRIEND IS ONLINE','Would you like to notify your friend and battle against them?','You can invite them to a private TAG! room, or keep waiting for a random opponent.',{spinner:false,yes:true,no:true,keep:true});}else{showQuickMatchModal('NO OPPONENTS YET','No one is playing as of right now.','You are still in the matchmaking queue. Other players can join while you wait.',{spinner:false,keep:true});}}
@@ -2241,6 +2262,8 @@ import { Client } from 'https://esm.sh/@heroiclabs/nakama-js@2.8.0';
       nextSocket.onmatchpresence=onPresence;
       nextSocket.onmatchmakermatched=async event=>{
         if(socket!==nextSocket||!connected)return;
+        // Ignore late matches from a cancelled/finished search; they must not clear a new queue's timer.
+        if(!queueActive&&!queueBotFallbackStarted)return;
         try{
           const botFallbackWasRunning=queueBotFallbackStarted;
           queueActive=false;queueGeneration++;clearQueueClocks();
@@ -2415,8 +2438,18 @@ async function quickMatch(){
   readOnlineOptions();matchStarted=false;queueActive=true;queueCancelRequested=false;queueBotFallbackStarted=false;
   const generation=++queueGeneration;queueDeadline=Date.now()+30000;
   showQuickMatchModal('FINDING OPPONENTS','Searching for other TAG! players...','You can cancel the search at any time.',{spinner:true,keep:true});
-  const updateTimer=()=>{if(!queueActive||generation!==queueGeneration)return;const left=Math.max(0,Math.ceil((queueDeadline-Date.now())/1000));const countdown=$('queueCountdown');if(countdown)countdown.textContent=left>0?('BOT MATCH IN '+left+' SECOND'+(left===1?'':'S')):'0 · STARTING BOT MATCH';if(left===0)startBotFallback(generation);};
-  updateTimer();queueInterval=setInterval(updateTimer,1000);queueTimer=setTimeout(()=>{if(queueActive&&generation===queueGeneration){const countdown=$('queueCountdown');if(countdown)countdown.textContent='0 · STARTING BOT MATCH';startBotFallback(generation);}},30000);
+  clearQueueClocks();
+  let lastShown=-1;
+  const updateTimer=()=>{
+    if(generation!==queueGeneration||!queueActive||queueCancelRequested||match){clearQueueClocks();return;}
+    const left=Math.max(0,Math.ceil((queueDeadline-Date.now())/1000));
+    const countdown=$('queueCountdown');
+    if(countdown&&left!==lastShown){countdown.textContent=left>0?('BOT MATCH IN '+left+' SECOND'+(left===1?'':'S')):'0 · STARTING BOT MATCH';lastShown=left;}
+    if(left===0){clearQueueClocks();void startBotFallback(generation);}
+  };
+  updateTimer();
+  // A monotonic deadline means the visible counter catches up after browser tab throttling.
+  queueInterval=window.setInterval(updateTimer,250);
   try{
     status('Searching for 2–4 TAG! runners...');
     const properties={mode:pendingMode,map:pendingMap,length:String(pendingLength),modifiers:pendingModifiers.join(',')||'none'};
@@ -2456,8 +2489,9 @@ async function createRoom(){
     const roomData=rpcPayload(response);
     const roomId=String(roomData.match_id||roomData.matchId||'').trim();
     if(!roomId)throw new Error('The server did not return a room ID. Please retry.');
-    // Display the actual Nakama match ID immediately; do not wait for the socket join.
-    setRoomCode(roomId);
+    // Present a shareable TAG! code while preserving a reversible link to the real Nakama match ID.
+    const shareCode=encodeRoomCode(roomId);
+    setRoomCode(shareCode);
     if(copyButton)copyButton.disabled=false;
     activeTournamentMatchId=null;isTournamentHost=false;
     if($('startTournamentBtn'))$('startTournamentBtn').disabled=true;
@@ -2465,7 +2499,7 @@ async function createRoom(){
     const joined=normalizeMatch(await socket.joinMatch(roomId));
     if(!joined?.match_id)throw new Error('Room was created, but joining it failed. Your room code is still shown above.');
     match=joined;matchPresences=sortedPresences(joined.presences);matchStarted=false;
-    setRoomCode(roomId);
+    setRoomCode(shareCode);
     await enterMatch(joined);
     return joined;
   }catch(e){
@@ -2477,7 +2511,18 @@ async function createRoom(){
     if(createButton){createButton.disabled=false;createButton.textContent='CREATE ROOM';}
   }
 }
-async function joinRoom(){if(!connected){await connect();if(!connected)return;}matchStarted=false;const id=$('joinRoomCode').value.trim();activeTournamentMatchId=null;isTournamentHost=false;if($('startTournamentBtn'))$('startTournamentBtn').disabled=true;if(!id){status('Paste the room code first.','error');return;}try{status('Joining private room...');const m=normalizeMatch(await socket.joinMatch(id));await enterMatch(m);}catch(e){status('Could not join room: '+e.message,'error');}}
+async function joinRoom(){
+  if(!connected){await connect();if(!connected)return;}
+  matchStarted=false;
+  const entered=$('joinRoomCode').value.trim();
+  activeTournamentMatchId=null;isTournamentHost=false;
+  if($('startTournamentBtn'))$('startTournamentBtn').disabled=true;
+  if(!entered){status('Paste your friend’s TAG! room code first.','error');return;}
+  const id=decodeRoomCode(entered);
+  if(!id){status('That room code is not valid. Copy the full TAG! code and try again.','error');return;}
+  try{status('Joining private room...');const m=normalizeMatch(await socket.joinMatch(id));await enterMatch(m);}
+  catch(e){status('Could not join room: '+e.message,'error');}
+}
  function onMatchData(md){if(!match)return;const incomingId=md.match_id||md.matchId;if(incomingId&&incomingId!==match.match_id)return;const op=md.opCode??md.op_code;let data;try{const raw=md.data??md.state;const payload=raw instanceof Uint8Array?new TextDecoder().decode(raw):(typeof raw==='string'?raw:JSON.stringify(raw));data=typeof payload==='string'?JSON.parse(payload):payload;}catch(e){return;}if(op===11&&data&&Array.isArray(data.players)){const onlinePlayers=data.players,local=onlinePlayers.findIndex(p=>p.user_id===session.user_id);if(local<0)return;if(data.status==='lobby'){if(data.tournament_mode){activeTournamentMatchId=match.match_id;isTournamentHost=data.host_user_id===session.user_id;if($('startTournamentBtn'))$('startTournamentBtn').disabled=!isTournamentHost;status(isTournamentHost?'Community tournament lobby open. Start whenever you are ready.':'Tournament lobby · waiting for the host to start.','connected');}else{status('Private room / matchmaker lobby · waiting for another runner...','connected');}return;}const alreadyStarted=!!window.TAGOnlineHooks?.isOnline();if(!alreadyStarted){localIndex=local;isHost=data.host_user_id===session.user_id;}const infoPlayers=onlinePlayers.map((p,i)=>({username:p.username||'RUNNER '+(i+1),userId:p.user_id,isBot:!!p.is_bot}));if(!alreadyStarted){pendingMap=data.map||'forge';pendingMode=data.mode||'classic';pendingLength=data.length||120;window.TAGOnlineHooks?.startMatch({localIndex,isHost,matchId:match.match_id,players:infoPlayers,mapId:pendingMap,gameMode:pendingMode,roundLength:pendingLength,modifiers:data.modifiers||[]});}const winnerSlot=data.status==='result'?(data.winner_user_id===session.user_id?localIndex:Math.max(0,window.__tagOnlinePlayerIds?.indexOf(data.winner_user_id)??infoPlayers.findIndex(p=>p.userId===data.winner_user_id))):data.winner_slot;window.TAGOnlineHooks?.applyNetworkState({...data,winner_slot:winnerSlot});if(data.status==='result'&&Number.isInteger(winnerSlot)){status(`Round complete · ${infoPlayers.find(p=>p.userId===data.winner_user_id)?.username||'Winner'} wins.`,'connected');window.dispatchEvent(new CustomEvent('tag-online-result'));}else if(data.status==='closed'){status('This TAG! room was closed before the round could start.','error');}return;}}
  function encode(obj){return new TextEncoder().encode(JSON.stringify(obj));}
  async function sendState(){if(!match||!socket||!window.TAGOnlineHooks?.isOnline())return;const me=window.TAGOnlineHooks.getLocalState();if(me)try{await socket.sendMatchState(match.match_id,0,JSON.stringify({player:me}));}catch(e){}}
