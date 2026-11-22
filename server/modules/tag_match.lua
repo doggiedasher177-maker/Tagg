@@ -440,6 +440,244 @@ local function accept_player_snapshot(state, sender, data, tick)
   player.last_tick = tick
 end
 
+
+-- V15 server-side bot navigation. Coordinates use the same normalized arena
+-- space as the browser client (x across the full scrolling world, y across height).
+local BOT_ARENAS = {
+  forge = {{.02,.73,.163},{.31,.62,.095},{.55,.72,.136},{.80,.57,.116},{.10,.43,.122},{.39,.39,.156},{.72,.30,.150},{.23,.20,.109}},
+  archive = {{.02,.75,.088},{.20,.66,.102},{.43,.73,.088},{.66,.62,.109},{.84,.49,.088},{.10,.43,.102},{.38,.38,.116},{.63,.25,.177}},
+  tidal = {{.02,.70,.129},{.27,.76,.095},{.52,.65,.116},{.77,.72,.136},{.12,.48,.109},{.39,.43,.136},{.72,.35,.116},{.28,.22,.156}},
+  moon = {{.03,.73,.116},{.28,.61,.102},{.56,.72,.122},{.80,.54,.109},{.12,.40,.109},{.43,.36,.095},{.67,.24,.163}},
+  greenland = {{.00,.74,.177},{.30,.66,.136},{.67,.73,.204},{.12,.48,.109},{.38,.48,.122},{.72,.43,.129},{.23,.27,.129},{.53,.25,.156}},
+  city = {{.00,.75,.122},{.22,.64,.088},{.40,.72,.122},{.64,.59,.095},{.82,.72,.122},{.10,.40,.116},{.36,.34,.122},{.65,.24,.156}},
+  mall = {{.02,.73,.190},{.35,.69,.190},{.69,.73,.197},{.13,.49,.116},{.40,.45,.136},{.71,.48,.116},{.28,.24,.286}},
+  dojo = {{.00,.75,.122},{.22,.67,.102},{.43,.75,.102},{.65,.67,.102},{.83,.75,.109},{.12,.44,.122},{.39,.39,.150},{.70,.31,.122}},
+  desert = {{.00,.76,.163},{.29,.69,.122},{.62,.75,.136},{.83,.57,.102},{.12,.49,.116},{.42,.42,.122},{.70,.30,.156},{.27,.23,.122}},
+  glacier = {{.00,.75,.136},{.24,.66,.095},{.47,.74,.116},{.73,.63,.150},{.10,.43,.122},{.40,.37,.102},{.65,.25,.170}},
+  skyport = {{.00,.73,.122},{.20,.62,.116},{.43,.52,.122},{.68,.62,.109},{.84,.47,.109},{.10,.31,.122},{.40,.24,.150},{.70,.30,.170}},
+  volcano = {{.00,.73,.136},{.24,.65,.109},{.49,.74,.122},{.75,.63,.150},{.10,.43,.116},{.39,.39,.122},{.69,.27,.150}},
+  carnival = {{.00,.75,.109},{.20,.66,.095},{.39,.74,.102},{.60,.65,.109},{.82,.74,.116},{.10,.45,.102},{.34,.39,.109},{.60,.34,.116},{.79,.23,.122}},
+  bombonera = {{.00,.75,.177},{.27,.66,.095},{.49,.75,.136},{.78,.63,.143},{.12,.43,.122},{.40,.39,.150},{.70,.27,.170}},
+  monumental = {{.00,.74,.136},{.23,.65,.109},{.45,.74,.129},{.69,.63,.122},{.10,.43,.129},{.39,.38,.136},{.70,.26,.170}},
+  hell = {{.00,.75,.177},{.27,.68,.095},{.50,.75,.136},{.78,.64,.136},{.10,.45,.122},{.39,.40,.143},{.72,.31,.156},{.26,.23,.129}},
+  heaven = {{.00,.74,.122},{.21,.66,.109},{.44,.73,.116},{.68,.64,.116},{.84,.48,.088},{.10,.43,.116},{.37,.37,.150},{.68,.25,.163}}
+}
+
+local function bot_surfaces(state)
+  local surfaces = {{id = "floor", x = 0, y = 0.835, w = 1}}
+  if state.public_map and state.custom_map and type(state.custom_map.objects) == "table" then
+    for index, object in ipairs(state.custom_map.objects) do
+      if object.type == "platform" or object.type == "structure" then
+        table.insert(surfaces, {
+          id = "community_" .. tostring(index),
+          x = clamp((tonumber(object.x) or 0) / 1200, 0, 1),
+          y = clamp((tonumber(object.y) or 0) / 700, 0.08, 0.82),
+          w = clamp((tonumber(object.w) or 28) / 1200, 0.02, 0.48)
+        })
+      end
+    end
+  else
+    local layout = BOT_ARENAS[state.map] or BOT_ARENAS.forge
+    for index, data in ipairs(layout) do
+      table.insert(surfaces, {id = "arena_" .. tostring(index), x = data[1], y = data[2], w = data[3]})
+    end
+  end
+  return surfaces
+end
+
+local function bot_surface_at(player, surfaces)
+  local half = 0.016
+  local best, best_score = surfaces[1], math.huge
+  for _, surface in ipairs(surfaces) do
+    local horizontal_gap = math.max(0, surface.x - player.x, player.x - (surface.x + surface.w))
+    local vertical_gap = surface.y - (player.y + half)
+    if vertical_gap >= -0.04 and vertical_gap <= 0.30 then
+      local score = math.abs(vertical_gap) * 1.3 + horizontal_gap * 0.9
+      if player.bot_ground_id == surface.id and math.abs(vertical_gap) < 0.055 then score = score - 0.25 end
+      if score < best_score then best, best_score = surface, score end
+    end
+  end
+  return best
+end
+
+local function bot_can_jump(from, to)
+  if from.id == to.id then return false end
+  local rise = from.y - to.y
+  local drop = to.y - from.y
+  if rise > 0.31 or drop > 0.38 then return false end
+  local gap = math.max(0, to.x - (from.x + from.w), from.x - (to.x + to.w))
+  local reach = rise > 0.08 and 0.31 or 0.36
+  return gap <= reach
+end
+
+local function bot_find_path(surfaces, start_surface, goal_surface)
+  if not start_surface or not goal_surface then return {} end
+  if start_surface.id == goal_surface.id then return {start_surface} end
+  local distance, previous, remaining = {}, {}, {}
+  for _, surface in ipairs(surfaces) do
+    distance[surface.id] = surface.id == start_surface.id and 0 or math.huge
+    remaining[surface.id] = true
+  end
+  while true do
+    local current, best = nil, math.huge
+    for id in pairs(remaining) do
+      if distance[id] < best then current, best = id, distance[id] end
+    end
+    if not current or best == math.huge then break end
+    remaining[current] = nil
+    if current == goal_surface.id then break end
+    local from = nil
+    for _, surface in ipairs(surfaces) do if surface.id == current then from = surface break end end
+    if from then
+      for _, to in ipairs(surfaces) do
+        if remaining[to.id] and bot_can_jump(from, to) then
+          local gap = math.max(0, to.x - (from.x + from.w), from.x - (to.x + to.w))
+          local cost = 1 + gap * 3 + math.abs(to.y - from.y) * 2.2
+          local alt = best + cost
+          if alt < distance[to.id] then distance[to.id] = alt; previous[to.id] = current end
+        end
+      end
+    end
+  end
+  if distance[goal_surface.id] == math.huge then return {} end
+  local path, cursor = {goal_surface}, goal_surface.id
+  while cursor ~= start_surface.id do
+    cursor = previous[cursor]
+    if not cursor then return {} end
+    for _, surface in ipairs(surfaces) do if surface.id == cursor then table.insert(path, 1, surface) break end end
+  end
+  return path
+end
+
+local function update_server_bot(bot, target, is_hunter, state, surfaces, dt)
+  bot.x = clamp(tonumber(bot.x) or 0.5, 0.02, 0.98)
+  bot.y = clamp(tonumber(bot.y) or 0.819, 0.05, 0.96)
+  bot.vx, bot.vy = tonumber(bot.vx) or 0, tonumber(bot.vy) or 0
+  bot.jump_cooldown = math.max(0, (bot.jump_cooldown or 0) - dt)
+  bot.goal_timer = math.max(0, (bot.goal_timer or 0) - dt)
+  local current = bot_surface_at(bot, surfaces) or surfaces[1]
+  local target_surface = target and bot_surface_at(target, surfaces) or nil
+  local destination = target_surface
+  if not is_hunter then
+    local old_goal = nil
+    for _, surface in ipairs(surfaces) do if surface.id == bot.goal_surface then old_goal = surface break end end
+    if bot.goal_timer <= 0 or not old_goal or old_goal.id == current.id then
+      local choices = {}
+      if target then
+        for _, surface in ipairs(surfaces) do
+          local path = bot_find_path(surfaces, current, surface)
+          if #path > 1 then
+            local center = surface.x + surface.w * 0.5
+            local safety = math.min(center, 1 - center)
+            local away = math.abs(center - target.x) + math.abs(surface.y - target.y) * 0.65
+            table.insert(choices, {surface = surface, score = away + safety * 0.16 + math.random() * 0.12})
+          end
+        end
+      end
+      table.sort(choices, function(a, b) return a.score > b.score end)
+      local pick = choices[math.random(1, math.min(3, #choices)) or 1]
+      if pick then old_goal = pick.surface end
+      bot.goal_surface = old_goal and old_goal.id or nil
+      bot.goal_timer = 1.25 + math.random() * 1.2
+    end
+    destination = old_goal or target_surface
+  end
+
+  local path = destination and bot_find_path(surfaces, current, destination) or {}
+  local next_surface = #path > 1 and path[2] or nil
+  local goal_x = target and target.x or (bot.x + (bot.face or 1) * 0.18)
+  local should_jump = false
+  if next_surface then
+    local center = next_surface.x + next_surface.w * 0.5
+    local gap = math.max(0, next_surface.x - (current.x + current.w), current.x - (next_surface.x + next_surface.w))
+    local rising = next_surface.y < current.y - 0.035
+    if rising or gap > 0.025 then
+      local takeoff = center >= current.x + current.w * 0.5 and (current.x + current.w - 0.025) or (current.x + 0.025)
+      local land_x = clamp(center, next_surface.x + 0.018, next_surface.x + next_surface.w - 0.018)
+      if math.abs(bot.x - takeoff) > 0.035 then goal_x = takeoff else goal_x = land_x; should_jump = true end
+    else
+      goal_x = clamp(center, next_surface.x + 0.018, next_surface.x + next_surface.w - 0.018)
+    end
+  elseif is_hunter and target then
+    goal_x = target.x + (target.vx or 0) * 0.25
+  elseif destination then
+    goal_x = destination.x + destination.w * 0.5
+  end
+
+  local current_center = current.x + current.w * 0.5
+  if bot_surface_at(bot, surfaces) and not next_surface and not destination and not is_hunter then
+    goal_x = current_center + ((bot.face or 1) * 0.12)
+  end
+  local desired = math.abs(goal_x - bot.x) < 0.025 and 0 or (goal_x > bot.x and 1 or -1)
+  if not is_hunter and target and math.abs(target.x - bot.x) < 0.18 and bot.on_ground and math.random() < 0.05 then
+    desired = -desired
+    should_jump = true
+  end
+  bot.vx = bot.vx + (desired * 0.34 - bot.vx) * math.min(1, dt * 5.5)
+  if desired ~= 0 then bot.face = desired end
+  if should_jump and bot.on_ground and bot.jump_cooldown <= 0 then
+    bot.vy = -1.12
+    bot.on_ground = false
+    bot.bot_ground_id = nil
+    bot.jump_cooldown = 0.72
+  end
+
+  local previous_bottom = bot.y + 0.016
+  bot.x = clamp(bot.x + bot.vx * dt, 0.02, 0.98)
+  bot.vy = clamp(bot.vy + 2.05 * dt, -1.9, 2.2)
+  bot.y = bot.y + bot.vy * dt
+  bot.on_ground = false
+  if bot.vy >= 0 then
+    local landing = nil
+    for _, surface in ipairs(surfaces) do
+      local overlaps = bot.x + 0.012 > surface.x and bot.x - 0.012 < surface.x + surface.w
+      if overlaps and previous_bottom <= surface.y + 0.025 and bot.y + 0.016 >= surface.y then
+        if not landing or surface.y < landing.y then landing = surface end
+      end
+    end
+    if landing then
+      bot.y = landing.y - 0.016
+      bot.vy = 0
+      bot.on_ground = true
+      bot.bot_ground_id = landing.id
+    end
+  end
+  if bot.y > 0.96 then
+    bot.y = 0.819;bot.vy = 0;bot.on_ground = true;bot.bot_ground_id = "floor"
+  end
+end
+
+local function update_match_bots(state, dt)
+  if not (state.public_map or state.tournament_mode or state.bot_match) then return end
+  local ids, surfaces = ordered_players(state), bot_surfaces(state)
+  for slot, user_id in ipairs(ids) do
+    local bot = state.players[user_id]
+    if bot and bot.is_bot then
+      local target, is_hunter = nil, false
+      if state.mode == "infection" then
+        is_hunter = state.infected[user_id] == true
+        for _, other_id in ipairs(ids) do
+          local other = state.players[other_id]
+          if other and not other.is_bot and other.connected and ((is_hunter and not state.infected[other_id]) or (not is_hunter and state.infected[other_id])) then
+            target = other;break
+          end
+        end
+      else
+        is_hunter = slot == state.tagged
+        if is_hunter then
+          for _, other_id in ipairs(ids) do
+            local other = state.players[other_id]
+            if other and not other.is_bot and other.connected then target = other;break end
+          end
+        else
+          target = state.players[ids[state.tagged]]
+        end
+      end
+      update_server_bot(bot, target, is_hunter, state, surfaces, dt)
+    end
+  end
+end
+
 function M.match_init(context, params)
   params = params or {}
   local mode = (params.mode == "infection" or params.mode == "hotpotato") and params.mode or "classic"
@@ -829,56 +1067,7 @@ function M.match_loop(context, dispatcher, tick, state, messages)
       nk.logger_info("TAG! authoritative round started: " .. tostring(context.match_id))
     end
   elseif state.status == "playing" then
-    if state.tournament_mode or state.bot_match then
-      for slot, user_id in ipairs(ordered_players(state)) do
-        local bot = state.players[user_id]
-        if bot and bot.is_bot then
-          local target = nil
-          if state.mode == "infection" then
-            for _, other_id in ipairs(ordered_players(state)) do
-              local other = state.players[other_id]
-              if other and not other.is_bot and other.connected and ((state.infected[user_id] and not state.infected[other_id]) or (not state.infected[user_id] and state.infected[other_id])) then
-                target = other
-                break
-              end
-            end
-          elseif slot == state.tagged then
-            for _, other_id in ipairs(ordered_players(state)) do
-              local other = state.players[other_id]
-              if other and not other.is_bot and other.connected then target = other break end
-            end
-          else
-            local holder = state.players[(state.order or {})[state.tagged]]
-            if holder then target = holder end
-          end
-          -- Server bots are ground runners, not free-flying coordinate markers.
-          -- Keep their feet on TAG!'s floor line; local fallback bots use the full
-          -- browser physics engine instead.
-          bot.x = bot.x or math.random(15, 85) / 100
-          bot.y = 0.82
-          bot.vy = 0
-          if target and target.x then
-            local dx = target.x - bot.x
-            local distance = math.abs(dx)
-            if distance > 0.001 then
-              local direction = 1
-              if state.mode == "infection" and not state.infected[user_id] then
-                direction = -1
-              elseif state.mode ~= "infection" and slot ~= state.tagged then
-                direction = -1
-              end
-              local step = (dx > 0 and 1 or -1) * 0.24 * dt * direction
-              bot.vx = (dx > 0 and 1 or -1) * 0.24 * direction
-              bot.x = clamp(bot.x + step, 0.04, 0.96)
-            else
-              bot.vx = 0
-            end
-          else
-            bot.vx = 0
-          end
-        end
-      end
-    end
+    update_match_bots(state, dt);
     state.remaining = math.max(0, state.remaining - dt)
     state.tag_cooldown = math.max(0, state.tag_cooldown - dt)
     state.score_tick = (state.score_tick or 0) + dt
