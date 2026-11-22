@@ -313,6 +313,10 @@ local function finish_match(state, winner_slot, reason)
   state.status = "result"
   state.end_reason = reason or "time"
   state.remaining = math.max(0, state.remaining or 0)
+  if state.end_reason == "opponent_disconnected" and state.remaining <= 30 then
+    state.scores = state.scores or {}
+    state.scores[slot] = (tonumber(state.scores[slot]) or 0) + 100
+  end
   award_match(state)
 end
 
@@ -704,6 +708,14 @@ function M.match_leave(context, dispatcher, tick, state, presences)
 
   if state.public_map then
     local ids = ordered_players(state)
+    local previous_scores = state.scores or {}
+    local remapped_scores = {}
+    for slot, user_id in ipairs(ids) do
+      for old_slot, old_id in ipairs(previous_order) do
+        if old_id == user_id then remapped_scores[slot] = previous_scores[old_slot] or 0 break end
+      end
+    end
+    state.scores = remapped_scores
     local human_ids = {}
     for _, user_id in ipairs(ids) do
       local p = state.players[user_id]
