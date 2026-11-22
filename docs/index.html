@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#080d19">
 <meta name="description" content="TAG! — a local multiplayer platform chase across many living realms.">
-<title>TAG! — Zyron Studios v14 Online</title>
+<title>TAG! — Zyron Studios v16 Online</title>
 <style>
 :root{
   --ink:#edf5ff;--muted:#9eafc5;--line:rgba(202,224,255,.15);
@@ -419,6 +419,32 @@ body.argentina-mode #menuScreen{background:linear-gradient(180deg,#75bde9 0 32%,
 .cosmetic-coming-soon p{max-width:560px;color:#afc1d5;line-height:1.65}
 .cosmetic-coming-soon .shop-pill{display:inline-block;margin-top:8px;padding:8px 12px;border-radius:999px;background:#303c58;color:#e5eaff;font-size:10px;font-weight:950;letter-spacing:.14em}
 
+
+/* V16 responsive tablet/phone play layout */
+@media(max-width:900px){
+ .menu-shell{grid-template-columns:1fr!important;gap:14px;padding:18px 14px;align-content:start}
+ .hero{padding:8px 0 0}.setup{width:100%;max-width:760px;justify-self:center}
+ .full-panel,.online-panel,.profile-panel{width:calc(100vw - 20px)!important;max-height:calc(100dvh - 20px);overflow:auto;padding:18px!important}
+ .screen{align-items:flex-start;padding:10px 0}
+ #markHud{left:8px;top:8px;min-width:0;padding:7px 9px}#realmHud{right:8px;top:8px;padding:7px 9px}
+ #timer{top:8px;padding:6px 10px;font-size:22px}.hud-panel{border-radius:11px}
+ #hintHud{bottom:8px;max-width:94vw;overflow:hidden;text-overflow:ellipsis}
+ #fullScreenBtn{right:8px!important;top:65px!important;padding:8px 10px!important;font-size:10px}
+}
+@media(max-width:600px){
+ .menu-shell{padding:14px 10px}.setup{padding:13px}.map-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .hero h1{font-size:58px!important}.hero-copy{font-size:12px}
+ .control-grid,.online-actions{grid-template-columns:1fr!important}
+ .tournament-bracket{grid-template-columns:1fr 1fr}
+ #markHud .eyebrow,#realmHud .eyebrow{font-size:7px}#itname,#realmname{font-size:10px}
+}
+#mobileControls{position:fixed;z-index:12;left:8px;right:8px;bottom:max(10px,env(safe-area-inset-bottom));display:none;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:7px;pointer-events:none;max-height:34vh}
+.touch-player-pad{pointer-events:auto;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:18px 42px 42px;gap:4px;padding:6px;border:1px solid var(--player-color);border-radius:13px;background:#081222d9;backdrop-filter:blur(8px);touch-action:none}
+.touch-player-label{grid-column:1/-1;text-align:center;color:var(--player-color);font-size:9px;font-weight:1000;letter-spacing:.14em}
+.touch-key{border:1px solid #ffffff35;border-radius:9px;background:#182b40e8;color:#f4fbff;font-size:18px;font-weight:1000;touch-action:none;user-select:none;-webkit-user-select:none;padding:0;min-width:0}
+.touch-key:active{background:#527b91;transform:scale(.96)}.touch-up{grid-column:2;grid-row:2}.touch-left{grid-column:1;grid-row:3}.touch-down{grid-column:2;grid-row:3}.touch-right{grid-column:3;grid-row:3}
+@media(hover:hover) and (pointer:fine){#mobileControls{display:none!important}}
+
 </style>
 </head>
 <body>
@@ -433,6 +459,7 @@ body.argentina-mode #menuScreen{background:linear-gradient(180deg,#75bde9 0 32%,
   <div class="hud-panel" id="realmHud"><span class="eyebrow">Current realm</span><strong id="realmname">EMBERGLASS FOUNDRY</strong></div>
   <div id="hintHud">P1 A / D + W　 ·　 P2 ← / → + ↑　 ·　 ESC PAUSE</div>
 </div>
+<div id="mobileControls" aria-label="Touch controls" style="display:none"></div>
 <button id="onlineChatToggle" class="online-chat-toggle" type="button" style="display:none">💬 CHAT</button>
 <div id="matchChatPanel" class="match-chat-panel" style="display:none"><div class="match-chat-head"><b>TAG! CHAT</b><button id="matchChatClose" type="button">×</button></div><select id="matchChatTarget"><option value="match">Online match</option><option value="local">Local players</option><option value="bots">Bot players</option><option value="munci">Angry Munci</option></select><div id="matchChatLog" class="online-chat-log"></div><div class="room-join"><input id="matchChatInput" maxlength="240" placeholder="Write a message..."><button id="matchChatSendBtn" type="button">SEND</button></div></div>
 
@@ -496,8 +523,9 @@ body.argentina-mode #menuScreen{background:linear-gradient(180deg,#75bde9 0 32%,
 
 <section class="screen" id="settingsScreen" aria-label="Settings"><div class="full-panel"><div class="eyebrow">GAME SETTINGS</div><h2>Settings</h2><div class="setting-row"><label for="fovSlider">Field of view <b id="fovValue">100</b></label><input id="fovSlider" type="range" min="50" max="200" value="100" step="5"></div><p>100 is the close default view. The camera only widens a little to keep nearby runners in frame; distant runners do not force a huge zoom-out.</p><div class="setting-row"><label for="settingsLanguage">Language</label><select id="settingsLanguage"><option value="en">English</option><option value="es">Español (España)</option><option value="fr">Français</option><option value="pt">Português</option><option value="it">Italiano</option><option value="zh">中文</option><option value="arg">Argentino 🇦🇷</option></select></div><div class="setting-row"><label for="settingsMusicVolume">Music volume <b id="settingsMusicValue">65%</b></label><input id="settingsMusicVolume" type="range" min="0" max="100" step="1" value="65"></div><button class="secondary-btn" id="settingsMusicToggle">MUSIC: ON</button><div class="music-indicator" id="settingsMusicStatus">ORIGINAL MAP SOUNDTRACK</div><button class="secondary-btn" id="resetWinsBtn">RESET ALL WIN COUNTERS</button><div class="result-actions"><button class="primary-small" id="backSettingsBtn">BACK TO TITLE</button></div></div></section>
 <section class="screen" id="tournamentScreen" aria-label="Tournament setup"><div class="full-panel"><div class="eyebrow">TAG! WORLD CUP</div><h2>Tournaments</h2><p>Build a local elimination bracket. Pick a field size and decide how each duel is judged.</p><div class="setting-row"><label for="tournamentSize">Tournament size</label><select id="tournamentSize"><option value="4">4 groups · 8 players</option><option value="6">6 groups · 12 players</option><option value="8">8 groups · 16 players</option></select></div><div class="setting-row"><label for="tournamentRule">Duel winner</label><select id="tournamentRule"><option value="points">Most points</option><option value="untagged">Player who avoids the tag</option></select></div><div class="setting-row"><label for="tournamentModifier">Tournament modifiers · up to 3</label><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;width:65%"><select id="tournamentModifier"><option value="none">Slot 1 · None</option><option value="doublejump">Double jump</option><option value="superspeed">Speed boost</option><option value="decoys">Decoys</option><option value="chained">Chained</option><option value="sentinels">Sentinels</option><option value="parry">Parry</option><option value="munci">Angry Munci</option></select><select id="tournamentModifier2"><option value="none">Slot 2 · None</option><option value="doublejump">Double jump</option><option value="superspeed">Speed boost</option><option value="decoys">Decoys</option><option value="chained">Chained</option><option value="sentinels">Sentinels</option><option value="parry">Parry</option><option value="munci">Angry Munci</option></select><select id="tournamentModifier3"><option value="none">Slot 3 · None</option><option value="doublejump">Double jump</option><option value="superspeed">Speed boost</option><option value="decoys">Decoys</option><option value="chained">Chained</option><option value="sentinels">Sentinels</option><option value="parry">Parry</option><option value="munci">Angry Munci</option></select></div></div><p id="tournamentInfo">Create up to 8 local brackets. Assign entrants as humans or bots, then play matchups.</p><h3 class="subsection-title">Entrants · choose human or bot</h3><div id="tournamentEntrants" class="entrant-grid"></div><div class="result-actions"><button class="primary-small" id="createTournamentBtn">CREATE BRACKET</button><button class="secondary-btn" id="backTournamentBtn">BACK TO TITLE</button></div><div id="tournamentList" class="control-grid"></div><div id="tournamentBracket" class="tournament-bracket"></div><div id="tournamentMatchPanel" class="setting-row" style="display:none;flex-direction:column;align-items:stretch"><h3 id="matchTitle">Matchup</h3><p id="matchPlayers"></p><div class="result-actions"><button class="primary-small" id="playMatchA">PLAY AS PLAYER A</button><button class="primary-small" id="playMatchB">PLAY AS PLAYER B</button><button class="secondary-btn" id="coinFlipMatch">COIN FLIP</button></div><button class="secondary-btn" id="closeMatchPanel">CLOSE MATCH</button></div></div></section>
-<section class="screen" id="changelogScreen" aria-label="What's new"><div class="full-panel"><div class="eyebrow">ZYRON STUDIOS · COMPLETE UPDATE HISTORY</div><h2>TAG! Update Log · v4–v15</h2><p>Milestones from the original playable realms through the current V15 release. Older entries are historical highlights, not exhaustive patch-by-patch records.</p><div class="changelog-timeline" id="changelogTimeline">
-  <article class="changelog-entry current"><h3>V15 · SMART BOTS & ARENA ARCHITECTURE</h3><p>Rebuilt bot movement around platform-to-platform route planning, smarter target prediction, evasive flanks, active patrols, tactical jumps and varied dashes. Arena platforms are now automatically repositioned to avoid overlapping structures, and decorative architecture uses distinct, spaced positions in each realm.</p></article>
+<section class="screen" id="changelogScreen" aria-label="What's new"><div class="full-panel"><div class="eyebrow">ZYRON STUDIOS · COMPLETE UPDATE HISTORY</div><h2>TAG! Update Log · v4–v16</h2><p>Milestones from the original playable realms through the current V16 release. Older entries are historical highlights, not exhaustive patch-by-patch records.</p><div class="changelog-timeline" id="changelogTimeline">
+  <article class="changelog-entry current"><h3>V16 · MOBILE PLAY, SOLID ARENAS & FRIEND MAILBOX</h3><p>Responsive phone and tablet layouts, dynamic touch controls for each human player, tighter round-start spawns, a shorter arena view, solid structure collision (the green drink still grants temporary noclip), and a friend-request mailbox with accept and decline actions.</p></article>
+  <article class="changelog-entry"><h3>V15 · SMART BOTS & ARENA ARCHITECTURE</h3><p>Rebuilt bot movement around platform-to-platform route planning, smarter target prediction, evasive flanks, active patrols, tactical jumps and varied dashes. Arena platforms are now automatically repositioned to avoid overlapping structures, and decorative architecture uses distinct, spaced positions in each realm.</p></article>
   <article class="changelog-entry"><h3>V14 · RUNNER IDENTITY & PROFILE</h3><p>Added player-name editing directly from Profile with unique-name enforcement; empty profiles stay nameless until a name is chosen; fixed Profile navigation to the title and leaderboard; custom profile pictures can be uploaded from your computer; added the Changed and Shiny achievement for uploading a custom picture.</p></article>
   <article class="changelog-entry"><h3>V4 · REALMS IN MOTION</h3><p>Original TAG! foundation, local chase gameplay and the first three arenas: Emberglass Foundry, Astral Archive and Drowned Observatory.</p></article>
   <article class="changelog-entry"><h3>V5 · THE REALM EXPANSION</h3><p>Expanded the world roster with Lunar Frontier, Greenland Trail, Neon City Rush, Overgrown Mall, Shadow Ninja Dojo, Sunscorch Canyon, Frostfall Peak, Cloudline Skyport and Ashen Caldera.</p></article>
@@ -1062,7 +1090,7 @@ $('mapGrid').addEventListener('click', event => {
 });
 
 function resize() {
-  width = Math.max(320, innerWidth);worldWidth=Math.max(width*1.9,1650);
+  width = Math.max(320, innerWidth);worldWidth=Math.max(width*1.55,1300);
   height = Math.max(260, innerHeight);
   dpr = Math.min(window.devicePixelRatio || 1, 2);
   canvas.width = Math.round(width * dpr);
@@ -1302,7 +1330,7 @@ function buildWorld() {
 
 function spawnPlayers(count) {
   players = [];
-  const positionSets={2:[.38,.62],3:[.23,.50,.77],4:[.17,.39,.61,.83]};
+  const positionSets={2:[.47,.53],3:[.44,.50,.56],4:[.41,.47,.53,.59]};
   const customSpawns=userLevels.find(l=>l.id===mapId)?.objects?.filter(o=>o.type==='spawn')||[];const positions=positionSets[count]||[.17,.39,.61,.83];
   for (let i=0;i<count;i++) {
     players.push({
@@ -1320,6 +1348,7 @@ function spawnPlayers(count) {
   tagCooldown = 3.0;
   blockedFrom = -1;
   updateHud();
+  refreshMobileControls();
 }
 
 function setHint() {
@@ -1327,6 +1356,30 @@ function setHint() {
     `P${i+1} ${c.keys.join('/')}`).join('　 ·　 ') + '　 ·　 DOWN DASH　 ·　 ESC PAUSE';
   $('hintHud').textContent = hudHint;
 }
+
+function refreshMobileControls(){
+  const root=$('mobileControls');if(!root)return;
+  const mobile=window.matchMedia('(pointer: coarse), (max-width: 900px)').matches;
+  if(!mobile||!['playing','countdown'].includes(mode)){root.style.display='none';root.innerHTML='';return;}
+  const ids=onlineActive?[onlineLocalIndex]:Array.from({length:activePlayerCount},(_,i)=>i).filter(i=>!botPlayers[i]);
+  root.innerHTML='';if(!ids.length){root.style.display='none';return;}root.style.display='grid';
+  ids.forEach(i=>{
+    const c=controls[i],pad=document.createElement('div');pad.className='touch-player-pad';pad.style.setProperty('--player-color',playerColors[i]);
+    const label=document.createElement('span');label.className='touch-player-label';label.textContent=onlineActive?'YOU':('P'+(i+1));pad.append(label);
+    [['up',c.jump],['left',c.left],['down',c.dash],['right',c.right]].forEach(([direction,key])=>{
+      const b=document.createElement('button');b.type='button';b.className='touch-key touch-'+direction;
+      b.textContent=({up:'▲',down:'▼',left:'◀',right:'▶'})[direction];b.setAttribute('aria-label',label.textContent+' '+direction);
+      b.dataset.touchKey=String(key).toLowerCase();
+      b.addEventListener('pointerdown',e=>{e.preventDefault();if(b.setPointerCapture)b.setPointerCapture(e.pointerId);keysDown.add(b.dataset.touchKey);});
+      const release=()=>keysDown.delete(b.dataset.touchKey);
+      b.addEventListener('pointerup',release);b.addEventListener('pointercancel',release);b.addEventListener('lostpointercapture',release);
+      pad.append(b);
+    });
+    root.append(pad);
+  });
+}
+window.addEventListener('resize',()=>refreshMobileControls());
+
 function updateHud() {
   const sec=Math.max(0,Math.ceil(gameMode==='hotpotato'?potatoClock:remaining));
   $('timer').textContent=gameMode==='hotpotato'?`POTATO ${sec}s`:String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');
@@ -1474,6 +1527,7 @@ function beginCountdown(){
 
 function beginPlay() {
   mode = 'playing';
+  refreshMobileControls();
   if($('onlineChatToggle'))$('onlineChatToggle').style.display='block';
   if(!onlineActive&&$('matchChatTarget'))$('matchChatTarget').value=botPlayers.some(Boolean)?'bots':'local';
   remaining = roundLength;
@@ -1524,7 +1578,7 @@ function togglePause() {
 }
 
 function resetToMenu() {
-  mode='menu';localBotMatchActive=false;if($('onlineChatToggle'))$('onlineChatToggle').style.display='none';if($('matchChatPanel'))$('matchChatPanel').style.display='none';$('menuScreen').classList.remove('setup-open');
+  mode='menu';refreshMobileControls();localBotMatchActive=false;if($('onlineChatToggle'))$('onlineChatToggle').style.display='none';if($('matchChatPanel'))$('matchChatPanel').style.display='none';$('menuScreen').classList.remove('setup-open');
   stopMapMusic();
   keysDown.clear();
   activeScreen('menu');
@@ -1690,10 +1744,10 @@ function movePlayer(p,dt) {
 
   // Solid platforms block side impacts and the underside as well as landings.
   for(const solid of [...platforms.filter(s=>s.id!=='ceiling'),...pads]){
-    if(solid.id==='floor'||p.potionTime>0||(p.id===tagged&&remaining<=10)) continue;
+    if(solid.id==='floor'||p.potionTime>0) continue;
     const overlapX=p.x+HALF_W>solid.x && p.x-HALF_W<solid.x+solid.w;
     const overlapY=p.y+HALF_H>solid.y && p.y-HALF_H<solid.y+solid.h;
-    if(solid.oneWay){if(overlapX&&overlapY){const oldX=p.x-p.vx*dt;if(oldX+HALF_W<=solid.x+4){p.x=solid.x-HALF_W;p.vx=Math.min(0,p.vx);}else if(oldX-HALF_W>=solid.x+solid.w-4){p.x=solid.x+solid.w+HALF_W;p.vx=Math.max(0,p.vx);}}continue;}
+    if(solid.oneWay && solid.kind!=='structure'){if(overlapX&&overlapY){const oldX=p.x-p.vx*dt;if(oldX+HALF_W<=solid.x+4){p.x=solid.x-HALF_W;p.vx=Math.min(0,p.vx);}else if(oldX-HALF_W>=solid.x+solid.w-4){p.x=solid.x+solid.w+HALF_W;p.vx=Math.max(0,p.vx);}}continue;}
     if(overlapX&&overlapY&&!landing){
       const oldX=p.x-p.vx*dt, oldY=p.y-p.vy*dt;
       if(oldX+HALF_W<=solid.x+4){p.x=solid.x-HALF_W;p.vx=Math.min(0,p.vx);}
@@ -3001,7 +3055,7 @@ async function saveProfileName(){
  async function openPlayerProfile(){loadProfilePhoto();window.TAGAppScreens?.show('profile');let cached={};try{cached=JSON.parse(localStorage.getItem('tagProfileStatsV1')||'{}');}catch(e){}const savedName=localStorage.getItem('tagOnlineName')||'';if($('profileNameInput'))$('profileNameInput').value=savedName;let localWins=0;try{const saved=JSON.parse(localStorage.getItem('tagRealmWins')||'[]');localWins=Array.isArray(saved)?saved.reduce((sum,n)=>sum+(Number(n)||0),0):0;}catch(e){}if($('profileDisplayName'))$('profileDisplayName').textContent=savedName||'EMPTY';if($('profileWins'))$('profileWins').textContent=localWins;if($('profileLosses'))$('profileLosses').textContent=Number(cached.losses)||0;if($('profileTags'))$('profileTags').textContent=Number(cached.tags)||0;if($('profileOnlineWins'))$('profileOnlineWins').textContent=Number(cached.onlineWins)||0;if($('profileRank'))$('profileRank').textContent=cached.rank||'—';if($('profileElo'))$('profileElo').textContent=Number(cached.elo)||100;if($('profileTagpoints'))$('profileTagpoints').textContent=Number(cached.tagpoints)||0;if(!connected){if(savedName&&!$('onlineName').value)$('onlineName').value=savedName;if(!$('onlineName').value.trim()){if($('profileConnectionState'))$('profileConnectionState').textContent='No player name has been set. Choose one above to create your TAG! account.';if($('profileConnectBtn'))$('profileConnectBtn').textContent='GO TO ONLINE';return;}if($('profileConnectionState'))$('profileConnectionState').textContent='CONNECTING TO TAG! ONLINE...';await connect();}if(connected){await Promise.allSettled([refreshOnlineStats(),refreshLeaderboard()]);if($('profileConnectBtn'))$('profileConnectBtn').textContent='CONNECTED';}else if($('profileConnectionState'))$('profileConnectionState').textContent='Offline · Showing your last saved account stats. Open Online to reconnect.';}
  async function submitOnlineWin(){if(!client||!session)return;await Promise.allSettled([refreshLeaderboard(),refreshOnlineStats(),refreshTournaments()]);}
  window.addEventListener('tag-online-result',()=>{void submitOnlineWin();});
- async function refreshFriends(){if(!client||!session)return;cachedOnlineFriends=[];onlineFriendIds.clear();const el=$('onlineFriendList');try{const results=await Promise.all([client.listFriends(session,0,100,null),client.listFriends(session,1,100,null),client.listFriends(session,2,100,null)]);const groups=results.map(r=>r.friends||[]),mutual=groups[0],outgoing=groups[1],incoming=groups[2];const ids=mutual.map(f=>f.user?.id).filter(Boolean);if(ids.length&&socket)try{const presence=await socket.followUsers(ids);onlineFriendIds=new Set((presence.presences||[]).map(p=>p.user_id));}catch(e){}cachedOnlineFriends=mutual.map(f=>f.user||{}).filter(u=>u.id&&(u.online||onlineFriendIds.has(u.id)));el.innerHTML='';const heading=t=>{const h=document.createElement('div');h.style.cssText='color:#9fe8d8;font-weight:900;padding:7px 0 3px';h.textContent=t;el.append(h);};const addRow=(label,buttonText,action,disabled=false)=>{const row=document.createElement('div');row.className='online-chat-line';const name=document.createElement('span');name.textContent=label;const button=document.createElement('button');button.className='secondary-btn';button.textContent=buttonText;button.disabled=disabled;button.onclick=action;row.append(name,button);el.append(row);};heading('FRIENDS');mutual.forEach(f=>{const u=f.user||{};addRow(`${u.username||'PLAYER'} · ${(u.online||onlineFriendIds.has(u.id))?'ONLINE':'OFFLINE'}`,'INVITE',async()=>{if(!match){status('Create a private room first, then invite your friend.','error');return;}try{const channel=await socket.joinChat(u.id,2,true,false);await socket.writeChatMessage(channel.id,{message:`TAG_ROOM_INVITE:${match.match_id}`});log('SYSTEM',`Room invite sent to ${u.username}.`);}catch(e){status('Could not invite friend: '+e.message,'error');}},!(u.online||onlineFriendIds.has(u.id)));});if(!mutual.length){const p=document.createElement('div');p.textContent='No accepted friends yet.';el.append(p);}heading('INCOMING REQUESTS');incoming.forEach(f=>{const u=f.user||{};addRow(u.username||'PLAYER','ACCEPT',async()=>{try{await client.addFriends(session,[u.id]);await refreshFriends();}catch(e){status('Could not accept request: '+e.message,'error');}});});if(!incoming.length){const p=document.createElement('div');p.textContent='No incoming requests.';el.append(p);}heading('SENT REQUESTS');outgoing.forEach(f=>{const u=f.user||{};addRow(u.username||'PLAYER','CANCEL',async()=>{try{await client.deleteFriends(session,[u.id]);await refreshFriends();}catch(e){status('Could not cancel request: '+e.message,'error');}});});if(!outgoing.length){const p=document.createElement('div');p.textContent='No pending requests.';el.append(p);}}catch(e){el.textContent='Friend list unavailable: '+e.message;}}
+ async function refreshFriends(){if(!client||!session)return;cachedOnlineFriends=[];onlineFriendIds.clear();const el=$('onlineFriendList');try{const results=await Promise.all([client.listFriends(session,0,100,null),client.listFriends(session,1,100,null),client.listFriends(session,2,100,null)]);const groups=results.map(r=>r.friends||[]),mutual=groups[0],outgoing=groups[1],incoming=groups[2];const ids=mutual.map(f=>f.user?.id).filter(Boolean);if(ids.length&&socket)try{const presence=await socket.followUsers(ids);onlineFriendIds=new Set((presence.presences||[]).map(p=>p.user_id));}catch(e){}cachedOnlineFriends=mutual.map(f=>f.user||{}).filter(u=>u.id&&(u.online||onlineFriendIds.has(u.id)));el.innerHTML='';const heading=t=>{const h=document.createElement('div');h.style.cssText='color:#9fe8d8;font-weight:900;padding:7px 0 3px';h.textContent=t;el.append(h);};const addRow=(label,buttonText,action,disabled=false)=>{const row=document.createElement('div');row.className='online-chat-line';const name=document.createElement('span');name.textContent=label;const button=document.createElement('button');button.className='secondary-btn';button.textContent=buttonText;button.disabled=disabled;button.onclick=action;row.append(name,button);el.append(row);};heading('FRIENDS');mutual.forEach(f=>{const u=f.user||{};addRow(`${u.username||'PLAYER'} · ${(u.online||onlineFriendIds.has(u.id))?'ONLINE':'OFFLINE'}`,'INVITE',async()=>{if(!match){status('Create a private room first, then invite your friend.','error');return;}try{const channel=await socket.joinChat(u.id,2,true,false);await socket.writeChatMessage(channel.id,{message:`TAG_ROOM_INVITE:${match.match_id}`});log('SYSTEM',`Room invite sent to ${u.username}.`);}catch(e){status('Could not invite friend: '+e.message,'error');}},!(u.online||onlineFriendIds.has(u.id)));});if(!mutual.length){const p=document.createElement('div');p.textContent='No accepted friends yet.';el.append(p);}heading('MAILBOX · INCOMING FRIEND REQUESTS');incoming.forEach(f=>{const u=f.user||{};addRow(u.username||'PLAYER','ACCEPT',async()=>{try{await client.addFriends(session,[u.id]);status('Friend request accepted.','connected');await refreshFriends();}catch(e){status('Could not accept request: '+e.message,'error');}});addRow((u.username||'PLAYER')+' · DECLINE','DECLINE',async()=>{try{await client.deleteFriends(session,[u.id]);status('Friend request declined.');await refreshFriends();}catch(e){status('Could not decline request: '+e.message,'error');}});});if(!incoming.length){const p=document.createElement('div');p.textContent='Your mailbox is empty. New friend requests will appear here.';el.append(p);}heading('SENT REQUESTS');outgoing.forEach(f=>{const u=f.user||{};addRow(u.username||'PLAYER','CANCEL',async()=>{try{await client.deleteFriends(session,[u.id]);await refreshFriends();}catch(e){status('Could not cancel request: '+e.message,'error');}});});if(!outgoing.length){const p=document.createElement('div');p.textContent='No pending requests.';el.append(p);}}catch(e){el.textContent='Friend list unavailable: '+e.message;}}
  async function addFriend(){const name=$('friendName').value.trim();if(!name)return;try{await client.addFriends(session,[name]);$('friendName').value='';status(`Friend request sent to ${name}. They will appear under Sent Requests until accepted.`,'connected');await refreshFriends();}catch(e){status('Could not add friend: '+e.message,'error');}}
   async function notifyOnlineFriendAndBattle(){if(!connected)return;const friend=cachedOnlineFriends[0];if(!friend){showQuickMatchModal('NO OPPONENT AVAILABLE','No opponent available right now.','Your current search is still active. You can keep waiting.',{spinner:false,keep:true});return;}queueActive=false;queueGeneration++;clearQueueClocks();const pendingTicket=matchmakerTicket?.ticket;matchmakerTicket=null;if(pendingTicket&&socket)await socket.removeMatchmaker(pendingTicket).catch(()=>{});try{if(matchmakerTicket?.ticket){await socket.removeMatchmaker(matchmakerTicket.ticket);matchmakerTicket=null;}closeQuickMatchModal();const room=await createRoom();if(!room?.match_id)throw new Error('Could not create an invite room.');const channel=await socket.joinChat(friend.id,2,true,false);await socket.writeChatMessage(channel.id,{message:'TAG_ROOM_INVITE:'+room.match_id,text:username+' invited you to play TAG!'});status('Room created. Sent a battle invitation to '+(friend.username||'your friend')+'.','connected');}catch(e){status('Could not send friend invitation: '+e.message,'error');}}
  async function joinCommunityTournament(matchId){if(!connected){await connect();if(!connected)return;}try{if(match)await socket.leaveMatch(match.match_id);const m=normalizeMatch(await socket.joinMatch(matchId));activeTournamentMatchId=matchId;isTournamentHost=false;if($('startTournamentBtn'))$('startTournamentBtn').disabled=true;await enterMatch(m);status('Joined the tournament lobby. Wait for its host to start the event.','connected');}catch(e){status('Could not join tournament: '+e.message,'error');}}
