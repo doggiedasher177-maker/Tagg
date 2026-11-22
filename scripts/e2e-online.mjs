@@ -17,7 +17,12 @@ function makeClient() {
 
 async function waitFor(page, fn, description, ms = timeout) {
   try { await page.waitForFunction(fn, null, { timeout: ms }); }
-  catch { throw new Error("Timed out waiting for " + description + ". Last status: " + await page.locator("#onlineStatus").textContent().catch(() => "unavailable")); }
+  catch {
+    const status = await page.locator("#onlineStatus").textContent().catch(() => "unavailable");
+    const diagnostics = page.__e2eDiagnostics || [];
+    const button = await page.locator("#onlineConnectBtn").evaluate(el => ({ hidden: el.hidden, exists: !!el, listeners: getEventListeners?.(el) || null })).catch(() => null);
+    throw new Error("Timed out waiting for " + description + ". Last status: " + status + ". Button: " + JSON.stringify(button) + ". Browser diagnostics: " + diagnostics.slice(-20).join(" | "));
+  }
 }
 
 async function openOnline(browser, accelerateQueue = false) {
@@ -34,11 +39,15 @@ async function openOnline(browser, accelerateQueue = false) {
     });
   }
   const page = await context.newPage();
+  page.__e2eDiagnostics = [];
+  page.on("console", message => { if (message.type() === "error") page.__e2eDiagnostics.push("console: " + message.text()); });
+  page.on("pageerror", error => page.__e2eDiagnostics.push("pageerror: " + String(error?.stack || error)));
+  page.on("requestfailed", request => page.__e2eDiagnostics.push("requestfailed: " + request.url() + " · " + request.failure()?.errorText));
   await page.goto(SITE_URL, { waitUntil: "domcontentloaded", timeout: 45000 });
   await page.locator("#onlineSoonBtn").waitFor({ state: "visible", timeout });
   await page.locator("#onlineSoonBtn").click();
   await page.locator("#onlineName").waitFor({ state: "visible", timeout });
-  await sleep(1000); // let the online module finish registering its handlers
+  await sleep(2500); // let the online module and its Nakama SDK import finish loading
   return { context, page };
 }
 
