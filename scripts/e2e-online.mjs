@@ -16,7 +16,7 @@ async function waitForPublishedClient() {
       const response = await fetch(SITE_URL, { cache: "no-store", signal: AbortSignal.timeout(12000) });
       if (response.ok) {
         const html = await response.text();
-        if (html.includes("const setButtons=on=>{[") && html.includes("async function responseErrorMessage(error){") && html.includes("nextSocket.rpc('tag_online_presence','{}')") && html.includes("oldSocket.rpc('tag_online_leave','{}')") && html.includes("getBotPlayers(){return botPlayers.slice(0,activePlayerCount);}") && html.includes("getMatchId(){return onlineMatchId;}")) return;
+        if (html.includes("const setButtons=on=>{[") && html.includes("async function responseErrorMessage(error){") && html.includes("nextSocket.rpc('tag_online_presence','{}')") && html.includes("oldSocket.rpc('tag_online_leave','{}')") && html.includes("getBotPlayers(){return botPlayers.slice(0,activePlayerCount);}") && html.includes("getMatchId(){return onlineMatchId;}") && html.includes("startLocalBotMatch(info)") && html.includes('id="avatarsScreen"')) return;
       }
     } catch {}
     await sleep(2500);
@@ -113,6 +113,24 @@ try {
   contexts.push(first.context, second.context);
   primaryPage = first.page;
 
+  // The title-menu cosmetic buttons must navigate to inert Coming Soon pages.
+  await first.page.evaluate(() => window.TAGAppScreens?.show("menu"));
+  await first.page.locator("#itemShopBtn").click();
+  assert(await first.page.locator("#itemShopScreen").evaluate(el => el.classList.contains("show")),
+    "Item Shop did not open its Coming Soon screen.");
+  assert((await first.page.locator("#itemShopScreen").innerText()).includes("ITEMS COMING SOON"),
+    "Item Shop did not display its Coming Soon message.");
+  await first.page.locator("#backItemShopBtn").click();
+  await first.page.locator("#avatarsBtn").click();
+  assert(await first.page.locator("#avatarsScreen").evaluate(el => el.classList.contains("show")),
+    "Avatars / Skins did not open its Coming Soon screen.");
+  assert((await first.page.locator("#avatarsScreen").innerText()).includes("AVATARS / SKINS COMING SOON"),
+    "Avatars / Skins did not display its Coming Soon message.");
+  await first.page.locator("#backAvatarsBtn").click();
+  await first.page.evaluate(() => window.TAGAppScreens?.show("online"));
+  await first.page.locator("#onlineName").waitFor({ state: "visible", timeout });
+  results.push("PASS: Item Shop and Avatars open Coming Soon pages with working back buttons");
+
   const nameA = makeName();
   const nameB = makeName();
 
@@ -203,21 +221,29 @@ try {
   });
   await first.page.locator("#quickMatchBtn").click();
   await waitFor(first.page,
-    () => window.TAGOnlineHooks?.isOnline?.() === true &&
+    () => window.TAGOnlineHooks?.isLocalBotMatch?.() === true &&
+      window.TAGOnlineHooks?.isOnline?.() === false &&
       Array.isArray(window.TAGOnlineHooks?.getBotPlayers?.()) &&
       window.TAGOnlineHooks.getBotPlayers().some(Boolean),
-    "30-second Quick Match bot fallback and authoritative bot roster",
+    "30-second Quick Match local bot fallback",
     18000);
+  assert(await first.page.evaluate(() => window.TAGOnlineHooks?.getMatchId?.() === null),
+    "A local fallback bot unexpectedly created a ranked server match.");
   await waitFor(first.page,
-    () => window.TAGOnlineHooks?.isOnline?.() === true,
-    "bot match becoming active",
+    () => {
+      const bot = window.TAGOnlineHooks?.getPlayerStates?.()?.find(player => player.isBot);
+      return !!bot && Number.isFinite(bot.y) && bot.y > 0.18 && bot.y < 0.96;
+    },
+    "the local bot to appear inside the arena rather than above the ceiling",
     12000);
   await sleep(4200);
   const botTimerBefore = (await first.page.locator("#timer").textContent()).trim();
   await sleep(1400);
   const botTimerAfter = (await first.page.locator("#timer").textContent()).trim();
-  assert(botTimerBefore !== botTimerAfter, "The bot-match round timer did not advance.");
-  results.push("PASS: Quick Match timeout starts a bot match and its timer advances");
+  assert(botTimerBefore !== botTimerAfter, "The local bot-match round timer did not advance.");
+  assert(await first.page.evaluate(() => window.TAGOnlineHooks?.isLocalBotMatch?.() === true && window.TAGOnlineHooks?.isOnline?.() === false),
+    "The fallback bot was not simulated locally.");
+  results.push("PASS: Quick Match timeout starts a local-physics bot match with no ranked server match");
 
 
   // 7. A published community map is searchable and starts with three replaceable bots.
@@ -303,6 +329,8 @@ try {
       "a public map match with one human and three bots");
     assert(firstMapState.players.filter(player => player.is_bot).length === 3,
       "A new public map match did not fill all three open slots with bots.");
+    assert(firstMapState.players.filter(player => player.is_bot).every(player => Math.abs(Number(player.y) - 0.82) < 0.025),
+      "A server arena bot did not spawn on the ground line.");
     await mapSocketB.joinMatch(matchId);
     const replacementState = await waitForMapState(() => mapStateA,
       state => Array.isArray(state.players) && state.players.some(player => player.user_id === mapSessionB.user_id),
