@@ -1079,6 +1079,28 @@ local function publish_public_map(context, payload)
   return nk.json_encode({ ok = true, key = key, owner_id = context.user_id, name = level.name })
 end
 
+local function unpublish_public_map(context, payload)
+  if not context.user_id then error("Sign in before removing a published map.") end
+  local request = {}
+  if payload and payload ~= "" then request = nk.json_decode(payload) or {} end
+  local key = tostring(request.key or "")
+  if key == "" or #key > 128 then error("Choose a published map to remove.") end
+  local objects, read_err = nk.storage_read({{
+    collection = PUBLIC_MAPS_COLLECTION,
+    key = key,
+    user_id = context.user_id
+  }})
+  if read_err then error(read_err) end
+  if not objects or not objects[1] then error("You can only remove maps that you published.") end
+  local delete_err = nk.storage_delete({{
+    collection = PUBLIC_MAPS_COLLECTION,
+    key = key,
+    user_id = context.user_id
+  }})
+  if delete_err then error(delete_err) end
+  return nk.json_encode({ ok = true })
+end
+
 local function list_public_maps(context, payload)
   local request = {}
   if payload and payload ~= "" then request = nk.json_decode(payload) or {} end
@@ -1267,6 +1289,7 @@ nk.register_rpc(unregister_online_presence, "tag_online_leave")
 nk.register_rpc(get_online_player_count, "tag_online_count")
 nk.register_rpc(ensure_elo_account, "tag_ensure_elo")
 nk.register_rpc(publish_public_map, "tag_publish_map")
+nk.register_rpc(unpublish_public_map, "tag_unpublish_map")
 nk.register_rpc(list_public_maps, "tag_list_public_maps")
 nk.register_rpc(start_public_map_match, "tag_start_public_map_match")
 
