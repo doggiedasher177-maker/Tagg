@@ -69,6 +69,9 @@ if (
   !source.includes("function refreshMobileControls()") ||
   !source.includes("id=\"mobilePauseBtn\"") ||
   !source.includes("await client.addFriends(session,[],[name])") ||
+  !source.includes("getOnlinePlayers(){return Array.from({length:activePlayerCount}") ||
+  !source.includes("ADD MATCH PLAYERS AS FRIENDS") ||
+  !source.includes("async function refreshMatchFriendTargets()") ||
   !source.includes("MAILBOX · INCOMING FRIEND REQUESTS") ||
   !source.includes("refreshFriends().catch(()=>{})") ||
   !source.includes("if(solid.id==='floor'||p.potionTime>0) continue;") ||
