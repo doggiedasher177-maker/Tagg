@@ -1,4 +1,4 @@
-# TAG! V20.5 — Scenario Menus & Cinematic Polish
+# TAG! V21 — Living Realms & Dance Gallery
 
 This repository contains the TAG! browser client and a Nakama server runtime.
 
@@ -20,6 +20,14 @@ For a hosted deployment, deploy this repository with a persistent Postgres datab
 - Offline historical snapshots for V14–V19: `archive/legacy-offline/` (mirrored in `docs/archive/` for Pages)
 - Nakama runtime match module: `server/modules/tag_match.lua`
 - Docker Compose: Nakama + PostgreSQL
+
+## V21 release notes
+
+- Rebuilt the title-screen action buttons as a responsive grid and made the menu independently scrollable, so every button remains reachable on phones, laptops and short displays.
+- Added a Controls & Dance Gallery with animated previews for all 14 existing emotes; the emote store now shows animated runner previews instead of static emoji tiles.
+- Replaced accessory shop emoji tiles with rendered vector model artwork for all eight existing accessories.
+- Added distinct layered scenery details to all 13 built-in realms while preserving existing map layouts, collision, online play, and round rules.
+- Preserved V19 emote gameplay, saved cosmetic IDs, keybinds and duo invitations.
 
 ## V20.5 release notes
 
