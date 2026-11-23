@@ -165,6 +165,8 @@ local function public_state(state)
       vx = p.vx,
       vy = p.vy,
       face = p.face or 1,
+      emote = p.emote or "",
+      heldItem = p.held_item or "",
       slot = slot - 1,
       connected = true,
       violations = p.violations or 0,
@@ -442,6 +444,19 @@ local function accept_player_snapshot(state, sender, data, tick)
   player.vx = clamp(vx, -1.4, 1.4)
   player.vy = clamp(vy, -2.4, 2.4)
   player.face = tonumber(source.face) and (tonumber(source.face) < 0 and -1 or 1) or 1
+  -- V19 cosmetic state is allowlisted and length-bounded; it never affects
+  -- authoritative movement, tagging, scoring or collision decisions.
+  local allowed_emotes = {
+    distraction = true, jamal = true, headbop = true, originalsound = true,
+    griddy = true, subaru = true, purple = true, defaultdance = true,
+    kwikflip = true, dapup = true, gangnam = true, hero = true,
+    boogiedown = true, icecream = true
+  }
+  local allowed_items = { dash = true, shield = true, jump = true, speed = true, blink = true, decoy = true }
+  local emote = type(source.emote) == "string" and source.emote:sub(1, 24) or ""
+  local held_item = type(source.heldItem) == "string" and source.heldItem:sub(1, 24) or ""
+  player.emote = allowed_emotes[emote] and emote or ""
+  player.held_item = allowed_items[held_item] and held_item or ""
   player.last_tick = tick
 end
 
