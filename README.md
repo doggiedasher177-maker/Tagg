@@ -1,4 +1,4 @@
-# TAG! V20 — Cosmic Menu & Character Polish
+# TAG! V20.5V — Mao Mao Dance Emote
 
 This repository contains the TAG! browser client and a Nakama server runtime.
 
@@ -14,7 +14,7 @@ For a hosted deployment, deploy this repository with a persistent Postgres datab
 
 ## Included
 
-- Browser client: `index.html` (V20 Cosmic Menu)
+- Browser client: `index.html` (V20.5V Mao Mao Dance emote update)
 - Published GitHub Pages client: `docs/index.html`
 - Historical build viewer: `docs/history.html`
 - Offline historical snapshots for V14–V19: `archive/legacy-offline/` (mirrored in `docs/archive/` for Pages)
@@ -25,7 +25,7 @@ For a hosted deployment, deploy this repository with a persistent Postgres datab
 
 - Rebuilt menu presentation around the V20 preview: cosmic violet/magenta/cyan palette, animated nebula and starfield layers, glass panels, responsive card layouts and blur/scale screen transitions.
 - Refined legacy character models and V1 preview without changing saved skin IDs, unlocks or player movement.
-- Reworked the fourteen emotes into distinct choreography; clarified Passinho do Jamal, Subaru Stairs, Boogie Down and Ice Cream Stand while retaining existing emote IDs and inventory keys.
+- Reworked the fourteen emotes into distinct choreography; V20.5V updates Original Sound with a DRZ / dorzhnya Mao Mao Dance-inspired flex pose and side-to-side footwork, preserving its existing emote ID, unlocks, equipped slots and online sync. The V20 choreography also clarifies Passinho do Jamal, Subaru Stairs, Boogie Down and Ice Cream Stand.
 - Gameplay rules, controls, round flow and Nakama behavior remain unchanged. The existing 19.5V regression safeguards and online tests are retained.
 
 ## Online architecture and security
@@ -48,4 +48,4 @@ GitHub Pages then publishes updates whenever `docs/` changes on `main`. The expe
 
 `https://doggiedasher177-maker.github.io/Tagg/`
 
-The Nakama multiplayer backend remains hosted separately on Railway. The GitHub Actions validation workflow checks that the published copy matches the source, both browser scripts parse successfully, and V15–V20 feature guards remain present. V1–V14 numbered originals are preserved in the companion offline archive pack.
+The Nakama multiplayer backend remains hosted separately on Railway. The GitHub Actions validation workflow checks that the published copy matches the source, both browser scripts parse successfully, and V15–V20.5V feature guards remain present. V1–V14 numbered originals are preserved in the companion offline archive pack.
