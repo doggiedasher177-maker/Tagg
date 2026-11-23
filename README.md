@@ -1,4 +1,4 @@
-# TAG! V14 — Nakama backend
+# TAG! V19 — Living Legends & Nakama backend
 
 This repository contains the TAG! browser client and a Nakama server runtime.
 
@@ -14,7 +14,10 @@ For a hosted deployment, deploy this repository with a persistent Postgres datab
 
 ## Included
 
-- Browser client: `index.html`
+- Browser client: `index.html` (V19 Living Legends)
+- Published GitHub Pages client: `docs/index.html`
+- Historical build viewer: `docs/history.html`
+- Offline historical snapshots for V14–V18: `archive/legacy-offline/` (mirrored in `docs/archive/` for Pages)
 - Nakama runtime match module: `server/modules/tag_match.lua`
 - Docker Compose: Nakama + PostgreSQL
 
@@ -38,4 +41,4 @@ GitHub Pages then publishes updates whenever `docs/` changes on `main`. The expe
 
 `https://doggiedasher177-maker.github.io/Tagg/`
 
-The Nakama multiplayer backend remains hosted separately on Railway. The GitHub Actions validation workflow checks that the published copy matches the source and that both browser scripts parse successfully.
+The Nakama multiplayer backend remains hosted separately on Railway. The GitHub Actions validation workflow checks that the published copy matches the source, both browser scripts parse successfully, and V15–V19 feature guards remain present. V1–V14 numbered originals are preserved in the companion offline archive pack.
