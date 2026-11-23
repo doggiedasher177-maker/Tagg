@@ -372,6 +372,13 @@ try {
     "V18 catalog/economy diagnostics failed: " + JSON.stringify(v18Diagnostics));
   await first.page.locator("#backAvatarsBtn").click();
   await first.page.evaluate(() => window.TAGAppScreens?.show("menu"));
+  await first.page.locator("#accessoriesShopBtn").click();
+  assert(await first.page.locator("#avatarsScreen").evaluate(el => el.classList.contains("show")),
+    "V18 dedicated Accessories Shop did not open.");
+  assert((await first.page.locator("#avatarsScreen").innerText()).toUpperCase().includes("WATERMELON HELMET"),
+    "V18 dedicated Accessories Shop did not open its accessories category.");
+  await first.page.locator("#backAvatarsBtn").click();
+  await first.page.evaluate(() => window.TAGAppScreens?.show("menu"));
   await first.page.locator("#settingsBtn").click();
   await first.page.locator('[data-v18-setting-skin="0"]').waitFor({ state: "visible", timeout });
   await first.page.locator('[data-v18-setting-skin="0"]').selectOption("gangbeast");
