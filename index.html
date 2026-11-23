@@ -450,6 +450,14 @@ body.argentina-mode #menuScreen{background:linear-gradient(180deg,#75bde9 0 32%,
 
 </style>
 <!-- V19 HISTORY VIEWER: docs/history.html opens archived HTML snapshots. -->
+
+<style id="v19-shop-viewport-fix">
+  /* Keep the growing cosmetics catalogue inside the screen and independently scrollable. */
+  #avatarsScreen.screen.show{align-items:flex-start;justify-content:center;padding:16px 0}
+  #avatarsScreen .v18-shell{max-height:calc(100dvh - 32px);overflow-y:auto;overflow-x:hidden;margin:0 auto;overscroll-behavior:contain}
+  #avatarsScreen .v18-tabs{position:sticky;top:0;z-index:5;padding:9px 0;background:linear-gradient(135deg,#15243af5,#11182ff5);backdrop-filter:blur(10px)}
+</style>
+
 </head>
 <body>
 <canvas id="world" aria-label="TAG game world"></canvas>
