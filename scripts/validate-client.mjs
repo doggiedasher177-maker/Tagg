@@ -65,8 +65,14 @@ if (
 }
 
 if (
+  !source.includes("V20 · COSMIC MENUS & CHARACTER DESIGN") ||
+  !source.includes("V20_COSMIC_MENU_THEME") ||
+  !source.includes("V20_SKIN_RENDERER") ||
+  !source.includes("V20_EMOTE_CHOREOGRAPHY") ||
+  !source.includes("Passinho do Jamal") ||
+  !source.includes("TAG! — Zyron Studios V20 · Cosmic Menu") ||
   !source.includes("V17 · SOLID STRUCTURES & IN-MATCH FRIENDS") ||
-  !source.includes("TAG! — Zyron Studios 19.5V · Living Legends") ||
+  !source.includes("TAG! — Zyron Studios V20 · Cosmic Menu") ||
   !source.includes("function customPlatformGeometry") ||
   !source.includes("centerX-objectW/2") ||
   !source.includes("centerY-objectH/2") ||
