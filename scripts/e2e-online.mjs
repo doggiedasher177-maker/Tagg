@@ -166,7 +166,7 @@ try {
     "V16 round-start spawn positions were not clustered closely together.");
   assert((await phonePage.evaluate(() => window.TAGOnlineHooks?.getBotPlayers?.() || [])).filter(Boolean).length === 1,
     "V16 phone control check did not create exactly one bot player.");
-  results.push("PASS: V17 phone layout renders four touch directions for each human and none for the bot; round-start positions are clustered");
+  results.push("PASS: V18 phone layout renders four directions plus ITEM for each human and none for the bot; round-start positions are clustered");
 
   await phonePage.locator("#mobilePauseBtn").click();
   await phonePage.waitForFunction(() => document.querySelector("#mobileControls")?.style.display === "none" &&
@@ -296,18 +296,23 @@ try {
     () => window.TAGOnlineHooks?.getBotDebug?.()?.mode === "playing",
     "V18 tablet bot match to enter active play",
     12000);
-  await tabletPage.waitForFunction(() =>
-    document.querySelector("#mobileControls")?.style.display === "grid" &&
-    document.querySelectorAll("#mobileControls .touch-player-pad").length === 1,
-    () => ({
+  try {
+    await tabletPage.waitForFunction(() =>
+      document.querySelector("#mobileControls")?.style.display === "grid" &&
+      document.querySelectorAll("#mobileControls .touch-player-pad").length === 1,
+      null,
+      { timeout: 20000 });
+  } catch (error) {
+    const diagnostic = await tabletPage.evaluate(() => ({
       width: window.innerWidth,
       coarse: window.matchMedia("(pointer: coarse)").matches,
       mobile: window.matchMedia("(pointer: coarse), (max-width: 900px)").matches,
       display: document.querySelector("#mobileControls")?.style.display,
       mode: window.TAGOnlineHooks?.getBotDebug?.()?.mode,
       bots: window.TAGOnlineHooks?.getBotPlayers?.()
-    }),
-    { timeout: 20000 });
+    }));
+    throw new Error("V18 tablet controls did not appear: " + JSON.stringify(diagnostic) + " · " + error.message);
+  }
   const tabletLayout = await tabletPage.evaluate(() => ({
     viewport: window.innerWidth,
     document: document.documentElement.scrollWidth,
@@ -337,7 +342,7 @@ try {
     null, { timeout: 20000 });
   const onlinePad = await phonePage.locator("#mobileControls .touch-player-label").innerText();
   assert(onlinePad === "YOU", "V17 online phone controls were not restricted to the local player.");
-  results.push("PASS: V17 online phone controls are restricted to the local human player");
+  results.push("PASS: V18 online phone controls are restricted to the local human player and include ITEM");
 
   // V18 shops, wallet, inventory limits, title/accessory unlocks, and emotes placeholder.
   await first.page.evaluate(() => { localStorage.setItem("tagV18Tagpoints", "8"); location.reload(); });
