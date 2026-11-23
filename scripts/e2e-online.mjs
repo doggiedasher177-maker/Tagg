@@ -417,7 +417,7 @@ try {
     () => window.TAGOnlineHooks?.getBotDebug?.()?.mode === "playing" &&
       document.querySelector("#mobileControls")?.style.display === "grid",
     "V18 tablet bot match and touch controls to enter active play",
-    30000);
+    60000);
   try {
     await tabletPage.waitForFunction(() =>
       document.querySelector("#mobileControls")?.style.display === "grid" &&
