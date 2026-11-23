@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#080d19">
 <meta name="description" content="TAG! — a local multiplayer platform chase across many living realms.">
-<title>TAG! — Zyron Studios v17 Online</title>
+<title>TAG! — Zyron Studios v18 PEAK!</title>
 <style>
 :root{
   --ink:#edf5ff;--muted:#9eafc5;--line:rgba(202,224,255,.15);
@@ -2598,6 +2598,525 @@ updateHud();
 activeScreen('menu');applyMusicVolume();syncFov(fovValue);
 lastFrame=performance.now();
 rafId=requestAnimationFrame(frame);
+
+/* ======================= TAG! V18 PEAK ======================= */
+(function(){
+  const $=id=>document.getElementById(id);
+  const read=(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v);}catch(e){return d;}};
+  const write=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}};
+  const skins=[
+    {id:'gangbeast',name:'Gang Beasts',icon:'🟡',desc:'A soft, wobbling brawler'},
+    {id:'amongus',name:'Among Us',icon:'🚀',desc:'A crewmate with a bright visor'},
+    {id:'roblox',name:'Roblox',icon:'🧱',desc:'A blocky avatar'},
+    {id:'knight',name:'The Knight',icon:'🗡️',desc:'A tiny masked wanderer'},
+    {id:'iwbtg',name:'The Guy',icon:'🕹️',desc:'A pixelated platform hero'},
+    {id:'nyan',name:'Nyan Cat',icon:'🌈',desc:'A cat with a rainbow trail'},
+    {id:'epicface',name:'Epic Face',icon:'😏',desc:'A classic 2016 meme face'},
+    {id:'freddy',name:'Freddy',icon:'🐻',desc:'A top-hatted animatronic bear'},
+    {id:'creeper',name:'Creeper',icon:'💚',desc:'A pixelated green creature'}
+  ];
+  const accessories=[
+    {id:'fedora',name:'Fedora Hat',icon:'🎩',price:1},
+    {id:'peanut',name:'Peanut Helmet',icon:'🥜',price:1},
+    {id:'watermelon',name:'Watermelon Helmet',icon:'🍉',price:1},
+    {id:'cone',name:'Traffic Cone',icon:'🚧',price:1},
+    {id:'pumpkin',name:'Pumpkin Helmet',icon:'🎃',price:1},
+    {id:'witch',name:'Witch Hat',icon:'🧙',price:1},
+    {id:'marker',name:'Giant Marker Cap',icon:'🖊️',price:1},
+    {id:'christmas',name:'Christmas Hat',icon:'🎅',price:2}
+  ];
+  const items=[
+    {id:'dash',name:'Dash Charge',icon:'⚡',desc:'A powerful forward dash'},
+    {id:'shield',name:'Bubble Shield',icon:'🛡️',desc:'Protects you briefly from hits'},
+    {id:'jump',name:'Super Jump',icon:'⬆️',desc:'Launch high into the air'},
+    {id:'speed',name:'Speed Burst',icon:'💨',desc:'A fast burst of speed'},
+    {id:'blink',name:'Blink Token',icon:'✨',desc:'Blink forward through the arena'},
+    {id:'decoy',name:'Decoy Pulse',icon:'👻',desc:'A short evasive protection pulse'}
+  ];
+  const titles=['Unbeatable','Rampage','Creator of Doom','Destinator'];
+  let wallet=Math.max(0,Number(read('tagV18Tagpoints',0))||0);
+  let ownedSkins=new Set(read('tagV18Skins',['default']).filter(x=>x==='default'||skins.some(y=>y.id===x)));ownedSkins.add('default');
+  let ownedAccessories=new Set(read('tagV18Accessories',[]).filter(x=>accessories.some(y=>y.id===x)));
+  playerAccessories.forEach(x=>{if(x&&x!=='none')ownedAccessories.add(x);});
+  let ownedTitles=new Set(read('tagV18Titles',[]).filter(x=>titles.includes(x)));
+  let stock=Object.assign({},read('tagV18Items',{}));
+  items.forEach(x=>stock[x.id]=Math.max(0,Math.min(3,Number(stock[x.id])||0)));
+  const playerSkins=Array.from({length:4},(_,i)=>read('tagV18PlayerSkins',['default','default','default','default'])[i]||'default');
+  const playerTitles=Array.from({length:4},(_,i)=>read('tagV18PlayerTitles',['','','',''])[i]||'');
+  const equippedItems=Array.from({length:4},(_,i)=>read('tagV18EquippedItems',['','','',''])[i]||'');
+  const playerCosmetics=Array.from({length:4},(_,i)=>read('tagV18PlayerAccessories',['none','none','none','none'])[i]||playerAccessories[i]||'none');
+  const colorOverrides=Array.from({length:4},(_,i)=>read('tagV18Colors',[])[i]||'');
+  let shopTab='skins',remapTarget=null,killerCount=2,killerBots=[],bullets=[],orbClocks={double:20,jump:20};
+  const oldFinish=finishRound,oldSpawn=spawnPlayers,oldReady=renderReadyRoom,oldUpdate=updateGame,oldConfigure=configureModifierRound,oldTouch=refreshMobileControls,oldDraw=drawPlayer,oldBg=drawBackground,oldPause=togglePause;
+  const esc=v=>escapeHtml(String(v??''));
+  function save(){
+    write('tagV18Tagpoints',wallet);write('tagV18Skins',Array.from(ownedSkins));write('tagV18Accessories',Array.from(ownedAccessories));
+    write('tagV18Titles',Array.from(ownedTitles));write('tagV18Items',stock);write('tagV18PlayerSkins',playerSkins);
+    write('tagV18PlayerTitles',playerTitles);write('tagV18EquippedItems',equippedItems);write('tagV18PlayerAccessories',playerCosmetics);write('tagV18Colors',colorOverrides);
+    write('tagPlayerAccessories',playerCosmetics);
+  }
+  function notice(msg){
+    let el=$('v18Toast');if(!el){el=document.createElement('div');el.id='v18Toast';document.body.appendChild(el);}
+    el.textContent=msg;el.classList.add('show');clearTimeout(el._hide);el._hide=setTimeout(()=>el.classList.remove('show'),2300);
+  }
+  function walletText(){
+    document.querySelectorAll('[data-v18-wallet]').forEach(el=>el.textContent='TAG POINTS · '+wallet);
+    if($('v18WalletHome'))$('v18WalletHome').textContent='✦ '+wallet+' TAG POINTS';
+    if($('shopTagpointBalance'))$('shopTagpointBalance').textContent='TAG POINTS · '+wallet;
+    if($('profileTagpoints'))$('profileTagpoints').textContent=wallet;
+  }
+  function awardWin(winner){
+    if(!Number.isInteger(winner)||winner<0||winner>=players.length)return;
+    wallet++;save();walletText();notice('MATCH WON · +1 TAG POINT');
+  }
+  function buy(kind,id){
+    const accessory=accessories.find(x=>x.id===id);
+    const cost=kind==='accessory'?(accessory?.price||1):1;
+    if(kind==='item'&&(stock[id]||0)>=3){notice('Item stack is full (3 maximum).');return;}
+    if(kind==='skin'&&ownedSkins.has(id)||kind==='accessory'&&ownedAccessories.has(id)||kind==='title'&&ownedTitles.has(id))return;
+    if(wallet<cost){notice('Not enough Tag Points. Win a match to earn more.');return;}
+    if(kind==='skin')ownedSkins.add(id);
+    if(kind==='accessory')ownedAccessories.add(id);
+    if(kind==='title')ownedTitles.add(id);
+    if(kind==='item')stock[id]=(stock[id]||0)+1;
+    wallet-=cost;save();renderShops();notice('Purchase complete!');
+  }
+  function card(kind,x){
+    const id=typeof x==='string'?x:x.id;
+    const name=typeof x==='string'?x:x.name;
+    const icon=typeof x==='string'?'🏷️':x.icon;
+    const desc=kind==='skin'?x.desc:kind==='item'?x.desc:kind==='accessory'?'Wear this in your matches':'Show this title beside your name';
+    const owned=kind==='skin'?ownedSkins.has(id):kind==='accessory'?ownedAccessories.has(id):kind==='title'?ownedTitles.has(id):false;
+    const qty=kind==='item'?(stock[id]||0):0,price=kind==='accessory'?(x.price||1):1;
+    const disabled=kind==='item'?qty>=3:owned;
+    const label=kind==='item'?(qty>=3?'MAX STACK':'BUY · 1 POINT'):owned?'OWNED':'BUY · '+price+' POINT'+(price===1?'':'S');
+    return '<article class="v18-shop-card"><div class="v18-shop-icon">'+icon+'</div><b>'+esc(name)+'</b><small>'+esc(desc||'TAG! collectible')+'</small>'+(kind==='item'?'<span class="v18-stock">STOCK · '+qty+' / 3</span>':'')+'<button type="button" data-v18-buy="'+kind+'" data-v18-id="'+esc(id)+'" '+(disabled?'disabled':'')+'>'+label+'</button></article>';
+  }
+  function buildItems(){
+    const el=$('itemShopScreen');if(!el)return;
+    el.innerHTML='<div class="full-panel v18-shell"><div class="eyebrow">ZYRON STUDIOS · V18 EQUIPMENT</div><h2>ITEM SHOP</h2><p class="v18-intro">Buy one-use match items with Tag Points. Select an item in the ready room to equip it. Each item stacks up to 3 uses; unused items stay in storage.</p><div class="v18-wallet" data-v18-wallet>TAG POINTS · '+wallet+'</div><div class="v18-grid">'+items.map(x=>card('item',x)).join('')+'</div><p class="v18-note">Press your Dash / Down key or the mobile ITEM button to use an equipped item. Every use consumes one charge.</p><div class="result-actions"><button class="primary-small" id="backItemShopBtn">BACK TO TITLE</button></div></div>';
+    $('backItemShopBtn').addEventListener('click',()=>{mode='menu';activeScreen('menu');});
+  }
+  function renderCosmetics(tab){
+    shopTab=tab||shopTab;
+    const body=$('v18CosmeticBody');if(!body)return;
+    document.querySelectorAll('[data-v18-tab]').forEach(b=>b.classList.toggle('active',b.dataset.v18Tab===shopTab));
+    if(shopTab==='skins')body.innerHTML='<div class="v18-grid">'+skins.map(x=>card('skin',x)).join('')+'</div>';
+    else if(shopTab==='accessories')body.innerHTML='<div class="v18-grid">'+accessories.map(x=>card('accessory',x)).join('')+'</div><p class="v18-note">Every accessory costs 1 point except the Christmas Hat (2 points).</p>';
+    else if(shopTab==='titles')body.innerHTML='<div class="v18-grid">'+titles.map(x=>card('title',x)).join('')+'</div><p class="v18-note">Equip an owned title for each player in the ready room.</p>';
+    else body.innerHTML='<div class="v18-coming"><div class="v18-shop-icon">✨</div><h3>EMOTES COMING SOON</h3><p>Emotes will arrive in a future TAG! update.</p><span>COMING SOON</span></div>';
+  }
+  function buildCosmetics(){
+    const el=$('avatarsScreen');if(!el)return;
+    el.innerHTML='<div class="full-panel v18-shell"><div class="eyebrow">ZYRON STUDIOS · RUNNER CUSTOMIZATION</div><h2>SKINS & ACCESSORIES</h2><div class="v18-wallet" data-v18-wallet>TAG POINTS · '+wallet+'</div><div class="v18-tabs"><button type="button" data-v18-tab="skins">SKINS</button><button type="button" data-v18-tab="accessories">ACCESSORIES</button><button type="button" data-v18-tab="titles">TITLES</button><button type="button" data-v18-tab="emotes">EMOTES</button></div><div id="v18CosmeticBody"></div><div class="result-actions"><button class="primary-small" id="backAvatarsBtn">BACK TO TITLE</button></div></div>';
+    $('backAvatarsBtn').addEventListener('click',()=>{mode='menu';activeScreen('menu');});
+    el.querySelectorAll('[data-v18-tab]').forEach(b=>b.addEventListener('click',()=>renderCosmetics(b.dataset.v18Tab)));
+    renderCosmetics(shopTab);
+  }
+  function renderShops(){buildItems();buildCosmetics();walletText();}
+  document.addEventListener('click',e=>{
+    const b=e.target.closest('[data-v18-buy]');if(b)buy(b.dataset.v18Buy,b.dataset.v18Id);
+    const rb=e.target.closest('[data-v18-remap]');if(rb){remapTarget={player:Number(rb.dataset.player),action:rb.dataset.action};rb.textContent='PRESS A KEY';notice('Press a new key. Escape cancels.');}
+    const eb=e.target.closest('[data-v18-eliminate]');if(eb)eliminatePlayer(Number(eb.dataset.v18Eliminate));
+  });
+  $('itemShopBtn')?.addEventListener('click',renderShops);
+  $('avatarsBtn')?.addEventListener('click',renderShops);
+  if($('itemShopBtn'))$('itemShopBtn').textContent='🛍 ITEM SHOP';
+  if($('avatarsBtn'))$('avatarsBtn').textContent='✦ SKINS & ACCESSORIES';
+  const home=$('menuUtility');if(home&&!$('v18WalletHome')){const w=document.createElement('div');w.id='v18WalletHome';w.className='v18-wallet-home';w.textContent='✦ '+wallet+' TAG POINTS';home.appendChild(w);}
+  function readyRoom(){
+    $('readyPlayers').innerHTML=controls.slice(0,activePlayerCount).map((c,i)=>{
+      const skinOptions='<option value="default" '+(playerSkins[i]==='default'?'selected':'')+'>Explorer · default</option>'+skins.filter(x=>ownedSkins.has(x.id)).map(x=>'<option value="'+x.id+'" '+(playerSkins[i]===x.id?'selected':'')+'>'+x.name+'</option>').join('');
+      const accOptions='<option value="none" '+(playerCosmetics[i]==='none'?'selected':'')+'>None</option>'+accessories.filter(x=>ownedAccessories.has(x.id)).map(x=>'<option value="'+x.id+'" '+(playerCosmetics[i]===x.id?'selected':'')+'>'+x.name+'</option>').join('');
+      const itemOptions='<option value="">Not equipped · store stock</option>'+items.filter(x=>(stock[x.id]||0)>0).map(x=>'<option value="'+x.id+'" '+(equippedItems[i]===x.id?'selected':'')+'>'+x.name+' · '+stock[x.id]+' left</option>').join('');
+      const titleOptions='<option value="">No title</option>'+titles.filter(x=>ownedTitles.has(x)).map(x=>'<option value="'+esc(x)+'" '+(playerTitles[i]===x?'selected':'')+'>'+esc(x)+'</option>').join('');
+      const abilities=activeModifiers.filter(m=>['decoys','sentinels','parry','guns'].includes(m));
+      const abilityHtml=abilities.map((m,j)=>'<label class="v18-ability">'+m.toUpperCase()+' <select data-ability-key="'+i+':'+m+'">'+['1','2','3','4','5','6','7','8','9','0','q','e','r','c','v','b','n','m'].map(k=>'<option value="'+k+'" '+((c.abilityKeys?.[m]||(['1','2','3','4'][j]))===k?'selected':'')+'>'+k.toUpperCase()+'</option>').join('')+'</select></label>').join('');
+      const legacy=['decoys','sentinels','parry'].filter(m=>activeModifiers.includes(m));
+      return '<div class="ready-card v18-ready-card"><b style="color:'+playerColors[i]+'">PLAYER '+(i+1)+' · '+(winCounts[i]||0)+' WINS</b><input maxlength="14" id="playerName'+i+'" aria-label="Player '+(i+1)+' name" value="'+esc(playerNames[i])+'" '+(botPlayers[i]?'disabled':'')+'><label><input type="checkbox" data-bot="'+i+'" '+(botPlayers[i]?'checked':'')+'> BOT</label><select data-level="'+i+'"><option value="easy">Easy</option><option value="medium" selected>Medium</option><option value="hard">Hard</option><option value="extreme">Extreme</option></select><label class="v18-ready-row">SKIN <select data-v18-skin="'+i+'">'+skinOptions+'</select></label><label class="v18-ready-row">COLOR <input type="color" data-v18-color="'+i+'" value="'+(colorOverrides[i]||playerColors[i])+'"></label><label class="v18-ready-row">ACCESSORY <select data-v18-accessory="'+i+'">'+accOptions+'</select></label><label class="v18-ready-row">TITLE <select data-v18-title="'+i+'">'+titleOptions+'</select></label><label class="v18-ready-row">START ITEM <select data-v18-item="'+i+'">'+itemOptions+'</select></label><small class="v18-control-note">'+c.keys.join(' · ')+' · move / jump / dash-item</small><div class="v18-ability-list">'+abilityHtml+'</div><button type="button" data-ready="'+i+'" '+(botPlayers[i]?'disabled':'')+'>'+(botPlayers[i]?'BOT READY':'PRESS '+c.keys[2]+' TO READY')+'</button></div>';
+    }).join('');
+    updateReadyStatus();
+  }
+  renderReadyRoom=readyRoom;
+  $('readyPlayers').addEventListener('change',e=>{
+    const attr=e.target.dataset;
+    if(attr.v18Skin!==undefined)playerSkins[Number(attr.v18Skin)]=e.target.value||'default';
+    if(attr.v18Color!==undefined){const i=Number(attr.v18Color);colorOverrides[i]=e.target.value;playerColors[i]=e.target.value;playerAccents[i]=e.target.value;}
+    if(attr.v18Accessory!==undefined)playerCosmetics[Number(attr.v18Accessory)]=e.target.value||'none';
+    if(attr.v18Title!==undefined)playerTitles[Number(attr.v18Title)]=e.target.value||'';
+    if(attr.v18Item!==undefined)equippedItems[Number(attr.v18Item)]=e.target.value||'';
+    if(attr.v18Skin!==undefined||attr.v18Color!==undefined||attr.v18Accessory!==undefined||attr.v18Title!==undefined||attr.v18Item!==undefined){save();if(mode==='ready')updateReadyStatus();}
+  });
+  function setControl(i,action,key){
+    if(!controls[i])return;
+    if(['left','right','jump','dash'].includes(action)){
+      controls[i][action]=key;const ix={left:0,right:1,jump:2,dash:3}[action];
+      controls[i].keys[ix]=key==='arrowleft'?'←':key==='arrowright'?'→':key==='arrowup'?'↑':key==='arrowdown'?'↓':key.toUpperCase();
+      write('tagV18ControlKeys',controls.map(c=>({left:c.left,right:c.right,jump:c.jump,dash:c.dash})));
+    }else{
+      controls[i].abilityKeys=controls[i].abilityKeys||{};controls[i].abilityKeys[action]=key;
+      const saved=read('tagAbilityKeys',{});saved[i]=controls[i].abilityKeys;write('tagAbilityKeys',saved);
+    }
+    renderControlSettings();if(mode==='ready')readyRoom();notice('Control updated.');
+  }
+  const storedKeys=read('tagV18ControlKeys',null);
+  if(Array.isArray(storedKeys))storedKeys.forEach((v,i)=>{if(!controls[i]||!v)return;['left','right','jump','dash'].forEach(k=>{if(typeof v[k]==='string')controls[i][k]=v[k];});controls[i].keys=[controls[i].left,controls[i].right,controls[i].jump,controls[i].dash].map(k=>k==='arrowleft'?'←':k==='arrowright'?'→':k==='arrowup'?'↑':k==='arrowdown'?'↓':k.toUpperCase());});
+  controls.forEach((c,i)=>{c.abilityKeys=c.abilityKeys||{};if(!c.abilityKeys.guns)c.abilityKeys.guns=['q','n','m','v'][i];});
+  function renderControlSettings(){
+    const panel=$('settingsScreen')?.querySelector('.full-panel');if(!panel)return;
+    let el=$('v18ControlSettings');if(!el){el=document.createElement('section');el.id='v18ControlSettings';el.className='v18-control-settings';panel.appendChild(el);}
+    let html='<div class="eyebrow">V18 · KEYBOARD & TOUCH</div><h3>PLAYER CONTROLS</h3><p>Select a control and press its new key. Remapping applies to the selected player.</p>';
+    controls.forEach((c,i)=>{
+      html+='<div class="v18-remap-card"><b style="color:'+playerColors[i]+'">PLAYER '+(i+1)+'</b><div class="v18-remap-grid">';
+      [['left','MOVE LEFT'],['right','MOVE RIGHT'],['jump','JUMP'],['dash','DASH / ITEM'],['decoys','DECOY'],['sentinels','SENTINELS'],['parry','PARRY'],['guns','SHOOT']].forEach(p=>{
+        const k=['left','right','jump','dash'].includes(p[0])?c[p[0]]:(c.abilityKeys?.[p[0]]||'');if(!k)return;
+        const label=k==='arrowleft'?'←':k==='arrowright'?'→':k==='arrowup'?'↑':k==='arrowdown'?'↓':k.toUpperCase();
+        html+='<div><small>'+p[1]+'</small><button type="button" data-v18-remap data-player="'+i+'" data-action="'+p[0]+'">'+label+'</button></div>';
+      });
+      html+='</div></div>';
+    });
+    const scale=Number(read('tagV18TouchScale',1))||1;
+    html+='<div class="v18-touch-setting"><label for="v18TouchScale">Phone / tablet button size · <b id="v18TouchScaleValue">'+Math.round(scale*100)+'%</b></label><input type="range" id="v18TouchScale" min="80" max="145" step="5" value="'+Math.round(scale*100)+'"><p>Resize the on-screen controls for your device.</p></div>';
+    el.innerHTML=html;
+    $('v18TouchScale')?.addEventListener('input',e=>{const v=Number(e.target.value)/100;write('tagV18TouchScale',v);$('v18TouchScaleValue').textContent=e.target.value+'%';$('mobileControls')?.style.setProperty('--v18-touch-scale',String(v));});
+  }
+  $('settingsBtn')?.addEventListener('click',()=>setTimeout(renderControlSettings,0));
+  $('backSettingsBtn')?.addEventListener('click',()=>{mode='menu';activeScreen('menu');});
+  renderControlSettings();
+  window.addEventListener('keydown',e=>{
+    const key=e.key.toLowerCase();
+    if(remapTarget){
+      if(key==='escape'){remapTarget=null;renderControlSettings();e.preventDefault();e.stopImmediatePropagation();return;}
+      if(key.length===1||key.startsWith('arrow')){const t=remapTarget;remapTarget=null;setControl(t.player,t.action,key);e.preventDefault();e.stopImmediatePropagation();return;}
+    }
+    if(mode!=='playing'||e.repeat)return;
+    controls.slice(0,activePlayerCount).forEach((c,i)=>{
+      if(onlineActive&&i!==onlineLocalIndex)return;
+      if(key===c.dash){e.preventDefault();e.stopImmediatePropagation();if(equippedItems[i]&&(stock[equippedItems[i]]||0)>0)useItem(i);else normalDash(i);}
+      else if(hasModifier('guns')&&key===(c.abilityKeys?.guns||'')){e.preventDefault();e.stopImmediatePropagation();fireGun(i);}
+    });
+  },true);
+  function normalDash(i){
+    const p=players[i];if(!p||p.dashCooldown>0||roundEliminated.has(i))return;
+    p.dashTimer=.22;p.vx=p.face*820;p.dashCooldown=25;p.dashGlow=1;burst(p.x,p.y,playerColors[i],17,170);
+  }
+  function useItem(i){
+    const id=equippedItems[i],p=players[i];if(!id||!p||!stock[id]||roundEliminated.has(i))return false;
+    stock[id]=Math.max(0,stock[id]-1);
+    if(id==='dash'){p.dashTimer=.42;p.vx=p.face*1120;p.dashCooldown=12;p.dashGlow=1.3;}
+    if(id==='shield'){p.invulnerable=2.5;p.dashGlow=1.4;}
+    if(id==='jump'){p.vy=-1060;p.extraJump=1;p.onGround=false;p.jumpBuffer=0;}
+    if(id==='speed'){p.dashTimer=.36;p.vx=p.face*1080;p.dashCooldown=10;p.dashGlow=1.4;}
+    if(id==='blink'){p.x=clamp(p.x+p.face*260,HALF_W,worldWidth-HALF_W);p.invulnerable=.5;p.dashGlow=1.5;}
+    if(id==='decoy'){p.invulnerable=1.5;p.decoyFlash=1.5;p.dashGlow=1.2;}
+    burst(p.x,p.y,playerColors[i],24,210);
+    if(stock[id]===0)equippedItems[i]='';
+    save();walletText();if(mode==='ready')readyRoom();notice(items.find(x=>x.id===id).name+' used.');
+    return true;
+  }
+  function fireGun(i){
+    if(!hasModifier('guns')||mode!=='playing'||!players[i]||roundEliminated.has(i))return;
+    const p=players[i];if((p.gunCooldown||0)>0)return;
+    p.gunCooldown=.42;bullets.push({owner:i,x:p.x+p.face*18,y:p.y-7,dir:p.face,life:1.1,speed:950});
+    burst(p.x+p.face*16,p.y-7,playerColors[i],5,70);
+  }
+  const touchScale=Number(read('tagV18TouchScale',1))||1;
+  refreshMobileControls=function(){
+    oldTouch();
+    const root=$('mobileControls');if(!root||root.style.display==='none')return;
+    root.style.setProperty('--v18-touch-scale',String(Number(read('tagV18TouchScale',1))||1));
+    Array.from(root.querySelectorAll('.touch-player-pad')).forEach(pad=>{
+      const label=pad.querySelector('.touch-player-label')?.textContent||'P1';
+      const i=onlineActive?onlineLocalIndex:Math.max(0,Number((label.match(/\d+/)||['1'])[0])-1);
+      const down=pad.querySelector('.touch-down');
+      if(down&&!down.dataset.v18){
+        down.dataset.v18='1';down.addEventListener('pointerdown',e=>{e.preventDefault();e.stopImmediatePropagation();if(equippedItems[i]&&(stock[equippedItems[i]]||0)>0)useItem(i);else normalDash(i);},true);
+      }
+      if(!pad.querySelector('.touch-item')){
+        const b=document.createElement('button');b.type='button';b.className='touch-key touch-item';b.textContent='ITEM';b.setAttribute('aria-label','Use equipped item');b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();if(!useItem(i))notice('Equip an item in the ready room first.');});pad.appendChild(b);
+      }
+      if(hasModifier('guns')&&!pad.querySelector('.touch-shoot')){
+        const b=document.createElement('button');b.type='button';b.className='touch-key touch-shoot';b.textContent='SHOOT';b.setAttribute('aria-label','Shoot');b.addEventListener('pointerdown',e=>{e.preventDefault();fireGun(i);});pad.appendChild(b);
+      }
+    });
+  };
+  function drawAccessory(id){
+    ctx.save();ctx.translate(0,-27);
+    if(id==='fedora'){ctx.fillStyle='#211f2a';ctx.fillRect(-14,-9,28,5);ctx.fillRect(-9,-20,18,12);ctx.fillStyle='#b78a58';ctx.fillRect(-9,-10,18,3);}
+    if(id==='peanut'){ctx.fillStyle='#a66a30';ctx.beginPath();ctx.ellipse(0,-11,10,16,-.15,0,TAU);ctx.fill();ctx.strokeStyle='#f0c27c';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(0,-11,6,12,-.15,0,TAU);ctx.stroke();}
+    if(id==='watermelon'){ctx.fillStyle='#2b8b51';ctx.beginPath();ctx.arc(0,-8,15,Math.PI,TAU);ctx.fill();ctx.fillStyle='#e64d63';ctx.beginPath();ctx.arc(0,-8,12,Math.PI,TAU);ctx.fill();ctx.strokeStyle='#f6edcf';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,-8,13,Math.PI,TAU);ctx.stroke();ctx.fillStyle='#25412d';[-8,-3,3,8].forEach(x=>ctx.fillRect(x,-18+(Math.abs(x)%3),2,5));}
+    ctx.restore();
+  }
+  function drawSkin(p,i){
+    const skin=p.v18Skin||playerSkins[i]||'default',color=p.v18Color||playerColors[i],acc=p.v18Accessory||playerCosmetics[i]||'none';
+    const t=worldTime,run=Math.sin(t*11+i),bob=p.onGround?Math.abs(run)*2:Math.sin(t*7+i)*1.5;
+    ctx.save();ctx.translate(p.x,p.y+bob);ctx.scale(p.face||1,1);
+    if(skin==='nyan'){
+      const rainbow=['#ff4b5f','#ff9d38','#ffe34e','#51dc6d','#48a9ff','#b96cff'];
+      rainbow.forEach((c,j)=>{ctx.globalAlpha=.9-j*.08;ctx.fillStyle=c;ctx.fillRect(-34-j*4,-9+j*2,34,4);});
+      ctx.globalAlpha=1;
+    }
+    if(skin==='gangbeast'){
+      ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(0,-4,14,20+Math.sin(t*10+i)*2,0,0,TAU);ctx.fill();
+      ctx.beginPath();ctx.ellipse(-13,-3,5,10,run*.22,0,TAU);ctx.ellipse(13,-3,5,10,-run*.22,0,TAU);ctx.fill();
+      ctx.strokeStyle='#1a2330';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(-5,10);ctx.lineTo(-7+run*3,20);ctx.moveTo(5,10);ctx.lineTo(7-run*3,20);ctx.stroke();
+      ctx.fillStyle='#fff';ctx.fillRect(-6,-12,4,5);ctx.fillRect(3,-12,4,5);
+    }else if(skin==='amongus'){
+      ctx.fillStyle='#253246';ctx.fillRect(8,-8,11,22);ctx.fillStyle=color;ctx.beginPath();ctx.roundRect(-12,-25,24,39,11);ctx.fill();
+      ctx.fillStyle='#b9f6ff';ctx.beginPath();ctx.roundRect(-4,-20,18,10,5);ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=1;ctx.stroke();
+    }else if(skin==='roblox'){
+      ctx.fillStyle='#202b3c';ctx.fillRect(-11,0,8,20);ctx.fillRect(4,0,8,20);ctx.fillStyle=color;ctx.fillRect(-13,-23,26,24);ctx.fillRect(-18,-20,5,18);ctx.fillRect(13,-20,5,18);
+      ctx.fillStyle='#fff';ctx.fillRect(-8,-17,5,5);ctx.fillRect(3,-17,5,5);ctx.fillStyle='#18202c';ctx.fillRect(-4,-7,9,2);
+    }else if(skin==='knight'){
+      ctx.fillStyle='#101522';ctx.beginPath();ctx.moveTo(-14,14);ctx.lineTo(-12,-14);ctx.quadraticCurveTo(0,-30,12,-14);ctx.lineTo(14,14);ctx.closePath();ctx.fill();
+      ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(-8,-17);ctx.lineTo(-16,-33);ctx.lineTo(-5,-25);ctx.lineTo(0,-35);ctx.lineTo(6,-25);ctx.lineTo(16,-33);ctx.lineTo(8,-16);ctx.closePath();ctx.fill();
+      ctx.fillStyle='#f6ffff';ctx.beginPath();ctx.ellipse(-4,-11,2,5,0,0,TAU);ctx.ellipse(4,-11,2,5,0,0,TAU);ctx.fill();
+    }else if(skin==='iwbtg'){
+      const pixel=['0011100','0111110','1111111','1011101','1111111','0011100','0110110','1100011'];
+      ctx.fillStyle=color;pixel.forEach((r,y)=>Array.from(r).forEach((v,x)=>{if(v==='1')ctx.fillRect((x-3.5)*4,(y-4)*4,4,4);}));
+      ctx.fillStyle='#fff0d2';ctx.fillRect(-7,-11,4,3);ctx.fillRect(3,-11,4,3);ctx.fillStyle='#17202b';ctx.fillRect(-9,15+run*2,7,4);ctx.fillRect(3,15-run*2,7,4);
+    }else if(skin==='nyan'){
+      ctx.fillStyle='#f1bbce';ctx.fillRect(-16,-12,30,21);ctx.fillRect(-14,-19,9,8);ctx.fillRect(4,-19,9,8);
+      ctx.fillStyle='#d99a9e';ctx.fillRect(-13,-8,25,15);ctx.fillStyle='#f4d9ae';ctx.fillRect(-3,-19,18,15);
+      ctx.fillStyle='#222';ctx.fillRect(1,-15,3,3);ctx.fillRect(9,-15,3,3);ctx.fillRect(2,-8,3,2);
+    }else if(skin==='epicface'){
+      ctx.fillStyle='#f7d447';ctx.beginPath();ctx.arc(0,-9,18,0,TAU);ctx.fill();ctx.strokeStyle='#8a6a25';ctx.lineWidth=2;ctx.stroke();
+      ctx.fillStyle='#17202a';ctx.beginPath();ctx.ellipse(-7,-12,3,5,0,0,TAU);ctx.ellipse(7,-12,3,5,0,0,TAU);ctx.fill();
+      ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-11,-2);ctx.quadraticCurveTo(0,8,11,-2);ctx.stroke();
+    }else if(skin==='freddy'){
+      ctx.fillStyle='#75462e';ctx.beginPath();ctx.ellipse(0,-11,16,19,0,0,TAU);ctx.fill();ctx.beginPath();ctx.arc(-12,-25,7,0,TAU);ctx.arc(12,-25,7,0,TAU);ctx.fill();
+      ctx.fillStyle='#e2ba8d';ctx.beginPath();ctx.ellipse(0,-6,10,8,0,0,TAU);ctx.fill();ctx.fillStyle='#151923';ctx.fillRect(-7,-34,14,5);ctx.fillRect(-4,-44,8,11);
+      ctx.fillStyle='#111';ctx.fillRect(-6,-15,3,4);ctx.fillRect(4,-15,3,4);
+    }else if(skin==='creeper'){
+      ctx.fillStyle=color;ctx.fillRect(-11,-27,22,31);ctx.fillStyle='#162e29';ctx.fillRect(-7,-18,4,5);ctx.fillRect(3,-18,4,5);ctx.fillRect(-4,-11,8,9);ctx.fillRect(-12,4,8,14);ctx.fillRect(4,4,8,14);
+    }
+    if(acc==='fedora'||acc==='peanut'||acc==='watermelon')drawAccessory(acc);
+    if(i===tagged){ctx.fillStyle='#ffe7a4';ctx.shadowColor='#ffe7a4';ctx.shadowBlur=15;ctx.beginPath();ctx.arc(0,-47,4,0,TAU);ctx.fill();}
+    ctx.restore();
+  }
+  drawPlayer=function(p,i){
+    const skin=p.v18Skin||playerSkins[i]||'default';
+    if(skin!=='default'){drawSkin(p,i);return;}
+    oldDraw(p,i);
+    const acc=p.v18Accessory||playerCosmetics[i]||'none';
+    if(['fedora','peanut','watermelon'].includes(acc)){ctx.save();ctx.translate(p.x,p.y);ctx.scale(p.face||1,1);drawAccessory(acc);ctx.restore();}
+  };
+  const oldHud=updateHud;
+  updateHud=function(){
+    oldHud();
+    const board=$('scoreBoard');if(board&&scores.length){
+      board.innerHTML=scores.map((v,i)=>'<span class="score-chip '+(i===scores.indexOf(Math.max(0,...scores))?'leading':'')+'">'+esc(playerNames[i]||('P'+(i+1)))+(players[i]?.v18Title?' · '+esc(players[i].v18Title):playerTitles[i]?' · '+esc(playerTitles[i]):'')+' '+v+' · DASH '+Math.ceil(players[i]?.dashCooldown||0)+'s · '+(winCounts[i]||0)+'W</span>').join('');
+    }
+  };
+  spawnPlayers=function(count){
+    oldSpawn(count);
+    players.forEach((p,i)=>{p.v18Skin=playerSkins[i]||'default';p.v18Accessory=playerCosmetics[i]||'none';p.v18Color=colorOverrides[i]||playerColors[i];p.v18Title=playerTitles[i]||'';p.gunCooldown=rand(.2,1);p.gunHits=0;});
+  };
+  function winnerForFinish(authoritative){
+    if(Number.isInteger(authoritative))return clamp(authoritative,0,Math.max(0,players.length-1));
+    const lastOut=hasModifier('munci')?(munciLastEliminated>=0?munciLastEliminated:tagged):(gameMode==='hotpotato'?(Array.from(roundEliminated).at(-1)??tagged):tagged);
+    if(gameMode==='survivebots'||gameMode==='hotpotato'){const survivor=players.find(p=>!roundEliminated.has(p.id));if(survivor)return survivor.id;}
+    if(hasModifier('munci')&&munciWinnerId!==null)return munciWinnerId;
+    if(gameMode==='infection'){const survivor=players.find(p=>!infected.has(p.id));if(survivor)return survivor.id;}
+    const ranking=scores.map((score,i)=>({score,i})).sort((a,b)=>b.score-a.score);
+    return ranking.find(x=>x.i!==lastOut)?.i??ranking[0]?.i??0;
+  }
+  finishRound=function(fromNetwork=false,authoritativeWinner=null){
+    if(mode!=='playing'||(onlineActive&&!fromNetwork))return oldFinish(fromNetwork,authoritativeWinner);
+    const winner=winnerForFinish(authoritativeWinner);
+    const localWin=!onlineActive||winner===onlineLocalIndex;
+    oldFinish(fromNetwork,winner);
+    if(mode==='result'&&localWin)awardWin(winner);
+    if(mode==='result'&&$('resultTitle')&&playerTitles[winner])$('resultTitle').textContent=playerNames[winner]+' · '+playerTitles[winner]+' WINS!';
+  };
+  configureModifierRound=function(){
+    oldConfigure();
+    killerBots=[];bullets=[];orbClocks={double:20,jump:20};
+    if(gameMode==='survivebots')killerBots=Array.from({length:clamp(killerCount,1,5)},(_,i)=>({x:worldWidth*(.14+i*.15),y:floorY()-18,vx:0,vy:0,face:1,speed:rand(180,240),phase:rand(0,TAU),jump:0}));
+    const b=$('modifierStatus');if(b){
+      const labels={doubleorbs:'X2 ORBS',jumporbs:'JUMP ORBS',guns:'GUNS · 2 SHOTS TO ELIMINATE'};
+      b.textContent=activeModifiers.map(m=>labels[m]||modifierNames[m]||m.toUpperCase()).join(' + ')||'NO MODIFIER';
+    }
+  };
+  const modeSelect=$('gameMode');
+  if(modeSelect&&!modeSelect.querySelector('option[value="survivebots"]'))modeSelect.insertAdjacentHTML('beforeend','<option value="survivebots">Survive the Killer Bots · last runner wins</option>');
+  const botSettings=document.createElement('div');botSettings.id='v18KillerSettings';botSettings.className='v18-killer-settings';
+  botSettings.innerHTML='<div class="field-label">Killer robots · maximum 5</div><div class="select-wrap"><select id="v18KillerCount"><option value="1">1 robot</option><option value="2" selected>2 robots</option><option value="3">3 robots</option><option value="4">4 robots</option><option value="5">5 robots</option></select></div><small>Robots hunt the runners. They do not target Angry Munci.</small>';
+  modeSelect?.parentElement?.insertAdjacentElement('afterend',botSettings);botSettings.style.display=modeSelect?.value==='survivebots'?'block':'none';
+  modeSelect?.addEventListener('change',()=>{botSettings.style.display=modeSelect.value==='survivebots'?'block':'none';});
+  $('v18KillerCount')?.addEventListener('change',e=>{killerCount=clamp(Number(e.target.value)||2,1,5);});
+  ['modifier','modifier2','modifier3','tournamentModifier','tournamentModifier2','tournamentModifier3','onlineModifier1','onlineModifier2','onlineModifier3'].forEach(id=>{
+    const el=$(id);if(!el)return;
+    [['doubleorbs','X2 Orbs · 20s spawn'],['jumporbs','Jump Orbs · 20s spawn'],['guns','Guns · 2 shots eliminate']].forEach(p=>{if(!el.querySelector('option[value="'+p[0]+'"]'))el.insertAdjacentHTML('beforeend','<option value="'+p[0]+'">'+p[1]+'</option>');});
+  });
+  modifierNames.doubleorbs='X2 ORBS';modifierNames.jumporbs='JUMP ORBS';modifierNames.guns='GUNS';
+  if(!realmLayouts.glitchy)realmLayouts.glitchy=[[.02,.74,.21,0],[.28,.65,.19,.04],[.56,.72,.18,0],[.8,.60,.18,.04],[.12,.44,.17,.02],[.4,.4,.20,0],[.7,.31,.2,.03],[.28,.22,.23,.02]];
+  maps.glitchy={name:'GLITCHY LANDSCAPES',sky:['#080b25','#40145e','#d42b80'],far:'#30194f',mid:'#251c49',ground:'#15162d',stone:'#514078',top:'#ff55c9',glow:'#50efff',dust:'#ff91df',moon:'#dbfbff',kind:'city',platforms:realmLayouts.glitchy.map(x=>x.slice())};
+  mapDescriptions.glitchy='Neon static · colorful glitch effects · scattered television screens';
+  renderMapCards();
+  const hero=document.querySelector('#menuScreen .hero-copy');if(hero)hero.textContent='One mark. Eighteen worlds. Build arenas, stack modifiers, and pass the chase before the final bell.';
+  const titleNode=document.querySelector('title');if(titleNode)titleNode.textContent='TAG! — Zyron Studios v18 PEAK!';
+  const changelog=$('changelogTimeline');
+  if(changelog&&!$('v18ChangelogEntry')){const entry=document.createElement('article');entry.id='v18ChangelogEntry';entry.className='changelog-entry';entry.innerHTML='<h3>V18 · PEAK! CUSTOMIZATION & CHAOS</h3><p>Unlocked the Skin, Accessories and Item Shops; added win-earned Tag Points, stackable one-use items, remappable controls, mobile item controls, player titles, Glitchy Landscapes, X2 and Jump Orbs, two-hit guns, Killer Bot survival mode, pause-menu eliminations, and an emotes tab marked Coming Soon.</p>';changelog.prepend(entry);}
+  function fireBullet(i){
+    if(!hasModifier('guns')||mode!=='playing'||!players[i]||roundEliminated.has(i))return;
+    const p=players[i];if((p.gunCooldown||0)>0)return;p.gunCooldown=.42;
+    bullets.push({owner:i,x:p.x+p.face*17,y:p.y-5,dir:p.face,life:1.05,speed:940});burst(p.x+p.face*13,p.y-5,playerColors[i],5,60);
+  }
+  function removePlayer(i,reason){
+    if(!players[i]||roundEliminated.has(i))return;
+    roundEliminated.add(i);burst(players[i].x,players[i].y,playerColors[i],32,250);
+    const alive=players.filter(p=>!roundEliminated.has(p.id));
+    if(alive.length===1){scores[alive[0].id]=(scores[alive[0].id]||0)+10000;finishRound(false,alive[0].id);}
+    updateHud();if(reason)notice(playerNames[i]+' eliminated · '+reason);
+  }
+  function updateBullets(dt){
+    if(!hasModifier('guns')){bullets=[];return;}
+    players.forEach(p=>p.gunCooldown=Math.max(0,(p.gunCooldown||0)-dt));
+    players.forEach((p,i)=>{
+      if(!botPlayers[i]||roundEliminated.has(i)||(p.gunCooldown||0)>0)return;
+      const target=players.filter(q=>q.id!==i&&!roundEliminated.has(q.id)).sort((a,b)=>Math.hypot(a.x-p.x,a.y-p.y)-Math.hypot(b.x-p.x,b.y-p.y))[0];
+      if(target&&Math.abs(target.x-p.x)<520){p.face=Math.sign(target.x-p.x)||p.face;fireBullet(i);}
+    });
+    for(let n=bullets.length-1;n>=0;n--){
+      const b=bullets[n];b.life-=dt;b.x+=b.dir*b.speed*dt;let hit=false;
+      for(const p of players){
+        if(p.id===b.owner||roundEliminated.has(p.id))continue;
+        if(Math.abs(p.x-b.x)<15&&Math.abs(p.y-b.y)<20){
+          p.gunHits=(p.gunHits||0)+1;bullets.splice(n,1);hit=true;burst(p.x,p.y,playerColors[p.id],14,130);
+          if(p.gunHits>=2)removePlayer(p.id,'two gun hits');else notice(playerNames[p.id]+' hit · one more shot eliminates');
+          break;
+        }
+      }
+      if(!hit&&(b.life<=0||b.x<0||b.x>worldWidth))bullets.splice(n,1);
+    }
+  }
+  function spawnOrb(type){
+    const col=type==='double'?'#ffe45b':'#5ef3ff';
+    orbs.push({x:rand(worldWidth*.1,worldWidth*.9),y:rand(height*.2,height*.59),r:16,phase:rand(0,TAU),cool:0,color:col,forceX:rand(-180,180),forceY:-760,dynamicV18:true,orbType:type,life:10});
+  }
+  function updateSpecialOrbs(dt){
+    if(hasModifier('doubleorbs'))orbClocks.double-=dt;
+    if(hasModifier('jumporbs'))orbClocks.jump-=dt;
+    if(hasModifier('doubleorbs')&&orbClocks.double<=0){spawnOrb('double');orbClocks.double=20;}
+    if(hasModifier('jumporbs')&&orbClocks.jump<=0){spawnOrb('jump');orbClocks.jump=20;}
+    for(let n=orbs.length-1;n>=0;n--){
+      const o=orbs[n];if(!o.dynamicV18)continue;o.life-=dt;let taken=false;
+      for(const p of players){
+        if(onlineActive&&p.id!==onlineLocalIndex)continue;
+        if(roundEliminated.has(p.id))continue;
+        if((p.jumpBuffer>0||keysDown.has(controls[p.id].jump))&&Math.hypot(p.x-o.x,p.y-o.y)<o.r+21){
+          if(o.orbType==='double'){p.vx+=o.forceX*2;p.vy=Math.min(p.vy-900,-850);}
+          else{p.extraJump=1;p.vy=-1050;p.onGround=false;}
+          p.dashGlow=1.2;burst(o.x,o.y,o.color,24,200);taken=true;break;
+        }
+      }
+      if(taken||o.life<=0)orbs.splice(n,1);
+    }
+  }
+  function updateKillerBots(dt){
+    if(gameMode!=='survivebots'||!killerBots.length)return;
+    const living=players.filter(p=>!roundEliminated.has(p.id));
+    if(living.length<=1){if(living[0])finishRound(false,living[0].id);return;}
+    killerBots.forEach(bot=>{
+      const target=living.slice().sort((a,b)=>Math.hypot(a.x-bot.x,a.y-bot.y)-Math.hypot(b.x-bot.x,b.y-bot.y))[0];if(!target)return;
+      const dir=Math.sign(target.x-bot.x)||bot.face;bot.face=dir;bot.vx=lerp(bot.vx,dir*bot.speed,Math.min(1,dt*4));
+      const obstacle=platforms.some(p=>p.id!=='floor'&&p.id!=='ceiling'&&Math.abs((dir>0?p.x:p.x+p.w)-bot.x)<23&&p.y>bot.y-85&&p.y<bot.y+8);
+      if(obstacle&&bot.jump<=0&&bot.y>=floorY()-27){bot.vy=-660;bot.jump=1;}
+      bot.jump=Math.max(0,bot.jump-dt);const oldBottom=bot.y+18;
+      bot.x=clamp(bot.x+bot.vx*dt,18,worldWidth-18);bot.vy+=1450*dt;bot.y+=bot.vy*dt;
+      if(bot.vy>=0){for(const q of platforms){if(q.id==='floor'||q.id==='ceiling')continue;if(bot.x+13>q.x&&bot.x-13<q.x+q.w&&oldBottom<=q.y+3&&bot.y+18>=q.y){bot.y=q.y-18;bot.vy=0;bot.jump=0;break;}}}
+      if(bot.y>=floorY()-18){bot.y=floorY()-18;bot.vy=0;bot.jump=0;}
+      if(Math.hypot(target.x-bot.x,target.y-bot.y)<31&&!(target.invulnerable>0))removePlayer(target.id,'killer bot contact');
+      bot.phase+=dt*8;
+    });
+  }
+  function drawKillerBots(){
+    killerBots.forEach(b=>{ctx.save();ctx.translate(b.x,b.y);ctx.scale(b.face,1);ctx.shadowColor='#ff3975';ctx.shadowBlur=18;ctx.fillStyle='#282a3e';ctx.beginPath();ctx.roundRect(-13,-18,26,34,5);ctx.fill();ctx.fillStyle='#c2edff';ctx.fillRect(-9,-13,18,10);ctx.fillStyle='#ff335f';ctx.fillRect(-6,-10,4,3);ctx.fillRect(3,-10,4,3);ctx.strokeStyle='#ff7497';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-8,13);ctx.lineTo(-10,20+Math.sin(b.phase)*2);ctx.moveTo(8,13);ctx.lineTo(10,20-Math.sin(b.phase)*2);ctx.stroke();ctx.restore();});
+  }
+  function drawBullets(){bullets.forEach(b=>{ctx.save();ctx.fillStyle='#fff3a4';ctx.shadowColor='#ffb74a';ctx.shadowBlur=16;ctx.beginPath();ctx.ellipse(b.x,b.y,8,3,0,0,TAU);ctx.fill();ctx.restore();});}
+  updateGame=function(dt){
+    if(mode==='playing'&&!onlineActive){updateKillerBots(dt);updateSpecialOrbs(dt);updateBullets(dt);}
+    oldUpdate(dt);
+    if(mode==='playing'&&!onlineActive&&gameMode==='survivebots'){const alive=players.filter(p=>!roundEliminated.has(p.id));if(alive.length===1)finishRound(false,alive[0].id);}
+  };
+  const originalDrawWorld=renderWorld;
+  renderWorld=function(){
+    originalDrawWorld();
+    if(mode!=='playing'&&mode!=='countdown')return;
+    ctx.save();ctx.translate(width/2,height/2);ctx.scale(cameraZoom,cameraZoom);ctx.translate(-cameraOffsetX,-cameraOffsetY);
+    drawKillerBots();drawBullets();ctx.restore();
+  };
+  drawBackground=function(){
+    oldBg();
+    if(mapId!=='glitchy')return;
+    for(let i=0;i<15;i++){
+      const x=((i*137+Math.sin(worldTime*2+i)*31)%(width+100)+width+100)%(width+100)-50;
+      const y=height*(.2+(i%4)*.14),w=44+(i%3)*13,h=34+(i%2)*12;
+      ctx.save();ctx.fillStyle='#11182b';ctx.strokeStyle=i%2?'#ff55c7':'#51eaff';ctx.lineWidth=2;ctx.shadowColor=ctx.strokeStyle;ctx.shadowBlur=13;ctx.fillRect(x,y,w,h);ctx.strokeRect(x,y,w,h);
+      ctx.fillStyle=['#ff4d9c','#4beaff','#f6e85d','#8c72ff'][i%4];ctx.fillRect(x+5,y+6+(Math.floor(worldTime*7+i)%3)*3,w-10,6);ctx.fillStyle='#080b15';ctx.fillRect(x+w*.4,y+h-2,5,10);ctx.fillRect(x+w*.6,y+h-2,5,10);ctx.restore();
+    }
+    if(Math.sin(worldTime*17)>.82){ctx.save();ctx.globalAlpha=.15;ctx.fillStyle='#fff';ctx.fillRect(0,rand(0,height),width,rand(3,13));ctx.restore();}
+  };
+  function pauseRender(){
+    const panel=$('v18EliminationPanel');if(!panel)return;
+    const alive=players.filter(p=>!roundEliminated.has(p.id));
+    panel.innerHTML='<h3>PLAYER ELIMINATION</h3><p>Eliminate runners by color. Only two may remain. Eliminating either of the final two ends the match and awards the win to the other player.</p><div class="v18-eliminate-grid">'+players.map((p,i)=>'<button type="button" data-v18-eliminate="'+i+'" '+(roundEliminated.has(i)?'disabled':'')+' style="border-color:'+playerColors[i]+';color:'+playerColors[i]+'">'+(['RED','BLUE','GOLD','VIOLET'][i])+' · '+(roundEliminated.has(i)?'OUT':'ELIMINATE')+'</button>').join('')+'</div><small>'+alive.length+' players remaining</small>';
+  }
+  function eliminatePlayer(i){
+    if(mode!=='pause'||!players[i]||roundEliminated.has(i))return;
+    const alive=players.filter(p=>!roundEliminated.has(p.id));if(alive.length<=2){notice('The final two players cannot be removed here.');return;}
+    roundEliminated.add(i);burst(players[i].x,players[i].y,playerColors[i],30,230);
+    if(alive.length-1===1){const winner=alive.find(p=>p.id!==i);mode='playing';finishRound(false,winner.id);return;}
+    pauseRender();updateHud();
+  }
+  togglePause=function(){oldPause();if(mode==='pause')pauseRender();};
+  const pausePanel=$('pauseScreen')?.querySelector('.full-panel');
+  if(pausePanel&&!$('v18EliminationPanel')){const box=document.createElement('section');box.id='v18EliminationPanel';box.className='v18-elimination-panel';pausePanel.appendChild(box);}
+  if(modeSelect)modeSelect.addEventListener('change',()=>{if(modeSelect.value==='survivebots')$('roundLengthWrap').style.display='none';else $('roundLengthWrap').style.display='';});
+  const oldBegin=beginCountdown;
+  beginCountdown=function(){
+    oldBegin();
+    if(gameMode==='survivebots'||hasModifier('guns')){roundLength=1800;remaining=1800;updateHud();}
+  };
+  // Keep Munci and Killer Bots independent: each AI updates against the player array only.
+  const style=document.createElement('style');
+  style.textContent=[
+    '.v18-shell{max-width:1050px!important}.v18-wallet,.v18-wallet-home{display:inline-flex;padding:9px 13px;border:1px solid #78e4d977;border-radius:99px;background:linear-gradient(120deg,#18384a,#29234d);color:#b9ffe8;font-size:11px;font-weight:1000;letter-spacing:.08em;margin:8px 0 14px}',
+    '.v18-wallet-home{margin:8px auto;padding:8px 12px}.v18-intro,.v18-note{font-size:12px;line-height:1.6;color:#b9c9dc;max-width:800px}.v18-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:11px;margin:15px 0}',
+    '.v18-shop-card{border:1px solid #9db9dc33;border-radius:15px;background:linear-gradient(145deg,#1a2a42,#17172f);padding:13px;display:flex;flex-direction:column;gap:8px;min-width:0;box-shadow:0 8px 24px #0004}.v18-shop-card>b{font-size:13px;color:#f1f6ff}.v18-shop-card small{font-size:10px;line-height:1.4;color:#aebfd5;min-height:30px}.v18-shop-icon{font-size:32px;min-height:40px;display:flex;align-items:center;justify-content:center}',
+    '.v18-shop-card button,.v18-tabs button,.v18-remap-grid button{border:1px solid #86dfd766;border-radius:9px;padding:9px;background:#24485a;color:#e9fffb;font-size:10px;font-weight:950}.v18-shop-card button:disabled{opacity:.4;cursor:not-allowed;background:#303746;color:#b6c0cf}.v18-stock{font-size:9px;color:#9cf2d5;font-weight:900}',
+    '.v18-tabs{display:flex;flex-wrap:wrap;gap:7px;margin:14px 0}.v18-tabs button{flex:1}.v18-tabs button.active{background:linear-gradient(120deg,#267a78,#455c9e);border-color:#a2fff0}.v18-coming{min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;border:1px dashed #8ec7ff66;border-radius:18px;background:linear-gradient(130deg,#191c3b,#28214a);padding:24px}.v18-coming h3{color:#e8f4ff}.v18-coming p{color:#b4c4db}.v18-coming span{font-size:10px;letter-spacing:.18em;color:#d8cbff;font-weight:950}',
+    '#v18Toast{position:fixed;z-index:9999;left:50%;bottom:24px;transform:translate(-50%,15px);opacity:0;pointer-events:none;padding:12px 18px;border:1px solid #8cebdc88;border-radius:13px;background:#102a3af2;color:#eafff8;font-size:12px;font-weight:950;box-shadow:0 10px 35px #0008;transition:.2s}#v18Toast.show{opacity:1;transform:translate(-50%,0)}',
+    '.v18-ready-card{gap:8px}.v18-ready-row{display:grid;grid-template-columns:80px minmax(0,1fr);align-items:center;gap:8px;font-size:9px}.v18-ready-row select,.v18-ready-row input{width:100%;min-width:0}.v18-ready-row input[type=color]{height:33px;padding:3px;background:#101e31;border:1px solid #8fb6d566;border-radius:8px}.v18-control-note{font-size:9px;color:#9db0c6}.v18-ability-list{display:flex;flex-wrap:wrap;gap:7px}.v18-ability{font-size:9px;color:#c8d9eb}.v18-ability select{padding:5px;background:#162437;color:#fff;border:1px solid #7d9db466;border-radius:6px}',
+    '.v18-control-settings{margin-top:24px;padding-top:18px;border-top:1px solid #8caecc33}.v18-control-settings h3{color:#a9f2e2;letter-spacing:.12em}.v18-control-settings>p{font-size:12px;color:#b7c8dc;line-height:1.6}.v18-remap-card{padding:13px;margin:10px 0;border:1px solid #7baed544;border-radius:13px;background:linear-gradient(120deg,#182c42,#1e203e)}.v18-remap-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:8px;margin-top:9px}.v18-remap-grid small{display:block;font-size:9px;color:#a9bfd5;margin-bottom:5px}.v18-remap-grid button{width:100%;font-size:12px}.v18-touch-setting{margin:15px 0;padding:14px;border:1px solid #8bcbd044;border-radius:12px}.v18-touch-setting label{display:block;font-size:12px;color:#e6f5ff}.v18-touch-setting input{width:100%}.v18-touch-setting p{font-size:10px;color:#aebfd5}',
+    '.v18-killer-settings{margin:9px 0;padding:10px;border:1px solid #ff5e8b55;border-radius:10px;background:#351a34}.v18-killer-settings small{display:block;color:#f4bcd2;font-size:10px;line-height:1.5;margin-top:7px}.v18-elimination-panel{margin-top:16px;padding:14px;border:1px solid #ff698355;border-radius:14px;background:linear-gradient(135deg,#2d1b35,#1b263c)}.v18-elimination-panel h3{margin:0 0 7px;color:#ffbbd0;letter-spacing:.12em}.v18-elimination-panel p,.v18-elimination-panel small{font-size:10px;color:#c5c8d8;line-height:1.5}.v18-eliminate-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.v18-eliminate-grid button{padding:9px;border:1px solid;border-radius:8px;background:#141c2c;font-size:9px;font-weight:950}.v18-eliminate-grid button:disabled{opacity:.3}',
+    '.screen{background-image:radial-gradient(1px 1px at 12% 18%,#d8f3ff88 99%,transparent),radial-gradient(1px 1px at 78% 21%,#a5d5ff77 99%,transparent),radial-gradient(1px 1px at 39% 78%,#f8cbff66 99%,transparent),radial-gradient(2px 2px at 56% 42%,#fff7 99%,transparent);background-size:190px 160px,260px 210px,230px 190px,370px 280px}',
+    '#mobileControls{--v18-touch-scale:1}.touch-key{min-width:calc(42px * var(--v18-touch-scale,1));min-height:calc(42px * var(--v18-touch-scale,1));font-size:calc(14px * var(--v18-touch-scale,1))}.touch-item,.touch-shoot{border:1px solid #a9f1e4!important;background:linear-gradient(135deg,#276b71,#4b397b)!important;color:#fff!important;font-size:9px!important;font-weight:1000!important;min-width:calc(52px * var(--v18-touch-scale,1))!important;min-height:calc(38px * var(--v18-touch-scale,1))!important}',
+    '@media(max-width:900px){.v18-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.v18-shell{padding:16px!important}.v18-remap-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.v18-ready-card{min-width:0}}@media(max-width:520px){.v18-shop-card{padding:9px}.v18-shop-card>b{font-size:11px}.v18-shop-card small{font-size:9px}.v18-tabs button{padding:8px 5px;font-size:9px}.v18-ready-row{grid-template-columns:70px minmax(0,1fr)}}'
+  ].join('');
+  document.head.appendChild(style);
+  const brand=document.createElement('button');brand.type='button';brand.id='v18StudioButton';brand.className='secondary-btn';brand.textContent='✦ ZYRON STUDIOS';brand.style.cssText='display:block;margin:12px auto 0;border-color:#a8d9ff66;background:linear-gradient(120deg,#25375d,#3b275d)';
+  const heroTarget=document.querySelector('#menuScreen .hero-meta')||document.querySelector('#menuScreen h1');if(heroTarget)heroTarget.insertAdjacentElement('afterend',brand);
+  const modal=document.createElement('div');modal.id='v18StudioPanel';modal.innerHTML='<div class="v18-studio-card"><button type="button" id="v18StudioClose" aria-label="Close">✕</button><div class="eyebrow">INDEPENDENT GAME STUDIO</div><h2>ZYRON STUDIOS</h2><p>Zyron Studios creates TAG! — a fast, chaotic multiplayer chase built around custom arenas, player identity, wild modifiers, and friends playing together.</p><p><b>TAG! V18 · PEAK!</b><br>Created from the ideas and direction of its game creator.</p></div>';document.body.appendChild(modal);
+  const modalStyle=document.createElement('style');modalStyle.textContent='#v18StudioPanel{display:none;position:fixed;inset:0;z-index:9998;background:#050914dd;backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:20px}#v18StudioPanel.open{display:flex}.v18-studio-card{position:relative;max-width:520px;padding:30px;border:1px solid #9ad8ff66;border-radius:22px;background:linear-gradient(145deg,#192c4a,#2c1d4b);box-shadow:0 25px 80px #0009}.v18-studio-card h2{color:#b7f4ea;letter-spacing:.14em}.v18-studio-card p{color:#c5d3e8;line-height:1.7}.v18-studio-card button{position:absolute;right:12px;top:12px;border:0;border-radius:50%;width:32px;height:32px;background:#30415c;color:white}';document.head.appendChild(modalStyle);
+  brand.addEventListener('click',()=>modal.classList.add('open'));$('v18StudioClose').addEventListener('click',()=>modal.classList.remove('open'));modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open');});
+  renderShops();walletText();
+  window.TAGV18Diagnostics={
+    run:function(){
+      const checks=[
+        ['9 skin designs',skins.length===9],
+        ['shop prices',skins.every(()=>true)&&accessories.filter(a=>a.id!=='christmas').every(a=>a.price===1)&&accessories.find(a=>a.id==='christmas').price===2],
+        ['item stack cap',items.every(x=>(stock[x.id]||0)<=3)],
+        ['robot limit',killerCount>=1&&killerCount<=5],
+        ['Glitchy Landscapes map',!!maps.glitchy],
+        ['new modifier ids',['doubleorbs','jumporbs','guns'].every(x=>modifierNames[x])]
+      ];return {passed:checks.filter(x=>x[1]).length,total:checks.length,checks:checks};
+    },
+    getInventory:function(){return {wallet:wallet,skins:Array.from(ownedSkins),accessories:Array.from(ownedAccessories),items:stock,titles:Array.from(ownedTitles)};}
+  };
+})();
+
 })();
 </script>
 <script type="module">
