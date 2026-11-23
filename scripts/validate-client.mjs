@@ -66,7 +66,7 @@ if (
 
 if (
   !source.includes("V17 · SOLID STRUCTURES & IN-MATCH FRIENDS") ||
-  !source.includes("TAG! — Zyron Studios V19 · Living Legends") ||
+  !source.includes("TAG! — Zyron Studios 19.5V · Living Legends") ||
   !source.includes("function customPlatformGeometry") ||
   !source.includes("centerX-objectW/2") ||
   !source.includes("centerY-objectH/2") ||
@@ -89,6 +89,7 @@ if (
   !source.includes("MAILBOX · INCOMING FRIEND REQUESTS") ||
   !source.includes("refreshFriends().catch(()=>{})") ||
   source.includes("V18 · STRUCTURE UNDERSIDE COLLISION") ||
+  !source.includes("19.5V · COUNTDOWN & RELEASE POLISH") ||
   !source.includes("V19 · THE LIVING LEGENDS UPDATE") ||
   !source.includes("function useItem(i)") ||
   !source.includes("data-v18-setting-skin") ||
@@ -108,7 +109,7 @@ if (
   !source.includes("function v19RenderSkinPreviews") ||
   !source.includes("docs/history.html")
 ) {
-  throw new Error("V18 release, V17 solid collision, or existing V16/V17 safeguards are missing.");
+  throw new Error("19.5V release, V19 Living Legends, solid collision, or existing safeguards are missing.");
 }
 
 const directory = join(tmpdir(), "tag-client-check-" + process.pid);

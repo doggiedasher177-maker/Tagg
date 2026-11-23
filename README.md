@@ -1,4 +1,4 @@
-# TAG! V19 — Living Legends & Nakama backend
+# TAG! 19.5V — Living Legends Polish & Nakama backend
 
 This repository contains the TAG! browser client and a Nakama server runtime.
 
@@ -14,12 +14,17 @@ For a hosted deployment, deploy this repository with a persistent Postgres datab
 
 ## Included
 
-- Browser client: `index.html` (V19 Living Legends)
+- Browser client: `index.html` (19.5V Living Legends)
 - Published GitHub Pages client: `docs/index.html`
 - Historical build viewer: `docs/history.html`
-- Offline historical snapshots for V14–V18: `archive/legacy-offline/` (mirrored in `docs/archive/` for Pages)
+- Offline historical snapshots for V14–V19: `archive/legacy-offline/` (mirrored in `docs/archive/` for Pages)
 - Nakama runtime match module: `server/modules/tag_match.lua`
 - Docker Compose: Nakama + PostgreSQL
+
+## 19.5V release notes
+
+- The in-game round countdown remains three seconds; automated browser fixtures now allow slower headless/mobile animation frames to finish the countdown before checking play state.
+- The version viewer opens V19 as an offline historical snapshot and 19.5V as the only current online-enabled release.
 
 ## Online architecture and security
 
@@ -41,4 +46,4 @@ GitHub Pages then publishes updates whenever `docs/` changes on `main`. The expe
 
 `https://doggiedasher177-maker.github.io/Tagg/`
 
-The Nakama multiplayer backend remains hosted separately on Railway. The GitHub Actions validation workflow checks that the published copy matches the source, both browser scripts parse successfully, and V15–V19 feature guards remain present. V1–V14 numbered originals are preserved in the companion offline archive pack.
+The Nakama multiplayer backend remains hosted separately on Railway. The GitHub Actions validation workflow checks that the published copy matches the source, both browser scripts parse successfully, and V15–19.5V feature guards remain present. V1–V14 numbered originals are preserved in the companion offline archive pack.

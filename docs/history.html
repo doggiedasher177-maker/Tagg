@@ -24,7 +24,7 @@ iframe{width:100%;height:calc(100vh - 150px);min-height:650px;border:0;backgroun
 </style>
 </head>
 <body>
-<header><small>ZYRON STUDIOS · TAG! ARCHIVE</small><h1>THE HISTORY OF TAG!</h1><p>Open the actual historical HTML build for each archived milestone. V14–V18 are served as offline snapshots; V1–V13 are preserved in the original numbered V1–V14 offline source bundle.</p></header>
+<header><small>ZYRON STUDIOS · TAG! ARCHIVE</small><h1>THE HISTORY OF TAG!</h1><p>Open the actual historical HTML build for each archived milestone. V14–V19 are served as offline snapshots; 19.5V is the current online release; V1–V13 are preserved in the original numbered V1–V14 offline source bundle.</p></header>
 <main>
 <nav aria-label="Historical versions"><b>SELECT A VERSION</b><div id="versions"></div></nav>
 <section class="viewer">
@@ -35,19 +35,19 @@ iframe{width:100%;height:calc(100vh - 150px);min-height:650px;border:0;backgroun
 </main>
 <script>
 (()=>{
-const versions=['V19','V18','V17.5V','V17','V16','V15','V14','V13','V12','V11','V10','V9','V8','V7','V6','V5','V4','V3','V2','V1'];
-const files={'V14':'archive/legacy-offline/TAG_V14_OFFLINE.html','V15':'archive/legacy-offline/TAG_V15_OFFLINE.html','V16':'archive/legacy-offline/TAG_V16_OFFLINE.html','V17':'archive/legacy-offline/TAG_V17_OFFLINE.html','V17.5V':'archive/legacy-offline/TAG_V17_5_OFFLINE.html','V18':'archive/legacy-offline/TAG_V18_OFFLINE.html'};
-const params=new URLSearchParams(location.search);let current=params.get('version')||'V18';
+const versions=['19.5V','V19','V18','V17.5V','V17','V16','V15','V14','V13','V12','V11','V10','V9','V8','V7','V6','V5','V4','V3','V2','V1'];
+const files={'V19':'archive/legacy-offline/TAG_V19_OFFLINE.html','V14':'archive/legacy-offline/TAG_V14_OFFLINE.html','V15':'archive/legacy-offline/TAG_V15_OFFLINE.html','V16':'archive/legacy-offline/TAG_V16_OFFLINE.html','V17':'archive/legacy-offline/TAG_V17_OFFLINE.html','V17.5V':'archive/legacy-offline/TAG_V17_5_OFFLINE.html','V18':'archive/legacy-offline/TAG_V18_OFFLINE.html'};
+const params=new URLSearchParams(location.search);let current=params.get('version')||'19.5V';
 const menu=document.getElementById('versions'),frame=document.getElementById('build'),fallback=document.getElementById('fallback'),caption=document.getElementById('caption'),state=document.getElementById('state');
 function choose(v){
 current=v;history.replaceState(null,'','?version='+encodeURIComponent(v));
 document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.version===v));
 caption.textContent=v+' · HISTORICAL BUILD';
-if(v==='V19'){frame.src='./index.html';frame.style.display='block';fallback.style.display='none';state.textContent='CURRENT ONLINE RELEASE';return;}
+if(v==='19.5V'){frame.src='./index.html';frame.style.display='block';fallback.style.display='none';state.textContent='CURRENT ONLINE RELEASE';return;}
 if(files[v]){frame.src=files[v];frame.style.display='block';fallback.style.display='none';state.textContent='OFFLINE SNAPSHOT · ONLINE FEATURES LOCKED';return;}
 frame.removeAttribute('src');frame.style.display='none';fallback.style.display='block';state.textContent='BUNDLED ORIGINAL HTML SNAPSHOT';
 }
-versions.forEach(v=>{const b=document.createElement('button');b.type='button';b.dataset.version=v;b.textContent=v+(v==='V19'?' · CURRENT':'');b.addEventListener('click',()=>choose(v));menu.appendChild(b);});
+versions.forEach(v=>{const b=document.createElement('button');b.type='button';b.dataset.version=v;b.textContent=v+(v==='19.5V'?' · CURRENT':'');b.addEventListener('click',()=>choose(v));menu.appendChild(b);});
 if(!versions.includes(current))current='V18';choose(current);
 })();
 </script>
