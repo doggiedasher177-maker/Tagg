@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#080d19">
 <meta name="description" content="TAG! — a local multiplayer platform chase across many living realms.">
-<title>TAG! — Zyron Studios v18 PEAK!</title>
+<title>TAG! — Zyron Studios V19 · Living Legends</title>
 <style>
 :root{
   --ink:#edf5ff;--muted:#9eafc5;--line:rgba(202,224,255,.15);
@@ -2600,7 +2600,7 @@ activeScreen('menu');applyMusicVolume();syncFov(fovValue);
 lastFrame=performance.now();
 rafId=requestAnimationFrame(frame);
 
-/* ======================= TAG! V18 PEAK ======================= */
+/* ======================= TAG! V19 LIVING LEGENDS ======================= */
 (function(){
   const $=id=>document.getElementById(id);
   const read=(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v);}catch(e){return d;}};
@@ -3180,6 +3180,391 @@ rafId=requestAnimationFrame(frame);
     syncProfilePoints:function(serverPoints){const n=Number(serverPoints);if(Number.isFinite(n)&&n>wallet){wallet=Math.floor(n);save();walletText();}return wallet;},
     getInventory:function(){return {wallet:wallet,skins:Array.from(ownedSkins),accessories:Array.from(ownedAccessories),items:stock,titles:Array.from(ownedTitles)};}
   };
+
+  // V19 · LIVING LEGENDS
+  skins.push({id:'v1',name:'V1',icon:'🤖',desc:'A V1-inspired combat machine with blue armor, red servo joints, a cyan visor and a pulsing chest core.'});
+  const skinCopy={gangbeast:'A wobbling brawler with elastic limbs, soft body squash and heavy-footed steps.',amongus:'A compact crewmate with glossy visor, backpack and articulated steps.',roblox:'A block-built avatar with articulated arms, legs and a square silhouette.',knight:'A tiny masked wanderer with flowing cloak, horned mask and bright eyes.',iwbtg:'A pixel-platform hero with crisp sprite blocks and quick footwork.',nyan:'A rainbow-trailing pastry cat with floating sparkles and a happy bounce.',epicface:'A round meme-face runner with a cheeky grin and expressive blinks.',freddy:'A top-hatted animatronic bear with muzzle, ears and stage-ready movement.',creeper:'A pixel-green creeper with a blocky body and square face.',v1:'A V1-inspired combat machine with blue armor, red servo joints, a cyan visor and a pulsing chest core.'};
+  skins.forEach(x=>{if(skinCopy[x.id])x.desc=skinCopy[x.id];});
+  const v19Emotes=[
+    {id:'distraction',name:'Distraction Dance',desc:'A playful full-body side-to-side routine with swinging arms.'},
+    {id:'jamal',name:'Jamal Dance',desc:'A bouncy shoulder-led groove with quick foot taps.'},
+    {id:'headbop',name:'Headbop',desc:'A smooth head-and-shoulder bop with a relaxed stance.'},
+    {id:'originalsound',name:'Original Sound',desc:'An animation-meme style sway with a clean two-step.'},
+    {id:'griddy',name:'Get Griddy',desc:'A forward-leaning stride with swinging arms and alternating steps.'},
+    {id:'subaru',name:'Subaru Stairs',desc:'A staircase appears under the runner for a climbing-in-place gag; it vanishes when cancelled.'},
+    {id:'purple',name:'Purple',desc:'A wide-armed, springy Forsaken-inspired groove.'},
+    {id:'defaultdance',name:'Default',desc:'An upbeat game-lobby dance with broad arm swings.'},
+    {id:'kwikflip',name:'Kwik Flip',desc:'A quick spin-and-recover animation with a dramatic finish.'},
+    {id:'dapup',name:'Dap Up',desc:'A two-runner greeting. The other human player must accept the invitation.',duo:true},
+    {id:'gangnam',name:'Gangnam Style',desc:'A playful horse-riding bounce and alternating arm pose.'},
+    {id:'hero',name:'The Hero',desc:'A goofy, confident side-step with a heroic flourish.'},
+    {id:'boogiedown',name:'Boogie Down',desc:'A two-runner synchronized shuffle. The other human player must accept the invitation.',duo:true},
+    {id:'icecream',name:'Ice Cream Stand',desc:'A tiny vendor routine: scoop, serve and present an imaginary cone.'}
+  ];
+  const v19Cards=[
+    {id:'angelic',name:'Angelic',desc:'Pearl-white trim, soft gold filigree and a luminous halo.'},
+    {id:'space',name:'Space',desc:'A deep cosmic gradient, constellations and a cool nebula glow.'},
+    {id:'grass',name:'Grass',desc:'Fresh greens, leaf details and a sunlit natural frame.'},
+    {id:'hell',name:'Hell',desc:'Obsidian panels, ember cracks and a molten red edge.'}
+  ];
+  const v19Read=(key,fallback)=>{try{return read(key,fallback);}catch(e){return fallback;}};
+  const v19Write=(key,value)=>{try{write(key,value);}catch(e){}};
+  let ownedEmotes=new Set((v19Read('tagV19OwnedEmotes',[])||[]).filter(id=>v19Emotes.some(x=>x.id===id)));
+  let equippedEmotes=Array.from({length:4},(_,i)=>{const a=(v19Read('tagV19EquippedEmotes',[[],[],[],[]])||[])[i];return Array.isArray(a)?a.slice(0,2).filter(id=>ownedEmotes.has(id)):[];});
+  let ownedProfileCards=new Set((v19Read('tagV19OwnedProfileCards',[])||[]).filter(id=>v19Cards.some(x=>x.id===id)));
+  let equippedProfileCards=Array.from({length:4},(_,i)=>{const id=(v19Read('tagV19EquippedProfileCards',['','','',''])||[])[i]||'';return ownedProfileCards.has(id)?id:'';});
+  let userPlayerIndex=Math.max(0,Math.min(3,Number(v19Read('tagV19UserPlayerIndex',0))||0));
+  let killerDifficulty=v19Read('tagV19KillerDifficulty','medium');
+  if(!['easy','medium','hard','extreme'].includes(killerDifficulty))killerDifficulty='medium';
+  let killerSpeedPercent=Math.max(60,Math.min(160,Number(v19Read('tagV19KillerSpeed',100))||100));
+  let detailMode=v19Read('tagV19DetailMode','medium');
+  if(!['low','medium','high'].includes(detailMode))detailMode='medium';
+  function v19Persist(){
+    v19Write('tagV19OwnedEmotes',Array.from(ownedEmotes));v19Write('tagV19EquippedEmotes',equippedEmotes);
+    v19Write('tagV19OwnedProfileCards',Array.from(ownedProfileCards));v19Write('tagV19EquippedProfileCards',equippedProfileCards);
+    v19Write('tagV19UserPlayerIndex',userPlayerIndex);v19Write('tagV19KillerDifficulty',killerDifficulty);
+    v19Write('tagV19KillerSpeed',killerSpeedPercent);v19Write('tagV19DetailMode',detailMode);
+  }
+  const baseSaveV19=save;save=function(){baseSaveV19();v19Persist();};
+  const baseAwardWinV19=awardWin;
+  awardWin=function(winner){
+    if(onlineActive){if(winner!==onlineLocalIndex)return;}
+    else if(winner!==userPlayerIndex||botPlayers[userPlayerIndex])return;
+    baseAwardWinV19(winner);
+  };
+
+  function v19EmoteOptions(selected){return '<option value="">EMPTY SLOT</option>'+v19Emotes.filter(x=>ownedEmotes.has(x.id)).map(x=>'<option value="'+x.id+'" '+(x.id===selected?'selected':'')+'>'+esc(x.name)+'</option>').join('');}
+  function v19CardOptions(selected){return '<option value="">DEFAULT CARD</option>'+v19Cards.filter(x=>ownedProfileCards.has(x.id)).map(x=>'<option value="'+x.id+'" '+(x.id===selected?'selected':'')+'>'+esc(x.name)+'</option>').join('');}
+  function v19ReadyControls(){
+    const list=$('readyPlayers');if(!list)return;
+    if(userPlayerIndex>=activePlayerCount||botPlayers[userPlayerIndex]){
+      const next=controls.slice(0,activePlayerCount).findIndex((c,i)=>!botPlayers[i]);if(next>=0)userPlayerIndex=next;
+    }
+    let picker=$('v19YouPicker');
+    if(!picker){picker=document.createElement('div');picker.id='v19YouPicker';picker.className='v19-you-picker';list.insertAdjacentElement('beforebegin',picker);}
+    const humans=controls.slice(0,activePlayerCount).map((c,i)=>({c,i})).filter(x=>!botPlayers[x.i]);
+    picker.innerHTML='<div><b>YOUR RUNNER</b><small>Only this human color earns a TAG Point for a local victory.</small></div><label>YOU ARE <select id="v19UserPlayerSelect">'+humans.map(x=>'<option value="'+x.i+'" '+(x.i===userPlayerIndex?'selected':'')+'>PLAYER '+(x.i+1)+' · '+['RED','BLUE','GOLD','VIOLET'][x.i]+'</option>').join('')+'</select></label>';
+    list.querySelectorAll('.v18-ready-card').forEach((card,i)=>{
+      if(card.querySelector('[data-v19-emote-slot]'))return;
+      card.insertAdjacentHTML('beforeend','<div class="v19-ready-cosmetics"><b>EMOTE INVENTORY</b><label>Q / SLOT 1 <select data-v19-emote-slot="'+i+':0">'+v19EmoteOptions(equippedEmotes[i][0]||'')+'</select></label><label>E / SLOT 2 <select data-v19-emote-slot="'+i+':1">'+v19EmoteOptions(equippedEmotes[i][1]||'')+'</select></label><small>Equip up to two owned emotes. Jump or dash cancels the animation.</small><label>PROFILE CARD <select data-v19-card-player="'+i+'">'+v19CardOptions(equippedProfileCards[i])+'</select></label></div>');
+    });
+  }
+  const baseReadyRoomV19=readyRoom;readyRoom=function(){baseReadyRoomV19();v19ReadyControls();};renderReadyRoom=readyRoom;
+  $('readyPlayers')?.addEventListener('change',e=>{
+    const t=e.target;
+    if(t.id==='v19UserPlayerSelect'){const idx=Number(t.value);if(Number.isInteger(idx)&&!botPlayers[idx]){userPlayerIndex=idx;v19Persist();}}
+    if(t.dataset.v19EmoteSlot!==undefined){
+      const pair=t.dataset.v19EmoteSlot.split(':').map(Number),who=pair[0],slot=pair[1];
+      if(Number.isInteger(who)&&Number.isInteger(slot)){const id=t.value||'';equippedEmotes[who][slot]=id;if(id&&equippedEmotes[who][1-slot]===id)equippedEmotes[who][1-slot]='';v19Persist();readyRoom();}
+    }
+    if(t.dataset.v19CardPlayer!==undefined){equippedProfileCards[Number(t.dataset.v19CardPlayer)]=t.value||'';v19Persist();}
+    if(t.dataset.bot!==undefined&&botPlayers[userPlayerIndex]){const next=controls.slice(0,activePlayerCount).findIndex((c,i)=>!botPlayers[i]);if(next>=0)userPlayerIndex=next;v19Persist();}
+  });
+
+  function v19RenderEmoteStore(){
+    const body=$('v18CosmeticBody');if(!body)return;
+    body.innerHTML='<div class="v19-shop-intro"><b>EMOTE STORE</b><span>Every emote costs 1 TAG POINT. Purchased emotes stay in your inventory until equipped in the Ready Room. Press Q or E during a match.</span></div><div class="v19-emote-grid">'+v19Emotes.map(x=>'<article class="v19-collectible"><div class="v19-emote-art">'+({distraction:'🕺',jamal:'💃',headbop:'🎧',originalsound:'🎵',griddy:'👟',subaru:'🪜',purple:'🟣',defaultdance:'🪩',kwikflip:'🔄',dapup:'🤝',gangnam:'🐎',hero:'🦸',boogiedown:'🪩',icecream:'🍦'}[x.id])+'</div><b>'+esc(x.name)+(x.duo?' · DUO':'')+'</b><small>'+esc(x.desc)+'</small><button type="button" data-v19-action="buy-emote" data-v19-id="'+x.id+'" '+(ownedEmotes.has(x.id)?'disabled':'')+'>'+(ownedEmotes.has(x.id)?'OWNED':'BUY · 1 TAG POINT')+'</button></article>').join('')+'</div><p class="v18-note">Duo emotes send an invitation to another human runner. The second player chooses JOIN or DECLINE.</p>';
+  }
+  function v19RenderEmoteInventory(){
+    const body=$('v18CosmeticBody');if(!body)return;const owned=v19Emotes.filter(x=>ownedEmotes.has(x.id));
+    body.innerHTML='<div class="v19-shop-intro"><b>YOUR EMOTE INVENTORY</b><span>Equip up to two emotes per runner from the Ready Room. Player 1 uses Q and E.</span></div><div class="v19-owned-list">'+(owned.length?owned.map(x=>'<div class="v19-owned-row"><span>'+esc(x.name)+'</span><small>'+esc(x.desc)+'</small><b>OWNED</b></div>').join(''):'<p class="v18-note">Your inventory is empty. Visit the Emotes tab to unlock dances.</p>')+'</div>';
+  }
+  function v19RenderProfileCards(){
+    const body=$('v18CosmeticBody');if(!body)return;
+    body.innerHTML='<div class="v19-shop-intro"><b>PROFILE CARD DESIGNS</b><span>Unlock a visual identity for your runner profile. Each design costs 1 TAG POINT; equip it from Profile or the Ready Room.</span></div><div class="v19-card-grid">'+v19Cards.map(x=>'<article class="v19-profile-sample '+x.id+'"><div class="v19-profile-sample-art"><span>TAG!</span><b>'+esc(x.name.toUpperCase())+'</b></div><b>'+esc(x.name)+'</b><small>'+esc(x.desc)+'</small><button type="button" data-v19-action="buy-card" data-v19-id="'+x.id+'" '+(ownedProfileCards.has(x.id)?'disabled':'')+'>'+(ownedProfileCards.has(x.id)?'OWNED':'BUY · 1 TAG POINT')+'</button></article>').join('')+'</div>';
+  }
+  function v19RenderInventory(){
+    const body=$('v18CosmeticBody');if(!body)return;
+    body.innerHTML='<div class="v19-shop-intro"><b>YOUR COLLECTION</b><span>Cosmetics and emotes are saved locally to this profile.</span></div><div class="v19-owned-list"><div class="v19-owned-row"><span>EMOTES</span><b>'+ownedEmotes.size+' / '+v19Emotes.length+'</b></div><div class="v19-owned-row"><span>PROFILE CARDS</span><b>'+ownedProfileCards.size+' / '+v19Cards.length+'</b></div><div class="v19-owned-row"><span>SKINS</span><b>'+ownedSkins.size+' / '+skins.length+'</b></div><div class="v19-owned-row"><span>UNLOCKED TITLES</span><b>'+ownedTitles.size+' / '+titles.length+'</b></div></div>';
+  }
+  const baseRenderCosmeticsV19=renderCosmetics;
+  renderCosmetics=function(tab){
+    shopTab=tab||shopTab;
+    if(shopTab==='emotes'){v19RenderEmoteStore();document.querySelectorAll('[data-v18-tab],[data-v19-tab]').forEach(b=>b.classList.toggle('active',b.dataset.v18Tab===shopTab||b.dataset.v19Tab===shopTab));return;}
+    if(shopTab==='emoteinventory'){v19RenderEmoteInventory();document.querySelectorAll('[data-v18-tab],[data-v19-tab]').forEach(b=>b.classList.toggle('active',b.dataset.v18Tab===shopTab||b.dataset.v19Tab===shopTab));return;}
+    if(shopTab==='profilecards'){v19RenderProfileCards();document.querySelectorAll('[data-v18-tab],[data-v19-tab]').forEach(b=>b.classList.toggle('active',b.dataset.v18Tab===shopTab||b.dataset.v19Tab===shopTab));return;}
+    if(shopTab==='inventory'){v19RenderInventory();document.querySelectorAll('[data-v18-tab],[data-v19-tab]').forEach(b=>b.classList.toggle('active',b.dataset.v18Tab===shopTab||b.dataset.v19Tab===shopTab));return;}
+    baseRenderCosmeticsV19(shopTab);if(shopTab==='skins')requestAnimationFrame(v19RenderSkinPreviews);
+  };
+  const baseBuildCosmeticsV19=buildCosmetics;
+  buildCosmetics=function(){
+    baseBuildCosmeticsV19();const tabs=$('avatarsScreen')?.querySelector('.v18-tabs');if(!tabs)return;
+    [['profilecards','PROFILE CARDS'],['emoteinventory','EMOTE INVENTORY'],['inventory','COLLECTION']].forEach(([id,label])=>{
+      if(tabs.querySelector('[data-v19-tab="'+id+'"]'))return;
+      const b=document.createElement('button');b.type='button';b.dataset.v19Tab=id;b.textContent=label;b.addEventListener('click',()=>renderCosmetics(id));tabs.appendChild(b);
+    });
+    renderCosmetics(shopTab);
+  };
+  document.addEventListener('click',e=>{
+    const b=e.target.closest('[data-v19-action]');if(!b)return;const id=b.dataset.v19Id;
+    if(b.dataset.v19Action==='buy-emote'){
+      if(ownedEmotes.has(id))return;if(wallet<1){notice('Not enough TAG POINTS. Win a match to earn more.');return;}
+      ownedEmotes.add(id);wallet--;save();walletText();renderCosmetics('emotes');notice('Emote unlocked · '+v19Emotes.find(x=>x.id===id).name);
+    }else if(b.dataset.v19Action==='buy-card'){
+      if(ownedProfileCards.has(id))return;if(wallet<1){notice('Not enough TAG POINTS. Win a match to earn more.');return;}
+      ownedProfileCards.add(id);wallet--;save();walletText();renderCosmetics('profilecards');notice('Profile card unlocked · '+v19Cards.find(x=>x.id===id).name);
+    }
+  });
+
+  function v19DrawPreview(canvas,id){
+    const g=canvas.getContext('2d'),w=canvas.width,h=canvas.height;g.clearRect(0,0,w,h);
+    const bg=g.createLinearGradient(0,0,w,h);bg.addColorStop(0,'#1d3551');bg.addColorStop(1,'#111728');g.fillStyle=bg;g.fillRect(0,0,w,h);
+    g.strokeStyle='#9bc9ea33';for(let x=0;x<w;x+=24){g.beginPath();g.moveTo(x,0);g.lineTo(x,h);g.stroke();}for(let y=0;y<h;y+=24){g.beginPath();g.moveTo(0,y);g.lineTo(w,y);g.stroke();}
+    g.save();g.translate(120,105);
+    const base=({gangbeast:'#e6bd35',amongus:'#d94555',roblox:'#df9251',knight:'#95a8c4',iwbtg:'#dbb16a',nyan:'#c9a2d8',epicface:'#f4d24f',freddy:'#8c5e42',creeper:'#52b76d',v1:'#9bbbd1'}[id]||'#55b8e9');
+    g.fillStyle='#0b0f1c';g.beginPath();g.ellipse(0,3,47,9,0,0,Math.PI*2);g.fill();
+    if(id==='amongus'){g.fillStyle='#2a354d';g.fillRect(18,-45,20,63);g.fillStyle=base;g.beginPath();g.roundRect(-27,-93,55,107,22);g.fill();g.fillStyle='#b8f6ff';g.beginPath();g.roundRect(-8,-78,42,27,12);g.fill();}
+    else if(id==='roblox'){g.fillStyle='#24334a';g.fillRect(-18,-32,16,37);g.fillRect(4,-32,16,37);g.fillStyle=base;g.fillRect(-28,-93,56,58);g.fillRect(-38,-84,10,42);g.fillRect(28,-84,10,42);g.fillStyle='#f7ffff';g.fillRect(-16,-75,10,11);g.fillRect(7,-75,10,11);}
+    else if(id==='knight'){g.fillStyle='#182033';g.beginPath();g.moveTo(-30,5);g.lineTo(-24,-68);g.quadraticCurveTo(0,-110,24,-68);g.lineTo(30,5);g.closePath();g.fill();g.fillStyle=base;g.beginPath();g.moveTo(-13,-72);g.lineTo(-31,-113);g.lineTo(-8,-94);g.lineTo(0,-120);g.lineTo(9,-94);g.lineTo(31,-113);g.lineTo(13,-72);g.closePath();g.fill();g.fillStyle='#f8ffff';g.fillRect(-11,-79,6,12);g.fillRect(6,-79,6,12);}
+    else if(id==='iwbtg'){g.fillStyle=base;const p=['0011100','0111110','1111111','1011101','1111111','0011100','0110110','1100011'];p.forEach((r,y)=>Array.from(r).forEach((v,x)=>{if(v==='1')g.fillRect((x-3.5)*8,(y-9)*8,8,8);}));}
+    else if(id==='nyan'){['#fb5c68','#ffab48','#ffe95d','#61de82','#53baff','#b17bff'].forEach((col,i)=>{g.fillStyle=col;g.fillRect(-72-i*6,-23+i*7,62,9);});g.fillStyle=base;g.fillRect(-26,-55,65,48);g.fillRect(-20,-71,18,20);g.fillRect(22,-71,18,20);g.fillStyle='#f3dfc6';g.fillRect(-10,-51,41,36);g.fillStyle='#17202b';g.fillRect(2,-44,5,5);g.fillRect(22,-44,5,5);}
+    else if(id==='epicface'){g.fillStyle=base;g.beginPath();g.arc(0,-48,48,0,Math.PI*2);g.fill();g.strokeStyle='#9b7023';g.lineWidth=4;g.stroke();g.fillStyle='#142033';g.fillRect(-23,-64,12,19);g.fillRect(12,-64,12,19);g.lineWidth=5;g.beginPath();g.moveTo(-27,-31);g.quadraticCurveTo(0,-6,28,-31);g.stroke();}
+    else if(id==='freddy'){g.fillStyle=base;g.beginPath();g.ellipse(0,-49,43,52,0,0,Math.PI*2);g.fill();g.beginPath();g.arc(-30,-92,17,0,Math.PI*2);g.arc(30,-92,17,0,Math.PI*2);g.fill();g.fillStyle='#171a24';g.fillRect(-29,-111,58,9);g.fillRect(-16,-130,32,21);g.fillStyle='#e3bd93';g.beginPath();g.ellipse(0,-34,24,18,0,0,Math.PI*2);g.fill();}
+    else if(id==='creeper'){g.fillStyle=base;g.fillRect(-34,-95,68,86);g.fillRect(-27,-10,18,20);g.fillRect(9,-10,18,20);g.fillStyle='#17352d';g.fillRect(-20,-72,13,16);g.fillRect(8,-72,13,16);g.fillRect(-7,-52,14,35);}
+    else if(id==='v1'){g.fillStyle='#213c59';g.fillRect(-27,-89,54,72);g.fillStyle='#a8c4d9';g.fillRect(-20,-99,40,34);g.fillStyle='#36edff';g.fillRect(-13,-86,26,9);g.fillStyle='#d8434f';g.fillRect(-39,-64,13,48);g.fillRect(26,-64,13,48);g.fillStyle='#b8d8e7';g.fillRect(-22,-18,15,30);g.fillRect(8,-18,15,30);g.fillStyle='#35d9e9';g.beginPath();g.arc(0,-42,10,0,Math.PI*2);g.fill();g.fillStyle='#d84a56';g.fillRect(-10,-103,20,5);}
+    else if(id==='gangbeast'){g.fillStyle=base;g.beginPath();g.ellipse(0,-46,36,55,0,0,Math.PI*2);g.fill();g.beginPath();g.ellipse(-34,-41,12,27,-.2,0,Math.PI*2);g.ellipse(34,-41,12,27,.2,0,Math.PI*2);g.fill();g.strokeStyle='#17202b';g.lineWidth=8;g.beginPath();g.moveTo(-11,-2);g.lineTo(-16,12);g.moveTo(11,-2);g.lineTo(16,12);g.stroke();g.fillStyle='#fff';g.fillRect(-15,-59,8,12);g.fillRect(7,-59,8,12);}
+    else{g.fillStyle=base;g.beginPath();g.ellipse(0,-42,39,48,0,0,Math.PI*2);g.fill();g.fillRect(-29,-22,13,31);g.fillRect(16,-22,13,31);g.fillStyle='#fff';g.fillRect(-17,-54,9,13);g.fillRect(9,-54,9,13);}
+    g.restore();
+  }
+  function v19RenderSkinPreviews(){
+    const body=$('v18CosmeticBody');if(!body)return;
+    body.querySelectorAll('.v18-shop-card').forEach(card=>{
+      const button=card.querySelector('[data-v18-buy="skin"]');if(!button)return;
+      const holder=card.querySelector('.v18-shop-icon');if(!holder)return;holder.innerHTML='';
+      const c=document.createElement('canvas');c.className='v19-skin-preview';c.width=240;c.height=150;c.setAttribute('aria-label',button.dataset.v18Id+' character model preview');holder.appendChild(c);v19DrawPreview(c,button.dataset.v18Id);
+      const caption=document.createElement('small');caption.className='v19-model-caption';caption.textContent='CHARACTER MODEL PREVIEW';holder.appendChild(caption);
+    });
+  }
+
+  function v19DrawV1(p,i){
+    const t=worldTime,step=Math.sin(t*14+i),air=p.onGround?0:Math.sin(t*7)*2,arm=Math.sin(t*15+i)*.22;
+    const acc=p.v18Accessory||playerCosmetics[i]||'none',dash=p.dashTimer>0;
+    ctx.save();ctx.translate(p.x,p.y+air);ctx.scale(p.face||1,1);
+    ctx.fillStyle='#2d5175';ctx.beginPath();ctx.moveTo(-12,-41);ctx.lineTo(-28,-56-(dash?16:0));ctx.lineTo(-23,-17);ctx.lineTo(-8,-23);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#d44855';ctx.beginPath();ctx.moveTo(-18,-49);ctx.lineTo(-34,-62-(dash?18:0));ctx.lineTo(-28,-27);ctx.lineTo(-16,-29);ctx.closePath();ctx.fill();
+    ctx.strokeStyle='#9eb9cc';ctx.lineWidth=9;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(-9,-14);ctx.lineTo(-12+step*4,5);ctx.lineTo(-19+step*5,14);ctx.moveTo(9,-14);ctx.lineTo(12-step*4,5);ctx.lineTo(19-step*5,14);ctx.stroke();
+    ctx.fillStyle='#d84a58';ctx.fillRect(-23+step*5,11,12,5);ctx.fillRect(13-step*5,11,12,5);
+    ctx.fillStyle='#345c80';ctx.beginPath();ctx.roundRect(-18,-52,36,43,8);ctx.fill();
+    ctx.fillStyle='#a9c5d8';ctx.beginPath();ctx.moveTo(-14,-49);ctx.lineTo(0,-57);ctx.lineTo(14,-49);ctx.lineTo(12,-18);ctx.lineTo(-12,-18);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#d74652';ctx.fillRect(-18,-49,5,26);ctx.fillRect(13,-49,5,26);
+    ctx.fillStyle='#3df1ff';ctx.shadowColor='#3df1ff';ctx.shadowBlur=10;ctx.beginPath();ctx.arc(0,-34,7+Math.sin(t*5)*.6,0,TAU);ctx.fill();ctx.shadowBlur=0;
+    ctx.fillStyle='#bdd0df';ctx.beginPath();ctx.roundRect(-14,-78,28,28,7);ctx.fill();
+    ctx.fillStyle='#203b58';ctx.fillRect(-12,-72,24,15);ctx.fillStyle='#4af2ff';ctx.shadowColor='#4af2ff';ctx.shadowBlur=12;ctx.fillRect(-9,-67,18,5);ctx.shadowBlur=0;
+    ctx.strokeStyle='#a7c3d7';ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(-15,-46);ctx.lineTo(-20+arm*12,-31);ctx.lineTo(-24+arm*12,-22);ctx.moveTo(15,-46);ctx.lineTo(20-arm*12,-31);ctx.lineTo(24-arm*12,-22);ctx.stroke();
+    ctx.strokeStyle='#d84a58';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(-20+arm*12,-31);ctx.lineTo(-24+arm*12,-22);ctx.moveTo(20-arm*12,-31);ctx.lineTo(24-arm*12,-22);ctx.stroke();
+    ctx.fillStyle='#dceaf4';ctx.beginPath();ctx.arc(-24+arm*12,-21,4,0,TAU);ctx.arc(24-arm*12,-21,4,0,TAU);ctx.fill();
+    if(acc&&acc!=='none')drawAccessory(acc);
+    if(i===tagged){ctx.fillStyle='#ffe7a4';ctx.shadowColor='#ffe7a4';ctx.shadowBlur=15;ctx.beginPath();ctx.arc(0,-88,4,0,TAU);ctx.fill();}
+    ctx.restore();
+  }
+  const baseDrawSkinV19=drawSkin;drawSkin=function(p,i){if((p.v18Skin||playerSkins[i])==='v1')v19DrawV1(p,i);else baseDrawSkinV19(p,i);};
+
+  let v19PendingDuo=null;
+  function v19StopEmote(i){const p=players[i];if(!p)return;p.v19Emote='';p.v19EmoteStarted=0;p.v19EmotePartner=-1;p.v19Duo=false;}
+  function v19StartEmote(i,id,paired=false,partner=-1){const p=players[i];if(!p||roundEliminated.has(i))return;p.v19Emote=id;p.v19EmoteStarted=worldTime;p.v19EmotePartner=partner;p.v19Duo=paired;}
+  function v19ShowDuoInvite(sender,id,partner){
+    let box=$('v19DuoInvite');if(!box){box=document.createElement('div');box.id='v19DuoInvite';box.className='v19-duo-invite';document.body.appendChild(box);}
+    v19PendingDuo={sender,id,partner};const emote=v19Emotes.find(x=>x.id===id);
+    box.innerHTML='<b>🤝 '+esc(emote?.name||'DUO EMOTE')+' INVITATION</b><p>PLAYER '+(sender+1)+' invited PLAYER '+(partner+1)+'. The second runner decides whether to join.</p><div><button type="button" data-v19-duo="join">JOIN</button><button type="button" data-v19-duo="decline">DECLINE</button></div>';box.style.display='block';
+  }
+  function v19PlayEmote(i,slot){
+    if(mode!=='playing')return;const id=equippedEmotes[i]?.[slot];if(!id)return;
+    const emote=v19Emotes.find(x=>x.id===id);if(!emote)return;
+    if(emote.duo){const partner=players.findIndex((p,j)=>j!==i&&j<activePlayerCount&&!botPlayers[j]&&!roundEliminated.has(j));if(partner<0){notice('A second human runner must accept this emote.');return;}v19ShowDuoInvite(i,id,partner);return;}
+    v19StartEmote(i,id,false,-1);
+  }
+  document.addEventListener('click',e=>{
+    const choice=e.target.closest('[data-v19-duo]');if(!choice||!v19PendingDuo)return;
+    const pending=v19PendingDuo,box=$('v19DuoInvite');if(box)box.style.display='none';
+    if(choice.dataset.v19Duo==='join'&&!botPlayers[pending.partner]){v19StartEmote(pending.sender,pending.id,true,pending.partner);v19StartEmote(pending.partner,pending.id,true,pending.sender);notice('DUO EMOTE STARTED');}
+    else notice('Invitation declined.');v19PendingDuo=null;
+  });
+  const v19EmoteKeys=[['q','e'],['u','o'],['7','8'],['5','6']];
+  if(controls[0]?.abilityKeys&&(controls[0].abilityKeys.guns==='q'||controls[0].abilityKeys.guns==='e')){controls[0].abilityKeys.guns='1';const saved=v19Read('tagAbilityKeys',{});saved[0]=controls[0].abilityKeys;v19Write('tagAbilityKeys',saved);}
+  window.addEventListener('keydown',e=>{
+    if(e.repeat)return;const key=e.key.toLowerCase();
+    if(mode==='playing'){
+      for(let i=0;i<Math.min(activePlayerCount,4);i++){
+        if(onlineActive&&i!==onlineLocalIndex)continue;const slot=v19EmoteKeys[i].indexOf(key);
+        if(slot>=0&&equippedEmotes[i]?.[slot]){e.preventDefault();v19PlayEmote(i,slot);return;}
+      }
+      controls.slice(0,activePlayerCount).forEach((c,i)=>{if(key===c.jump||key===c.dash)v19StopEmote(i);});
+    }
+  },true);
+  document.addEventListener('pointerdown',e=>{const pad=e.target.closest('.touch-player-pad');if(!pad)return;const n=Number((pad.querySelector('.touch-player-label')?.textContent||'P1').match(/\d+/)?.[0]||1)-1;if(e.target.closest('.touch-up,.touch-down'))v19StopEmote(n);},true);
+  const baseNormalDashV19=normalDash;normalDash=function(i){v19StopEmote(i);return baseNormalDashV19(i);};
+  const baseUseItemV19=useItem;useItem=function(i){v19StopEmote(i);const ok=baseUseItemV19(i);if(ok&&players[i])players[i].v19ItemUse=.48;return ok;};
+
+  function v19DrawHeldItem(p,i){
+    const id=equippedItems[i];if(!id||!(stock[id]>0))return;
+    const using=Math.max(0,p.v19ItemUse||0),swing=using>0?Math.sin((.48-using)*Math.PI/.48)*.9:Math.sin(worldTime*3+i)*.04;
+    if(using>0)p.v19ItemUse=Math.max(0,using);
+    ctx.save();ctx.translate(p.x+(p.face||1)*15,p.y-10);ctx.rotate(swing*(id==='shield'?-.45:.35));
+    ctx.shadowColor='#83eaff';ctx.shadowBlur=using>0?15:5;ctx.lineWidth=2;ctx.strokeStyle='#e8f7ff';ctx.fillStyle=({dash:'#ffe16a',shield:'#65c9f6',jump:'#8becaa',speed:'#c5a1ff',blink:'#6cf4e9',decoy:'#d8c4ff'}[id]||'#a9d8eb');
+    if(id==='shield'){ctx.beginPath();ctx.moveTo(0,-15);ctx.lineTo(11,-9);ctx.lineTo(8,7);ctx.lineTo(0,14);ctx.lineTo(-8,7);ctx.lineTo(-11,-9);ctx.closePath();ctx.fill();ctx.stroke();}
+    else if(id==='jump'){ctx.beginPath();ctx.moveTo(0,-15);ctx.lineTo(11,-3);ctx.lineTo(5,-3);ctx.lineTo(5,13);ctx.lineTo(-5,13);ctx.lineTo(-5,-3);ctx.lineTo(-11,-3);ctx.closePath();ctx.fill();}
+    else if(id==='dash'||id==='speed'){ctx.beginPath();ctx.moveTo(4,-15);ctx.lineTo(-9,1);ctx.lineTo(-1,1);ctx.lineTo(-5,14);ctx.lineTo(10,-4);ctx.lineTo(2,-4);ctx.closePath();ctx.fill();}
+    else if(id==='blink'){ctx.beginPath();ctx.moveTo(0,-15);ctx.lineTo(10,0);ctx.lineTo(0,15);ctx.lineTo(-10,0);ctx.closePath();ctx.fill();ctx.stroke();}
+    else{ctx.beginPath();ctx.arc(0,0,11,0,TAU);ctx.fill();ctx.fillStyle='#25334b';ctx.beginPath();ctx.arc(-4,-2,2,0,TAU);ctx.arc(4,-2,2,0,TAU);ctx.fill();}
+    ctx.strokeStyle='#d9faff';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-4,12);ctx.lineTo(2,19);ctx.stroke();ctx.restore();
+  }
+  function v19DrawEmote(p,i){
+    const id=p.v19Emote||p.v19RemoteEmote;if(!id)return;
+    const phase=(worldTime-(p.v19EmoteStarted||worldTime))*7,bob=Math.sin(phase*1.4)*2.2,wide=['distraction','defaultdance','purple','boogiedown'].includes(id),step=Math.sin(phase);
+    ctx.save();ctx.translate(p.x+(id==='griddy'?Math.sin(phase*.5)*7:Math.sin(phase*.7)*3),p.y+bob);ctx.scale(p.face||1,1);
+    ctx.strokeStyle=p.v18Color||playerColors[i];ctx.lineWidth=4;ctx.lineCap='round';ctx.lineJoin='round';
+    const armL=wide?Math.sin(phase)*.85:Math.sin(phase*1.25)*.55,armR=wide?Math.cos(phase)*.85:-Math.sin(phase*1.25)*.55;
+    ctx.beginPath();ctx.moveTo(-12,-17);ctx.lineTo(-21+Math.sin(armL)*13,-33-Math.cos(armL)*11);ctx.moveTo(12,-17);ctx.lineTo(21+Math.sin(armR)*13,-33-Math.cos(armR)*11);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(-7,11);ctx.lineTo(-10+step*5,22+Math.abs(step)*2);ctx.moveTo(7,11);ctx.lineTo(10-step*5,22+Math.abs(step)*2);ctx.stroke();
+    if(id==='headbop'||id==='distraction'){ctx.fillStyle='#fff4a8';ctx.beginPath();ctx.arc(0,-43+Math.sin(phase*1.5)*4,3,0,TAU);ctx.fill();}
+    if(id==='jamal'||id==='originalsound'||id==='hero'){ctx.strokeStyle='#e7f7ff';ctx.beginPath();ctx.arc(0,-27,23,-.3,Math.PI+.3);ctx.stroke();}
+    if(id==='gangnam'){ctx.strokeStyle='#f1d78a';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(-12,-22);ctx.lineTo(0,-31);ctx.lineTo(12,-22);ctx.stroke();}
+    if(id==='icecream'){ctx.strokeStyle='#fff0cb';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(23,-24);ctx.lineTo(28,-40);ctx.stroke();ctx.fillStyle='#ffc9d8';ctx.beginPath();ctx.arc(29,-43,6,0,TAU);ctx.fill();}
+    if(id==='subaru'){ctx.fillStyle='#8195aa';for(let n=0;n<4;n++)ctx.fillRect(-23+n*12,18-n*5,12,5);ctx.strokeStyle='#d8ebff';ctx.beginPath();ctx.moveTo(0,-20);ctx.lineTo(0,-34+Math.sin(phase)*4);ctx.stroke();}
+    if(id==='kwikflip'){ctx.translate(0,-20);ctx.rotate(Math.sin(phase*.5)*.32);}
+    if(id==='dapup'||id==='boogiedown'){ctx.strokeStyle='#fff1b8';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(15,-29);ctx.lineTo(25,-34+Math.sin(phase)*3);ctx.stroke();}
+    ctx.restore();
+  }
+  const baseDrawPlayerV19=drawPlayer;
+  drawPlayer=function(p,i){
+    baseDrawPlayerV19(p,i);
+    if(p.dashTimer>0){const col=(p.v18Skin||playerSkins[i])==='v1'?'#5ff3ff':(p.v18Color||playerColors[i]);ctx.save();ctx.globalAlpha=Math.min(.65,p.dashTimer*1.8);ctx.strokeStyle=col;ctx.lineWidth=3;ctx.shadowColor=col;ctx.shadowBlur=13;for(let n=0;n<3;n++){ctx.beginPath();ctx.moveTo(p.x-(p.face||1)*(22+n*13),p.y-10+n*8);ctx.lineTo(p.x-(p.face||1)*(58+n*21),p.y-10+n*8);ctx.stroke();}ctx.restore();}
+    v19DrawHeldItem(p,i);v19DrawEmote(p,i);
+  };
+  const baseMovePlayerV19=movePlayer;
+  movePlayer=function(p,dt){
+    const i=p?.id;
+    if(Number.isInteger(i)&&controls[i]){
+      if(keysDown.has(controls[i].jump)||keysDown.has(controls[i].dash))v19StopEmote(i);
+      p.v19ItemUse=Math.max(0,(p.v19ItemUse||0)-dt);p.v19PadCooldown=Math.max(0,(p.v19PadCooldown||0)-dt);
+    }
+    // Pads are launch triggers, never collision surfaces.
+    const savedPads=pads;pads=[];
+    try{baseMovePlayerV19(p,dt);}finally{pads=savedPads;}
+    if(!p||!Number.isInteger(i))return;
+    if((p.v19PadCooldown||0)<=0){
+      const pad=savedPads.find(q=>p.x+HALF_W>q.x&&p.x-HALF_W<q.x+q.w&&p.y+HALF_H>=q.y-12&&p.y-HALF_H<=q.y+q.h+18);
+      if(pad){p.vy=-Math.max(850,Math.abs(p.vy)+640);p.onGround=false;p.groundId=null;p.v19PadCooldown=.32;pad.flash=1;p.dashGlow=1;shake=Math.max(shake,2.5);burst(p.x,pad.y,'#e1fff5',18,230);burst(p.x,pad.y,'#8be9ff',12,180);}
+    }
+  };
+
+  // Killer Bot speed and difficulty are independently adjustable.
+  const killerPanelV19=$('v18KillerSettings');
+  if(killerPanelV19&&!$('v19KillerDifficulty')){
+    const row=document.createElement('div');row.className='v19-killer-options';
+    row.innerHTML='<label>BOT DIFFICULTY <select id="v19KillerDifficulty"><option value="easy">EASY</option><option value="medium">MEDIUM</option><option value="hard">HARD</option><option value="extreme">EXTREME</option></select></label><label>BOT SPEED <b id="v19KillerSpeedValue">'+killerSpeedPercent+'%</b><input id="v19KillerSpeed" type="range" min="60" max="160" step="5" value="'+killerSpeedPercent+'"></label>';
+    killerPanelV19.appendChild(row);$('v19KillerDifficulty').value=killerDifficulty;
+    $('v19KillerDifficulty').addEventListener('change',e=>{killerDifficulty=e.target.value;v19Persist();});
+    $('v19KillerSpeed').addEventListener('input',e=>{killerSpeedPercent=Number(e.target.value);$('v19KillerSpeedValue').textContent=killerSpeedPercent+'%';v19Persist();});
+  }
+  const baseUpdateKillerBotsV19=updateKillerBots;
+  updateKillerBots=function(dt){
+    const diff={easy:.68,medium:1,hard:1.27,extreme:1.55}[killerDifficulty]||1;
+    killerBots.forEach(bot=>{if(!Number.isFinite(bot.v19BaseSpeed))bot.v19BaseSpeed=bot.speed;bot.speed=bot.v19BaseSpeed*diff*killerSpeedPercent/100;});
+    return baseUpdateKillerBotsV19(dt);
+  };
+
+  function v19ApplyDetail(){document.body.dataset.tagDetail=detailMode;document.body.classList.toggle('tag-low-detail',detailMode==='low');const select=$('v19DetailMode');if(select)select.value=detailMode;}
+  const settingsPanelV19=$('settingsScreen')?.querySelector('.full-panel');
+  if(settingsPanelV19&&!$('v19DetailSetting')){
+    const row=document.createElement('div');row.id='v19DetailSetting';row.className='setting-row v19-detail-setting';
+    row.innerHTML='<label for="v19DetailMode">Graphics detail <b>MEDIUM DEFAULT</b></label><select id="v19DetailMode"><option value="low">LOW · Performance first</option><option value="medium">MEDIUM · Balanced (default)</option><option value="high">HIGH · Full atmosphere</option></select><small>Changes ambient effects, decorative particles and presentation detail. Gameplay physics stay the same.</small>';
+    const actions=settingsPanelV19.querySelector('.result-actions');if(actions)settingsPanelV19.insertBefore(row,actions);else settingsPanelV19.appendChild(row);
+    $('v19DetailMode').value=detailMode;$('v19DetailMode').addEventListener('change',e=>{detailMode=e.target.value;v19Persist();v19ApplyDetail();});
+  }
+  v19ApplyDetail();
+  function v19DrawRealmAtmosphere(){
+    if(detailMode==='low')return;const id=mapId||'forge',t=worldTime,glow=maps[id]?.glow||'#9bdcff',count=detailMode==='high'?28:12;
+    ctx.save();ctx.globalAlpha=detailMode==='high'?.42:.25;
+    for(let i=0;i<count;i++){
+      const x=(i*149.7+t*(id==='forge'?22:7)*(i%2?1:-.35)+width*2)%(width+20)-10;
+      const y=(i*83.3+Math.sin(t*.35+i*1.7)*height*.12+height*.11)%(height*.82);
+      ctx.strokeStyle=glow;ctx.fillStyle=glow;ctx.lineWidth=1.2;
+      if(['tidal','tidal-observatory','drowned'].includes(id)){ctx.beginPath();ctx.arc(x,y,2+(i%5),0,TAU);ctx.stroke();ctx.beginPath();ctx.arc(x-2,y-3,1,0,TAU);ctx.stroke();}
+      else if(['ice','frost','winter'].includes(id)){ctx.beginPath();ctx.moveTo(x-4,y);ctx.lineTo(x+4,y);ctx.moveTo(x,y-4);ctx.lineTo(x,y+4);ctx.moveTo(x-3,y-3);ctx.lineTo(x+3,y+3);ctx.stroke();}
+      else if(['forge','ember','hell'].includes(id)){ctx.beginPath();ctx.moveTo(x,y+5);ctx.lineTo(x+Math.sin(t*2+i)*2,y-5-i%4);ctx.stroke();}
+      else if(['dojo','verdant','grass'].includes(id)){ctx.save();ctx.translate(x,y);ctx.rotate(Math.sin(t+i)*.8);ctx.beginPath();ctx.ellipse(0,0,3,7,0,0,TAU);ctx.fill();ctx.restore();}
+      else if(['city','mall','carnival','stadium','bombonera','monumental'].includes(id)){ctx.save();ctx.translate(x,y);ctx.rotate(i*.6);ctx.fillRect(-2,-3,4,6);ctx.restore();}
+      else if(['sky','cloudline'].includes(id)){ctx.beginPath();ctx.arc(x,y,2+(i%3),0,TAU);ctx.arc(x+5,y-2,3,0,TAU);ctx.fill();}
+      else{ctx.beginPath();ctx.arc(x,y,1.2+(i%3)*.5,0,TAU);ctx.fill();}
+    }
+    if(detailMode==='high'){ctx.globalAlpha=.10;const beam=ctx.createLinearGradient(0,0,width,height);beam.addColorStop(0,glow+'00');beam.addColorStop(.5,glow);beam.addColorStop(1,glow+'00');ctx.fillStyle=beam;ctx.fillRect(0,0,width,height);}
+    ctx.restore();
+  }
+  const baseDrawBackgroundV19=drawBackground;drawBackground=function(){baseDrawBackgroundV19();v19DrawRealmAtmosphere();};
+
+  function v19RefreshProfile(){
+    const panel=$('profileScreen')?.querySelector('.profile-panel'),idx=onlineActive?onlineLocalIndex:userPlayerIndex,title=$('v19ProfileTitle');
+    if(panel)panel.dataset.v19Card=equippedProfileCards[idx]||'default';
+    if(title)title.textContent=playerTitles[idx]||'NO TITLE EQUIPPED';
+    const select=$('v19ProfileCardSelect');if(select)select.innerHTML=v19CardOptions(equippedProfileCards[userPlayerIndex]);
+  }
+  const profileIdentityV19=$('profileScreen')?.querySelector('.profile-identity');
+  if(profileIdentityV19){
+    if(!$('v19ProfileTitle')){const title=document.createElement('div');title.id='v19ProfileTitle';title.className='v19-profile-title';title.textContent='NO TITLE EQUIPPED';profileIdentityV19.appendChild(title);}
+    if(!$('v19ProfileCardSelect')){
+      const wrap=document.createElement('label');wrap.className='v19-profile-card-equip';wrap.innerHTML='PROFILE CARD <select id="v19ProfileCardSelect">'+v19CardOptions(equippedProfileCards[userPlayerIndex])+'</select>';
+      profileIdentityV19.appendChild(wrap);$('v19ProfileCardSelect').addEventListener('change',e=>{equippedProfileCards[userPlayerIndex]=e.target.value||'';save();v19RefreshProfile();});
+    }
+  }
+  const baseActiveScreenV19=activeScreen;activeScreen=function(name){baseActiveScreenV19(name);if(name==='profile')v19RefreshProfile();};
+  function v19WatchEloChampion(){
+    const elo=$('eloLeaderboard');if(!elo)return;const rows=Array.from(elo.querySelectorAll('.leaderboard-entry'));
+    rows.forEach((row,i)=>{
+      if(i!==0)row.querySelectorAll('.v19-champion-label').forEach(n=>n.remove());
+      row.classList.toggle('v19-unbeaten-row',i===0&&rows.length>0);
+      if(i===0&&rows.length&&!row.querySelector('.v19-champion-label')){const badge=document.createElement('span');badge.className='v19-champion-label';badge.textContent='[Unbeaten champion]';row.appendChild(badge);}
+    });
+    const top=rows[0]?.querySelector('b')?.textContent||'',own=$('onlineProfileName')?.textContent||'';
+    const champion=!!own&&own!=='NOT CONNECTED'&&top.toLowerCase().includes(own.toLowerCase()),title=$('v19ProfileTitle');
+    if(title)title.textContent=champion?'[Unbeaten champion]':(playerTitles[userPlayerIndex]||'NO TITLE EQUIPPED');
+  }
+  const eloTarget=$('eloLeaderboard');
+  if(eloTarget&&typeof MutationObserver!=='undefined'){const observer=new MutationObserver(v19WatchEloChampion);observer.observe(eloTarget,{childList:true,subtree:true,characterData:true});v19WatchEloChampion();}
+  window.addEventListener('tag-online-result',()=>setTimeout(v19WatchEloChampion,80));
+
+  const changelogV19=$('changelogTimeline');
+  if(changelogV19){
+    changelogV19.insertAdjacentHTML('afterbegin','<article class="changelog-entry current" id="v19ChangelogEntry"><h3>V19 · THE LIVING LEGENDS UPDATE</h3><p>Clickable historical HTML builds with online locked in past versions; V1-inspired combat-machine skin and full model previews; fourteen purchasable emotes with two-slot inventories and consent-based duo dances; four profile-card designs; human-player victory rewards; dynamic Unbeaten Champion ELO badge; Killer Bot difficulty and speed controls; item-in-hand animations; non-solid launch pads; low, medium and high graphics detail; richer realm atmospheres, menu decoration and smoother transitions.</p></article>');
+    changelogV19.querySelectorAll('.changelog-entry').forEach(entry=>{
+      const heading=entry.querySelector('h3')?.textContent||'',found=heading.match(/(17\.5V|V\d+)/i),version=found?found[1].toUpperCase():'V19';
+      entry.dataset.v19Version=version;entry.tabIndex=0;entry.setAttribute('role','link');
+      entry.addEventListener('click',e=>{if(e.target.closest('a,button,select,input'))return;const destination=version==='V19'?'./index.html':'./history.html?version='+encodeURIComponent(version);window.open(destination,'_blank','noopener');});
+      entry.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();entry.click();}});
+    });
+    const h=$('changelogScreen')?.querySelector('h2');if(h)h.textContent='TAG! Update Log · V1–V19';
+    const p=$('changelogScreen')?.querySelector('.full-panel > p');if(p)p.textContent='Every milestone opens its historical HTML build. Older releases are archived as offline editions; only the current V19 release has online multiplayer enabled.';
+  }
+
+  const v19ScriptStyle=document.createElement('style');v19ScriptStyle.id='v19PresentationStyles';
+  v19ScriptStyle.textContent=[
+    '.v19-you-picker,.v19-ready-cosmetics,.v19-killer-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:10px;padding:13px;margin:10px 0;border:1px solid #7ee5e04d;border-radius:14px;background:linear-gradient(130deg,#112c41,#211b39)}',
+    '.v19-you-picker{align-items:center}.v19-you-picker b,.v19-ready-cosmetics>b{display:block;color:#a9ffec;font-size:11px;letter-spacing:.13em}.v19-you-picker small,.v19-ready-cosmetics small{display:block;color:#afc6da;font-size:9px;line-height:1.5;margin-top:4px}',
+    '.v19-you-picker label,.v19-ready-cosmetics label,.v19-killer-options label{display:grid;gap:5px;color:#d9eaf7;font-size:9px;font-weight:950;letter-spacing:.08em}.v19-you-picker select,.v19-ready-cosmetics select,.v19-killer-options select,.v19-killer-options input,.v19-profile-card-equip select{width:100%;min-width:0;background:#101d31;color:#eef8ff;border:1px solid #8cded466;border-radius:8px;padding:8px}',
+    '.v19-ready-cosmetics{grid-template-columns:repeat(2,minmax(0,1fr));margin-top:9px;padding:10px}.v19-ready-cosmetics>b,.v19-ready-cosmetics>small{grid-column:1/-1}.v19-killer-options{margin-top:10px}',
+    '.v19-shop-intro{padding:13px 15px;border:1px solid #91d8ec44;border-radius:13px;background:linear-gradient(120deg,#162b45,#302042);text-align:left}.v19-shop-intro b{display:block;color:#b7fff0;font-size:12px;letter-spacing:.12em}.v19-shop-intro span{display:block;color:#c0cee0;font-size:10px;line-height:1.6;margin-top:5px}',
+    '.v19-emote-grid,.v19-card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:14px 0}.v19-collectible,.v19-profile-sample{display:flex;flex-direction:column;gap:8px;padding:14px;border-radius:16px;border:1px solid #8dbbe64d;background:linear-gradient(145deg,#172d45,#1f1d38);box-shadow:0 10px 28px #0004;min-width:0}',
+    '.v19-collectible>b,.v19-profile-sample>b{font-size:12px;color:#f2f7ff}.v19-collectible small,.v19-profile-sample small{font-size:10px;line-height:1.5;color:#b8c9dc;min-height:42px}.v19-collectible button,.v19-profile-sample button{border:1px solid #83e6d577;background:linear-gradient(120deg,#245b69,#344e80);border-radius:9px;color:#f5ffff;padding:9px;font-size:10px;font-weight:950}.v19-collectible button:disabled,.v19-profile-sample button:disabled{opacity:.42;cursor:default}',
+    '.v19-emote-art{display:grid;place-items:center;height:65px;font-size:39px;border-radius:12px;background:radial-gradient(circle at 50% 35%,#49658b,#19263e 70%)}.v19-owned-list{display:grid;gap:8px;margin:12px 0}.v19-owned-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 13px;border:1px solid #8eb3dc33;border-radius:10px;background:#17263b}.v19-owned-row span{font-size:11px;font-weight:900;color:#eff7ff}.v19-owned-row small{flex:1;color:#aec2d6;font-size:9px}.v19-owned-row b{font-size:9px;color:#9affdf}',
+    '.v19-profile-sample-art{height:104px;display:flex;flex-direction:column;justify-content:space-between;padding:12px;border:1px solid #ffffff44;border-radius:12px;color:#fff;font-size:11px;font-weight:1000;letter-spacing:.13em}.v19-profile-sample.angelic .v19-profile-sample-art{background:radial-gradient(circle at 50% 10%,#fff9d9,#a7c6e0 45%,#4b668c)}.v19-profile-sample.space .v19-profile-sample-art{background:radial-gradient(circle at 65% 20%,#9a84ff,#25234f 48%,#0b132a)}.v19-profile-sample.grass .v19-profile-sample-art{background:radial-gradient(circle at 20% 5%,#baff91,#397a52 45%,#163a34)}.v19-profile-sample.hell .v19-profile-sample-art{background:radial-gradient(circle at 50% 20%,#ff9a55,#9a252b 45%,#241522)}',
+    '.v19-skin-preview{display:block;width:100%;height:118px;object-fit:contain;border:1px solid #91b9d833;border-radius:10px;background:#111a2a}.v19-model-caption{font-size:8px!important;min-height:0!important;letter-spacing:.12em;color:#91d8ee!important}',
+    '.v19-profile-title{display:inline-flex;margin:9px 0;padding:7px 11px;border:1px solid #efd58e66;border-radius:99px;background:linear-gradient(120deg,#493b27,#28243b);color:#ffe4a1;font-size:9px;font-weight:1000;letter-spacing:.1em}.v19-profile-card-equip{display:grid;gap:5px;margin-top:10px;color:#b7e9ee;font-size:9px;font-weight:950;letter-spacing:.1em}',
+    '#profileScreen .profile-panel[data-v19-card="angelic"]{background:radial-gradient(circle at 80% 5%,#fff7d555,transparent 38%),linear-gradient(145deg,#354b6b,#1c2d4c)!important}#profileScreen .profile-panel[data-v19-card="space"]{background:radial-gradient(circle at 80% 5%,#9c8fff66,transparent 40%),linear-gradient(145deg,#29264e,#11172f)!important}#profileScreen .profile-panel[data-v19-card="grass"]{background:radial-gradient(circle at 80% 5%,#aaff9e55,transparent 40%),linear-gradient(145deg,#315c47,#172d2c)!important}#profileScreen .profile-panel[data-v19-card="hell"]{background:radial-gradient(circle at 80% 5%,#ff663b55,transparent 40%),linear-gradient(145deg,#522d37,#211a2b)!important}',
+    '.v19-champion-label{display:inline-block;margin-left:9px;padding:5px 8px;border:1px solid #f3d78b77;border-radius:99px;background:linear-gradient(120deg,#594426,#312c42);color:#ffe6a6;font-size:9px;font-weight:1000;letter-spacing:.04em}.v19-unbeaten-row{border-color:#e9cc83aa!important;box-shadow:0 0 22px #d6aa4d22}',
+    '.v19-duo-invite{display:none;position:fixed;z-index:120;left:50%;top:50%;transform:translate(-50%,-50%);width:min(390px,calc(100vw - 30px));padding:18px;border:1px solid #b8e8ff88;border-radius:18px;background:linear-gradient(145deg,#1d3656,#302145);color:#effaff;box-shadow:0 22px 70px #000b;text-align:center}.v19-duo-invite>b{color:#ffe7a7;letter-spacing:.1em;font-size:12px}.v19-duo-invite p{font-size:11px;line-height:1.55;color:#c6d7e8}.v19-duo-invite div{display:flex;gap:10px}.v19-duo-invite button{flex:1;padding:10px;border:1px solid #9be6dc66;border-radius:10px;background:#275b68;color:white;font-weight:950}',
+    '.changelog-entry{cursor:pointer;transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease}.changelog-entry:hover,.changelog-entry:focus-visible{transform:translateY(-2px);border-color:#a9ede2;box-shadow:0 12px 26px #0005;outline:none}',
+    '.screen .full-panel{isolation:isolate;position:relative;box-shadow:0 20px 70px #0008,0 0 0 1px #a5d6eb19;backdrop-filter:blur(14px)}.screen .full-panel:before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;border-radius:inherit;background:radial-gradient(circle at 4% 5%,#70dbdf15,transparent 23%),radial-gradient(circle at 96% 95%,#a981ff18,transparent 27%);opacity:.95}',
+    '#menuScreen .hero h1{text-shadow:0 0 20px #82eaff33,0 8px 35px #0009}#menuScreen .setup{box-shadow:0 18px 55px #0008,0 0 35px #71d7e014;border-color:#9fe9e255}',
+    '.screen .primary-small,.screen .secondary-btn,.v18-shop-card button{transition:transform .18s ease,filter .18s ease,box-shadow .18s ease}.screen .primary-small:hover,.screen .secondary-btn:hover,.v18-shop-card button:not(:disabled):hover{transform:translateY(-2px);filter:brightness(1.13);box-shadow:0 8px 24px #0005}#world{backface-visibility:hidden;transform:translateZ(0)}',
+    'body.tag-low-detail .screen .full-panel{backdrop-filter:none;box-shadow:0 8px 22px #0005}body.tag-low-detail .changelog-entry,body.tag-low-detail .screen .primary-small,body.tag-low-detail .screen .secondary-btn{transition:none}',
+    '@media(max-width:600px){.v19-ready-cosmetics{grid-template-columns:1fr}.v19-you-picker{grid-template-columns:1fr}.v19-owned-row{align-items:flex-start;flex-wrap:wrap}.v19-champion-label{margin:5px 0 0}}@media(prefers-reduced-motion:reduce){.changelog-entry,.screen .primary-small,.screen .secondary-btn,.v18-shop-card button{transition:none!important;animation:none!important}}'
+  ].join('\n');
+  document.head.appendChild(v19ScriptStyle);
+  v19WatchEloChampion();v19RefreshProfile();
+  const v19Title=document.querySelector('title');if(v19Title)v19Title.textContent='TAG! — Zyron Studios V19 · Living Legends';
+  const v19Hero=document.querySelector('#menuScreen .hero-copy');if(v19Hero)v19Hero.textContent='Nineteen releases. Fourteen dances. One champion. Your realm is alive.';
+  if($('changelogBtn'))$('changelogBtn').textContent='✦ WHAT’S NEW · V19';
+
 })();
 
 })();
@@ -3576,8 +3961,9 @@ async function joinRoom(){
  function encode(obj){return new TextEncoder().encode(JSON.stringify(obj));}
  async function sendState(){if(!match||!socket||!window.TAGOnlineHooks?.isOnline())return;const me=window.TAGOnlineHooks.getLocalState();if(me)try{await socket.sendMatchState(match.match_id,0,JSON.stringify({player:me}));}catch(e){}}
  async function joinGlobalChat(){if(!connected)return;try{globalChannel=await socket.joinChat('tag-global-lobby',1,false,false);log('SYSTEM','Joined the TAG! global lobby chat.');}catch(e){status('Global chat unavailable: '+e.message,'error');}}
- async function sendMatchChat(){const input=$('matchChatInput'),message=input.value.trim(),target=$('matchChatTarget')?.value||'match';if(!message)return;if(['local','bots','munci'].includes(target)){log(username||'YOU',message);const replies={local:['Nice try.','I saw that coming.','Run it back!'],bots:['Calculating escape route...','Beep boop. You cannot catch my pathfinding.','I am learning your movement patterns.'],munci:['...I CAN HEAR YOU RUNNING.','YOUR LITTLE LEGS WILL NOT SAVE YOU.','RUN FASTER. I AM ALREADY THERE.','THE RED EYES ARE WATCHING.']};setTimeout(()=>log(target==='munci'?'ANGRY MUNCI':target==='bots'?'BOT':'LOCAL PLAYER',replies[target][Math.floor(Math.random()*replies[target].length)]),450);input.value='';return;}if(!chatChannel){status('You are not in an online match.','error');return;}try{await socket.writeChatMessage(chatChannel.id,{message});input.value='';}catch(e){status('Match chat failed: '+e.message,'error');}}
- async function sendChat(){const input=$('onlineChatInput'),message=input.value.trim(),target=$('onlineChatTarget')?.value||'match';if(!message)return;if(['local','bots','munci'].includes(target)){log(username||'YOU',message);const replies={local:['Nice try.','I saw that coming.','Run it back!'],bots:['Calculating escape route...','Beep boop. You cannot catch my pathfinding.','I am learning your movement patterns.'],munci:['...I CAN HEAR YOU RUNNING.','YOUR LITTLE LEGS WILL NOT SAVE YOU.','RUN FASTER. I AM ALREADY THERE.','THE RED EYES ARE WATCHING.']};setTimeout(()=>log(target==='munci'?'ANGRY MUNCI':target==='bots'?'BOT':'LOCAL PLAYER',replies[target][Math.floor(Math.random()*replies[target].length)]),450);input.value='';return;}const channel=target==='global'?globalChannel:chatChannel;if(!channel){status(target==='global'?'Join the global chat first.':'You are not in an online match.','error');return;}try{await socket.writeChatMessage(channel.id,{message});input.value='';}catch(e){status('Chat send failed: '+e.message,'error');}}
+ function v19ContextualBotReply(){const me=window.TAGOnlineHooks?.getLocalState?.()||{};const tx=$('timer')?.textContent||'';const sec=Number((tx.match(/\d+/)||['0'])[0]);const speed=Math.hypot(Number(me.vx)||0,Number(me.vy)||0);const opts=[];if(sec>0&&sec<=10)opts.push('Clock is nearly out. I am changing my route.');if(speed>520)opts.push('That dash was quick. Recalculating the intercept.');if(Number(me.y)<180)opts.push('You took the high route. I am planning an upper-platform intercept.');if(me.invulnerable)opts.push('Temporary protection detected. I will wait for the opening.');opts.push('I saw that jump. Next time I will cut off the landing.','Path update: flank first, then close the gap.','You changed direction. I am predicting the next turn.');return opts[Math.floor(Math.random()*opts.length)];}
+ async function sendMatchChat(){const input=$('matchChatInput'),message=input.value.trim(),target=$('matchChatTarget')?.value||'match';if(!message)return;if(['local','bots','munci'].includes(target)){log(username||'YOU',message);const replies={local:['Nice try.','I saw that coming.','Run it back!'],bots:['Calculating escape route...','Beep boop. You cannot catch my pathfinding.','I am learning your movement patterns.'],munci:['...I CAN HEAR YOU RUNNING.','YOUR LITTLE LEGS WILL NOT SAVE YOU.','RUN FASTER. I AM ALREADY THERE.','THE RED EYES ARE WATCHING.']};setTimeout(()=>log(target==='munci'?'ANGRY MUNCI':target==='bots'?'BOT':'LOCAL PLAYER',(target==='bots'?v19ContextualBotReply():replies[target][Math.floor(Math.random()*replies[target].length)])),450);input.value='';return;}if(!chatChannel){status('You are not in an online match.','error');return;}try{await socket.writeChatMessage(chatChannel.id,{message});input.value='';}catch(e){status('Match chat failed: '+e.message,'error');}}
+ async function sendChat(){const input=$('onlineChatInput'),message=input.value.trim(),target=$('onlineChatTarget')?.value||'match';if(!message)return;if(['local','bots','munci'].includes(target)){log(username||'YOU',message);const replies={local:['Nice try.','I saw that coming.','Run it back!'],bots:['Calculating escape route...','Beep boop. You cannot catch my pathfinding.','I am learning your movement patterns.'],munci:['...I CAN HEAR YOU RUNNING.','YOUR LITTLE LEGS WILL NOT SAVE YOU.','RUN FASTER. I AM ALREADY THERE.','THE RED EYES ARE WATCHING.']};setTimeout(()=>log(target==='munci'?'ANGRY MUNCI':target==='bots'?'BOT':'LOCAL PLAYER',(target==='bots'?v19ContextualBotReply():replies[target][Math.floor(Math.random()*replies[target].length)])),450);input.value='';return;}const channel=target==='global'?globalChannel:chatChannel;if(!channel){status(target==='global'?'Join the global chat first.':'You are not in an online match.','error');return;}try{await socket.writeChatMessage(channel.id,{message});input.value='';}catch(e){status('Chat send failed: '+e.message,'error');}}
  function leaderboardDisplayName(username){
     const raw=String(username||'RUNNER').trim();
     const synthetic=/^(TAG\b|TAG[-_ ]|smoke\b|quick\b|public\b|tournament\b|test\b|bot\b)/i.test(raw);
