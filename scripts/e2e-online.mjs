@@ -390,8 +390,12 @@ try {
   await first.page.locator('[data-v18-tab="titles"]').click();
   await first.page.locator('[data-v18-buy="title"][data-v18-id="Unbeatable"]').click();
   await first.page.locator('[data-v18-tab="emotes"]').click();
-  assert((await first.page.locator("#v18CosmeticBody").innerText()).includes("EMOTES COMING SOON"),
-    "V18 emotes tab did not show its Coming Soon state.");
+  const emoteStore = await first.page.evaluate(() => ({
+    heading: document.querySelector("#v18CosmeticBody .v19-shop-intro b")?.textContent?.trim(),
+    emoteCount: document.querySelectorAll("#v18CosmeticBody .v19-collectible").length
+  }));
+  assert(emoteStore.heading === "EMOTE STORE" && emoteStore.emoteCount === 14,
+    "V19 emote store must display all 14 emotes: " + JSON.stringify(emoteStore));
   const v18Diagnostics = await first.page.evaluate(() => window.TAGV18Diagnostics?.run?.());
   assert(v18Diagnostics?.passed === v18Diagnostics?.total && v18Diagnostics.total >= 6,
     "V18 catalog/economy diagnostics failed: " + JSON.stringify(v18Diagnostics));
@@ -424,7 +428,7 @@ try {
   await first.page.locator("#backSettingsBtn").click();
   await first.page.evaluate(() => window.TAGAppScreens?.show("online"));
   await first.page.locator("#onlineName").waitFor({ state: "visible", timeout });
-  results.push("PASS: V18 Item Shop, three-use item stack cap, skin/accessory/title purchases, and emotes Coming Soon tab");
+  results.push("PASS: V18 Item Shop, three-use item stack cap, skin/accessory/title purchases, and V19 14-emote store");
 
   // V15 layout regression: built-in arenas must remain distinct and collision-free.
   const arenaLayouts = await first.page.evaluate(() => window.TAGOnlineHooks?.getMapLayoutDiagnostics?.() || []);
