@@ -20,7 +20,7 @@ async function waitForPublishedClient() {
           html.includes("V15 · SMART BOTS & ARENA ARCHITECTURE") &&
           html.includes("V17 · SOLID STRUCTURES & IN-MATCH FRIENDS") &&
           html.includes("V16 · MOBILE PLAY, SOLID ARENAS & FRIEND MAILBOX") &&
-          html.includes("TAG! — Zyron Studios v17 Online") &&
+          html.includes("TAG! — Zyron Studios v18 PEAK!") && html.includes("TAG! V18 PEAK") && html.includes("GLITCHY LANDSCAPES") &&
           html.includes("function customPlatformGeometry") &&
           html.includes("getStructureStates(){return platforms.filter(p=>p.kind==='structure')") &&
           html.includes('id="matchMailboxRefreshBtn"') &&
@@ -158,9 +158,9 @@ try {
     return root && root.style.display === "grid" && root.querySelectorAll(".touch-player-pad").length === 3;
   }, null, { timeout: 20000 });
   const phonePads = await phonePage.evaluate(() => [...document.querySelectorAll("#mobileControls .touch-player-pad")]
-    .map(pad => pad.querySelectorAll(".touch-key").length));
-  assert(phonePads.length === 3 && phonePads.every(count => count === 4),
-    "V16 phone controls did not render four directions for each of the three human players. " + JSON.stringify(phonePads));
+    .map(pad => ({ count: pad.querySelectorAll(".touch-key").length, item: !!pad.querySelector(".touch-item") })));
+  assert(phonePads.length === 3 && phonePads.every(pad => pad.count === 5 && pad.item),
+    "V18 phone controls did not render four directions plus an ITEM button for each of the three human players. " + JSON.stringify(phonePads));
   const spawnStates = await phonePage.evaluate(() => window.TAGOnlineHooks?.getPlayerStates?.() || []);
   assert(spawnStates.length === 4 && Math.max(...spawnStates.map(p => p.x)) - Math.min(...spawnStates.map(p => p.x)) <= 0.20,
     "V16 round-start spawn positions were not clustered closely together.");
@@ -302,12 +302,14 @@ try {
     viewport: window.innerWidth,
     document: document.documentElement.scrollWidth,
     body: document.body.scrollWidth,
-    controls: [...document.querySelectorAll("#mobileControls .touch-player-pad")].map(p => p.querySelectorAll(".touch-key").length)
+    controls: [...document.querySelectorAll("#mobileControls .touch-player-pad")].map(p => ({
+      count: p.querySelectorAll(".touch-key").length, item: !!p.querySelector(".touch-item")
+    }))
   }));
   assert(tabletLayout.document <= tabletLayout.viewport + 1 && tabletLayout.body <= tabletLayout.viewport + 1 &&
-    tabletLayout.controls.length === 1 && tabletLayout.controls[0] === 4,
-    "V16 tablet layout overflowed or rendered the wrong human touch controls: " + JSON.stringify(tabletLayout));
-  results.push("PASS: V17 tablet viewport fits without horizontal overflow and renders four buttons for the only human player");
+    tabletLayout.controls.length === 1 && tabletLayout.controls[0].count === 5 && tabletLayout.controls[0].item,
+    "V18 tablet layout overflowed or failed to render four directions plus ITEM: " + JSON.stringify(tabletLayout));
+  results.push("PASS: V18 tablet viewport fits without horizontal overflow and includes four directions plus ITEM");
 
   // Online input on a phone should expose only the local human's control pad.
   await phonePage.evaluate(() => window.TAGOnlineHooks.startMatch({
@@ -327,23 +329,41 @@ try {
   assert(onlinePad === "YOU", "V17 online phone controls were not restricted to the local player.");
   results.push("PASS: V17 online phone controls are restricted to the local human player");
 
-  // The title-menu cosmetic buttons must navigate to inert Coming Soon pages.
+  // V18 shops, wallet, inventory limits, title/accessory unlocks, and emotes placeholder.
+  await first.page.evaluate(() => { localStorage.setItem("tagV18Tagpoints", "8"); location.reload(); });
+  await first.page.locator("#onlineSoonBtn").waitFor({ state: "visible", timeout });
+  await first.page.locator("#onlineSoonBtn").click();
+  await first.page.locator("#onlineName").waitFor({ state: "visible", timeout });
   await first.page.evaluate(() => window.TAGAppScreens?.show("menu"));
   await first.page.locator("#itemShopBtn").click();
   assert(await first.page.locator("#itemShopScreen").evaluate(el => el.classList.contains("show")),
-    "Item Shop did not open its Coming Soon screen.");
-  assert((await first.page.locator("#itemShopScreen").innerText()).includes("ITEMS COMING SOON"),
-    "Item Shop did not display its Coming Soon message.");
+    "V18 Item Shop did not open.");
+  assert((await first.page.locator("#itemShopScreen").innerText()).includes("DASH CHARGE"),
+    "V18 Item Shop did not display its purchasable inventory.");
+  for (let n = 0; n < 3; n++) await first.page.locator('[data-v18-buy="item"][data-v18-id="dash"]').click();
+  const itemInventory = await first.page.evaluate(() => window.TAGV18Diagnostics?.getInventory?.());
+  assert(itemInventory?.items?.dash === 3, "V18 item stock did not purchase / stack to exactly three uses: " + JSON.stringify(itemInventory));
+  assert(await first.page.locator('[data-v18-buy="item"][data-v18-id="dash"]').isDisabled(),
+    "V18 item stack limit did not disable a fourth purchase.");
   await first.page.locator("#backItemShopBtn").click();
   await first.page.locator("#avatarsBtn").click();
-  assert(await first.page.locator("#avatarsScreen").evaluate(el => el.classList.contains("show")),
-    "Avatars / Skins did not open its Coming Soon screen.");
-  assert((await first.page.locator("#avatarsScreen").innerText()).includes("AVATARS / SKINS COMING SOON"),
-    "Avatars / Skins did not display its Coming Soon message.");
+  assert((await first.page.locator("#avatarsScreen").innerText()).includes("GANG BEASTS"),
+    "V18 skin shop did not display the Gang Beasts skin.");
+  await first.page.locator('[data-v18-buy="skin"][data-v18-id="gangbeast"]').click();
+  await first.page.locator('[data-v18-tab="accessories"]').click();
+  await first.page.locator('[data-v18-buy="accessory"][data-v18-id="fedora"]').click();
+  await first.page.locator('[data-v18-tab="titles"]').click();
+  await first.page.locator('[data-v18-buy="title"][data-v18-id="Unbeatable"]').click();
+  await first.page.locator('[data-v18-tab="emotes"]').click();
+  assert((await first.page.locator("#v18CosmeticBody").innerText()).includes("EMOTES COMING SOON"),
+    "V18 emotes tab did not show its Coming Soon state.");
+  const v18Diagnostics = await first.page.evaluate(() => window.TAGV18Diagnostics?.run?.());
+  assert(v18Diagnostics?.passed === v18Diagnostics?.total && v18Diagnostics.total >= 6,
+    "V18 catalog/economy diagnostics failed: " + JSON.stringify(v18Diagnostics));
   await first.page.locator("#backAvatarsBtn").click();
   await first.page.evaluate(() => window.TAGAppScreens?.show("online"));
   await first.page.locator("#onlineName").waitFor({ state: "visible", timeout });
-  results.push("PASS: Item Shop and Avatars open Coming Soon pages with working back buttons");
+  results.push("PASS: V18 Item Shop, three-use item stack cap, skin/accessory/title purchases, and emotes Coming Soon tab");
 
   // V15 layout regression: built-in arenas must remain distinct and collision-free.
   const arenaLayouts = await first.page.evaluate(() => window.TAGOnlineHooks?.getMapLayoutDiagnostics?.() || []);
