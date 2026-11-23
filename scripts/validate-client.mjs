@@ -91,6 +91,8 @@ if (
   source.includes("V18 · STRUCTURE UNDERSIDE COLLISION") ||
   !source.includes("TAG! V18 PEAK") ||
   !source.includes("function useItem(i)") ||
+  !source.includes("data-v18-setting-skin") ||
+  !source.includes("data-v18-setting-color") ||
   !source.includes("function updateKillerBots(dt)") ||
   !source.includes("function eliminatePlayer(i)") ||
   !source.includes("GLITCHY LANDSCAPES")
