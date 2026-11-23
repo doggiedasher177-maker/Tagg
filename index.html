@@ -2724,7 +2724,14 @@ rafId=requestAnimationFrame(frame);
   $('itemShopBtn')?.addEventListener('click',renderShops);
   $('avatarsBtn')?.addEventListener('click',renderShops);
   if($('itemShopBtn'))$('itemShopBtn').textContent='🛍 ITEM SHOP';
-  if($('avatarsBtn'))$('avatarsBtn').textContent='✦ SKINS & ACCESSORIES';
+  if($('avatarsBtn'))$('avatarsBtn').textContent='✦ SKIN SHOP';
+  const accessoriesShopBtn=document.createElement('button');accessoriesShopBtn.type='button';accessoriesShopBtn.id='accessoriesShopBtn';accessoriesShopBtn.className='secondary-btn';accessoriesShopBtn.textContent='🎩 ACCESSORIES SHOP';
+  const cosmeticsMenuPair=$('avatarsBtn')?.parentElement;
+  if(cosmeticsMenuPair&&!$('accessoriesShopBtn')){
+    const accessoriesMenuPair=document.createElement('div');accessoriesMenuPair.className='cosmetic-menu-pair v18-accessories-menu-pair';
+    accessoriesMenuPair.appendChild(accessoriesShopBtn);cosmeticsMenuPair.insertAdjacentElement('afterend',accessoriesMenuPair);
+  }
+  accessoriesShopBtn.addEventListener('click',()=>{shopTab='accessories';buildCosmetics();activeScreen('avatars');});
   const home=$('menuUtility');if(home&&!$('v18WalletHome')){const w=document.createElement('div');w.id='v18WalletHome';w.className='v18-wallet-home';w.textContent='✦ '+wallet+' TAG POINTS';home.appendChild(w);}
   function readyRoom(){
     $('readyPlayers').innerHTML=controls.slice(0,activePlayerCount).map((c,i)=>{
@@ -3115,7 +3122,7 @@ rafId=requestAnimationFrame(frame);
   // Keep Munci and Killer Bots independent: each AI updates against the player array only.
   const style=document.createElement('style');
   style.textContent=[
-    '.v18-shell{max-width:1050px!important}.v18-wallet,.v18-wallet-home{display:inline-flex;padding:9px 13px;border:1px solid #78e4d977;border-radius:99px;background:linear-gradient(120deg,#18384a,#29234d);color:#b9ffe8;font-size:11px;font-weight:1000;letter-spacing:.08em;margin:8px 0 14px}',
+    '.v18-shell{max-width:1050px!important}.v18-accessories-menu-pair #accessoriesShopBtn{grid-column:1/-1;width:100%}.v18-wallet,.v18-wallet-home{display:inline-flex;padding:9px 13px;border:1px solid #78e4d977;border-radius:99px;background:linear-gradient(120deg,#18384a,#29234d);color:#b9ffe8;font-size:11px;font-weight:1000;letter-spacing:.08em;margin:8px 0 14px}',
     '.v18-wallet-home{margin:8px auto;padding:8px 12px}.v18-intro,.v18-note{font-size:12px;line-height:1.6;color:#b9c9dc;max-width:800px}.v18-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:11px;margin:15px 0}',
     '.v18-shop-card{border:1px solid #9db9dc33;border-radius:15px;background:linear-gradient(145deg,#1a2a42,#17172f);padding:13px;display:flex;flex-direction:column;gap:8px;min-width:0;box-shadow:0 8px 24px #0004}.v18-shop-card>b{font-size:13px;color:#f1f6ff}.v18-shop-card small{font-size:10px;line-height:1.4;color:#aebfd5;min-height:30px}.v18-shop-icon{font-size:32px;min-height:40px;display:flex;align-items:center;justify-content:center}',
     '.v18-shop-card button,.v18-tabs button,.v18-remap-grid button{border:1px solid #86dfd766;border-radius:9px;padding:9px;background:#24485a;color:#e9fffb;font-size:10px;font-weight:950}.v18-shop-card button:disabled{opacity:.4;cursor:not-allowed;background:#303746;color:#b6c0cf}.v18-stock{font-size:9px;color:#9cf2d5;font-weight:900}',
