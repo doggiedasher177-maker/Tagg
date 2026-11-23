@@ -2635,7 +2635,8 @@ rafId=requestAnimationFrame(frame);
     {id:'decoy',name:'Decoy Pulse',icon:'👻',desc:'A short evasive protection pulse'}
   ];
   const titles=['Unbeatable','Rampage','Creator of Doom','Destinator'];
-  let wallet=Math.max(0,Number(read('tagV18Tagpoints',0))||0);
+  const cachedStatsForWallet=read('tagProfileStatsV1',{})||{};
+  let wallet=Math.max(0,Number(read('tagV18Tagpoints',0))||0,Number(cachedStatsForWallet.tagpoints)||0);
   let ownedSkins=new Set(read('tagV18Skins',['default']).filter(x=>x==='default'||skins.some(y=>y.id===x)));ownedSkins.add('default');
   let ownedAccessories=new Set(read('tagV18Accessories',[]).filter(x=>accessories.some(y=>y.id===x)));
   playerAccessories.forEach(x=>{if(x&&x!=='none')ownedAccessories.add(x);});
@@ -2656,6 +2657,8 @@ rafId=requestAnimationFrame(frame);
     write('tagV18Titles',Array.from(ownedTitles));write('tagV18Items',stock);write('tagV18PlayerSkins',playerSkins);
     write('tagV18PlayerTitles',playerTitles);write('tagV18EquippedItems',equippedItems);write('tagV18PlayerAccessories',playerCosmetics);write('tagV18Colors',colorOverrides);
     write('tagPlayerAccessories',playerCosmetics);
+    const cachedStats=read('tagProfileStatsV1',{})||{};
+    write('tagProfileStatsV1',{...cachedStats,tagpoints:wallet,updatedAt:Date.now()});
   }
   function notice(msg){
     let el=$('v18Toast');if(!el){el=document.createElement('div');el.id='v18Toast';document.body.appendChild(el);}
@@ -3174,6 +3177,7 @@ rafId=requestAnimationFrame(frame);
         ['new modifier ids',['doubleorbs','jumporbs','guns'].every(x=>modifierNames[x])]
       ];return {passed:checks.filter(x=>x[1]).length,total:checks.length,checks:checks};
     },
+    syncProfilePoints:function(serverPoints){const n=Number(serverPoints);if(Number.isFinite(n)&&n>wallet){wallet=Math.floor(n);save();walletText();}return wallet;},
     getInventory:function(){return {wallet:wallet,skins:Array.from(ownedSkins),accessories:Array.from(ownedAccessories),items:stock,titles:Array.from(ownedTitles)};}
   };
 })();
@@ -3631,6 +3635,9 @@ async function joinRoom(){
     if($('onlineSummaryTags'))$('onlineSummaryTags').textContent=values[3];
     if($('onlineSummaryMatches'))$('onlineSummaryMatches').textContent=values[2];
     try{localStorage.setItem('tagProfileStatsV1',JSON.stringify({username:displayName,wins:localWins,losses:values[1],tags:values[3],onlineWins:values[0],rank:rankValue,elo:values[4],tagpoints:values[5],updatedAt:Date.now()}));}catch(e){}
+    const mergedTagPoints=window.TAGV18Diagnostics?.syncProfilePoints?.(values[5])??values[5];
+    if($('profileTagpoints'))$('profileTagpoints').textContent=mergedTagPoints;
+    if($('shopTagpointBalance'))$('shopTagpointBalance').textContent='TAGPOINTS · '+mergedTagPoints;
   }catch(e){
     if(el)el.textContent='Your verified online record is temporarily unavailable. Try again while connected.';
     if($('profileConnectionState'))$('profileConnectionState').textContent='Connected, but account stats could not be loaded. Try again shortly.';
