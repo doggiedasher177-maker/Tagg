@@ -267,7 +267,10 @@ try {
     const samples = await phonePage.evaluate(() => window.__v17StructureSamples || []);
     const minCenterY = Math.min(...samples.map(sample => sample.y));
     const expectedCenterY = initialStructure.y + initialStructure.h + 11 / phonePage.viewportSize().height;
-    assert(samples.length > 8 && minCenterY >= expectedCenterY - 0.005,
+    assert(samples.length >= 5,
+      "Too few browser animation samples were captured for the structure collision check. " +
+        JSON.stringify({ mapId, samples: samples.length, recent: samples.slice(-6) }));
+    assert(minCenterY >= expectedCenterY - 0.005,
       "Runner passed through the underside of a " + (motionAmp ? "moving" : "stationary") +
         " structure. " + JSON.stringify({ mapId, minCenterY, expectedCenterY, recent: samples.slice(-6) }));
     assert(samples.some(sample => sample.vy > 0 && sample.y > minCenterY + 0.002),

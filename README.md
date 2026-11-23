@@ -23,7 +23,7 @@ For a hosted deployment, deploy this repository with a persistent Postgres datab
 
 ## 19.5V release notes
 
-- The in-game round countdown remains three seconds; automated browser fixtures now allow slower headless/mobile animation frames to finish the countdown before checking play state.
+- The in-game round countdown remains three seconds; automated browser fixtures allow slower headless/mobile animation frames and use a realistic minimum sample count for throttled structure-collision sampling.
 - The version viewer opens V19 as an offline historical snapshot and 19.5V as the only current online-enabled release.
 
 ## Online architecture and security
