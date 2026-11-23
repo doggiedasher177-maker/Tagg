@@ -647,6 +647,29 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid r
   #menuScreen:not(.setup-open) .creator-line{margin-top:4px;font-size:7px;line-height:1.2}
 }
 </style>
+
+<style id="v205-ultra-detail-pass">
+/* V20.5 Ultra Detail: cinematic UI surfaces, materials, typography and responsive polish */
+:root{--v205-glass:rgba(9,15,31,.82);--v205-edge:rgba(203,229,255,.25);--v205-luxe:#b9f7ed}
+button,.map-card,.control-card,.achievement-card,.setting-row{transition:transform .22s cubic-bezier(.2,.8,.2,1),box-shadow .22s,border-color .22s,filter .22s}
+button:hover,.map-card:hover{filter:brightness(1.13);transform:translateY(-2px)}
+button:active{transform:translateY(1px) scale(.985)}
+.screen.show .full-panel,.screen.show .online-panel,.screen.show .profile-panel,.screen.show .v18-shell{animation:v205PanelEnter .48s cubic-bezier(.16,1,.3,1) both}
+@keyframes v205PanelEnter{from{opacity:0;transform:translateY(18px) scale(.975);filter:blur(7px)}to{opacity:1;transform:none;filter:blur(0)}}
+.full-panel,.online-panel,.profile-panel,.v18-shell{border:1px solid var(--v205-edge)!important;background:linear-gradient(145deg,rgba(22,31,54,.96),rgba(8,13,28,.96))!important;box-shadow:0 24px 90px #0008,inset 0 1px #ffffff18,0 0 44px #8a9dff12!important}
+.map-card,.control-card,.achievement-card{border:1px solid #ffffff20!important;background:linear-gradient(145deg,#ffffff12,#050a16aa)!important;box-shadow:0 10px 28px #0003,inset 0 1px #ffffff0c}
+.map-card:hover,.control-card:hover,.achievement-card:hover{border-color:#a8f4e2aa!important;box-shadow:0 16px 40px #0006,0 0 24px #9df5e522}
+#menuScreen:not(.setup-open) .hero h1{letter-spacing:-.075em;text-shadow:0 8px 0 #0003,0 0 38px #9d8bff55,0 0 90px #69d9ff22}
+#menuScreen:not(.setup-open)::before{content:'';position:fixed;inset:-15%;pointer-events:none;background:radial-gradient(ellipse at 50% 22%,#b69aff20,transparent 34%),radial-gradient(ellipse at 12% 82%,#5cebd018,transparent 32%),radial-gradient(ellipse at 90% 65%,#ff9acb12,transparent 30%);animation:v205Nebula 22s ease-in-out infinite alternate}
+@keyframes v205Nebula{to{transform:translate3d(1.5%,-1%,0) scale(1.06);filter:hue-rotate(24deg)}}
+#menuScreen .hero-actions button{box-shadow:0 12px 32px #0005,inset 0 1px #ffffff30}
+.setting-row{border:1px solid #ffffff18;border-radius:13px;padding:12px;background:linear-gradient(110deg,#ffffff0b,#ffffff03)}
+#v205Intro{background:radial-gradient(ellipse at 50% 52%,#19142e 0,#05040a 45%,#000 78%)}
+.v205-logo-mark{width:112px;height:112px;border-radius:32px;font-size:76px;font-weight:1000;letter-spacing:-.12em;text-indent:-.08em;background:linear-gradient(145deg,#fff,#c8b7ff 45%,#7bf4df);box-shadow:0 0 0 1px #ffffff66,0 0 45px #a98bff77,0 0 130px #5ae8dc33;position:relative}
+.v205-logo-mark:after{content:'';position:absolute;inset:-9px;border:1px solid #ffffff38;border-radius:38px;transform:rotate(45deg);animation:v205LogoOrbit 8s linear infinite}
+@keyframes v205LogoOrbit{to{transform:rotate(405deg)}}
+@media(prefers-reduced-motion:reduce){#menuScreen:not(.setup-open)::before,.v205-logo-mark:after{animation:none!important}}
+</style>
 </head>
 <body>
 <canvas id="world" aria-label="TAG game world"></canvas>
@@ -2386,6 +2409,35 @@ function drawBackground() {
     ctx.beginPath();ctx.arc(m.x,m.y,m.r,0,TAU);ctx.fill();
   });
   ctx.globalAlpha=1;ctx.shadowBlur=0;
+
+  // Cinematic environmental detail pass: layered haze, drifting dust, stars and distant structures.
+  const detailSeed=(n)=>{const v=Math.sin(n*127.1+mapId.length*19.7)*43758.5453;return v-Math.floor(v);};
+  const horizon=height*.68;
+  const haze=ctx.createLinearGradient(0,horizon-130,0,height);
+  haze.addColorStop(0,t.glow+'00');haze.addColorStop(.52,t.glow+'12');haze.addColorStop(1,t.dust+'28');
+  ctx.fillStyle=haze;ctx.fillRect(0,horizon-130,width,height-horizon+130);
+  for(let i=0;i<72;i++){
+    const x=(detailSeed(i+11)*width+Math.sin(worldTime*.12+i)*9+width)%width;
+    const y=detailSeed(i+101)*height*.69;
+    const pulse=.22+.25*(.5+.5*Math.sin(worldTime*.8+i*1.7));
+    ctx.globalAlpha=pulse;ctx.fillStyle=i%5===0?'#ffffff':t.dust;
+    ctx.beginPath();ctx.arc(x,y,.45+detailSeed(i+201)*1.25,0,TAU);ctx.fill();
+  }
+  ctx.globalAlpha=1;
+  // Fine horizon architecture adds scale and a distinct skyline to every arena.
+  for(let i=0;i<24;i++){
+    const x=(i*97+detailSeed(i+303)*38-worldTime*(mapId==='city'?5:1.1)+width*4)%(width+90)-45;
+    const w=16+detailSeed(i+404)*33,h=22+detailSeed(i+505)*105;
+    ctx.fillStyle=i%3===0?'#07101d33':'#07101d22';
+    ctx.fillRect(x,horizon-h,w,h);
+    ctx.fillStyle=t.glow;ctx.globalAlpha=.10+detailSeed(i+606)*.10;
+    for(let wy=horizon-h+7;wy<horizon-5;wy+=13)for(let wx=x+5;wx<x+w-3;wx+=10)ctx.fillRect(wx,wy,2,3);
+    ctx.globalAlpha=1;
+  }
+  // Soft foreground vignette gives the arena depth without obscuring play.
+  const vignette=ctx.createRadialGradient(width*.5,height*.45,Math.min(width,height)*.22,width*.5,height*.45,Math.max(width,height)*.78);
+  vignette.addColorStop(0,'#00000000');vignette.addColorStop(1,'#02061155');ctx.fillStyle=vignette;ctx.fillRect(0,0,width,height);
+
 }
 
 function drawPlatform(p) {
@@ -2401,10 +2453,11 @@ function drawPlatform(p) {
   roundedRect(p.x,p.y,p.w,5,4);ctx.fillStyle='#f1f5e9';ctx.globalAlpha=.6;ctx.fill();ctx.globalAlpha=1;
   ctx.strokeStyle='#ffffff27';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(p.x+9,p.y+8);ctx.lineTo(p.x+p.w-9,p.y+8);ctx.stroke();
   ctx.strokeStyle='#07132180';ctx.lineWidth=1.2;
-  for(let x=p.x+18;x<p.x+p.w-12;x+=53) {
+  for(let x=p.x+18;x<p.x+p.w-12;x+=18) {
     const offset=(Math.floor(x/53)%3)*5;
     ctx.beginPath();ctx.moveTo(x,p.y+13+offset);ctx.lineTo(x+4,p.y+18+offset);ctx.lineTo(x+2,p.y+24+offset);ctx.stroke();
     if(!isFloor){ctx.fillStyle=t.glow;ctx.globalAlpha=.23;ctx.fillRect(x+13,p.y+p.h-2,2,3);ctx.globalAlpha=1;}
+    if(!isFloor&&x+16<p.x+p.w-5){ctx.fillStyle='#ffffff12';ctx.fillRect(x+8,p.y+Math.min(p.h-4,28),1.5,Math.max(2,Math.min(8,p.h-8)));}
   }
   if(mapId==='bombonera'&&!isFloor){ctx.fillStyle='#f4d34f';ctx.fillRect(p.x+4,p.y+4,p.w-8,5);ctx.fillStyle='#0754a8';ctx.fillRect(p.x+4,p.y+10,p.w-8,4);}
   if(mapId==='monumental'&&!isFloor){ctx.fillStyle='#c92f43';ctx.fillRect(p.x+4,p.y+4,p.w-8,5);ctx.fillStyle='#fffafa';ctx.fillRect(p.x+4,p.y+10,p.w-8,4);}
@@ -2424,6 +2477,17 @@ function drawPlatform(p) {
   } else if(mapId==='tidal'&&!isFloor) {
     ctx.fillStyle='#8fffe0';ctx.globalAlpha=.28;
     for(let x=p.x+8;x<p.x+p.w-8;x+=22){ctx.beginPath();ctx.arc(x,p.y+2,2,0,TAU);ctx.fill();}
+  }
+  
+  // Repeated micro-panels, rivets and edge highlights make each structure read as a built object.
+  if(!isFloor){
+    const count=Math.min(30,Math.max(2,Math.floor(p.w/18)));
+    for(let i=0;i<count;i++){
+      const x=p.x+8+(p.w-16)*(i/Math.max(1,count-1));
+      ctx.fillStyle='#ffffff22';ctx.beginPath();ctx.arc(x,p.y+Math.min(p.h-3,Math.max(7,p.h*.42)),1.05,0,TAU);ctx.fill();
+      if(i%3===0){ctx.strokeStyle=t.glow+'55';ctx.lineWidth=.7;ctx.beginPath();ctx.moveTo(x,p.y+Math.min(p.h-2,14));ctx.lineTo(x,p.y+Math.min(p.h-2,21));ctx.stroke();}
+    }
+    ctx.fillStyle='#00000024';ctx.fillRect(p.x+3,p.y+p.h-3,Math.max(0,p.w-6),2);
   }
   ctx.restore();
 }
@@ -2573,6 +2637,28 @@ function drawPlayer(p,i) {
     case 'witch': ctx.fillStyle='#38234f';ctx.beginPath();ctx.moveTo(-14,-27);ctx.lineTo(1,-54);ctx.lineTo(12,-27);ctx.closePath();ctx.fill();ctx.fillStyle='#6f3ca0';ctx.fillRect(-14,-30,28,4);ctx.fillStyle='#f4b8ff';ctx.fillRect(-4,-35,9,3);break;
     case 'marker': ctx.save();ctx.rotate(-.12);ctx.fillStyle='#f2d83d';ctx.fillRect(-11,-48,22,20);ctx.fillStyle='#252a33';ctx.fillRect(-11,-48,22,5);ctx.fillStyle='#e95b4b';ctx.fillRect(-7,-28,14,4);ctx.fillStyle='#252a33';ctx.fillRect(-3,-53,6,5);ctx.restore();break;
   }
+
+  // Tailored suit details: segmented shoulder guards, stitching, belt hardware and articulated gloves.
+  ctx.fillStyle='#071321';ctx.strokeStyle='#ffffff55';ctx.lineWidth=.8;
+  ctx.beginPath();ctx.roundRect(-9,-5,5,7,2);ctx.roundRect(4,-5,5,7,2);ctx.fill();ctx.stroke();
+  ctx.strokeStyle=light+'aa';ctx.lineWidth=.85;
+  for(let sy=-2;sy<=7;sy+=3){ctx.beginPath();ctx.moveTo(-7,sy);ctx.lineTo(-5,sy+.7);ctx.moveTo(7,sy);ctx.lineTo(5,sy+.7);ctx.stroke();}
+  const belt=ctx.createLinearGradient(-8,7,8,10);belt.addColorStop(0,'#26394b');belt.addColorStop(.5,'#d8e8ec');belt.addColorStop(1,'#26394b');
+  ctx.fillStyle=belt;ctx.fillRect(-8,7,16,2.2);ctx.fillStyle=light;ctx.fillRect(-1.5,6.6,3,3);
+  ctx.fillStyle='#182637';ctx.beginPath();ctx.roundRect(-8,11,6,5,1.5);ctx.roundRect(2,11,6,5,1.5);ctx.fill();
+  ctx.strokeStyle='#ffffff66';ctx.lineWidth=.8;ctx.beginPath();ctx.moveTo(-7,12);ctx.lineTo(-4,12);ctx.moveTo(3,12);ctx.lineTo(6,12);ctx.stroke();
+  // Helmet hardware: layered ear cups, faceplate rim, reflective visor sweep and fasteners.
+  ctx.fillStyle='#8298a8';ctx.beginPath();ctx.roundRect(-11,-22,3,9,1.5);ctx.roundRect(8,-22,3,9,1.5);ctx.fill();
+  ctx.strokeStyle='#ffffff99';ctx.lineWidth=.75;ctx.beginPath();ctx.arc(0,-20,10.1,Math.PI*1.08,Math.PI*1.92);ctx.stroke();
+  ctx.fillStyle='#ffffff55';ctx.beginPath();ctx.ellipse(-3,-21,2.1,.65,-.35,0,TAU);ctx.fill();
+  ctx.fillStyle=light;ctx.globalAlpha=.8;ctx.fillRect(-1,-25,2,1.2);ctx.globalAlpha=1;
+  // Fine accessory surface accents; keep the selected model silhouette intact.
+  const equipped=p.accessory||playerAccessories[i]||'none';
+  if(equipped!=='none'){
+    ctx.strokeStyle='#fff9';ctx.lineWidth=.8;ctx.beginPath();ctx.moveTo(-7,-29);ctx.lineTo(0,-31);ctx.lineTo(7,-29);ctx.stroke();
+    ctx.fillStyle='#ffffff66';ctx.beginPath();ctx.arc(-7,-29,1,0,TAU);ctx.arc(7,-29,1,0,TAU);ctx.fill();
+  }
+
   // Visor and eye lights; blink closes them briefly.
   ctx.fillStyle='#15263a';ctx.beginPath();ctx.roundRect(-6,-22,12,6,3);ctx.fill();
   ctx.shadowColor=accent;ctx.shadowBlur=10;
