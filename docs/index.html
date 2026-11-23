@@ -2945,6 +2945,22 @@ rafId=requestAnimationFrame(frame);
       if(/^#[0-9a-f]{6}$/i.test(v.color||''))p.v18Color=v.color;
       if(typeof v.title==='string')p.v18Title=v.title;
     };
+    const originalApplyNetwork=window.TAGOnlineHooks.applyNetworkState;
+    window.TAGOnlineHooks.applyNetworkState=function(data){
+      const result=originalApplyNetwork?.apply(this,arguments);
+      const state=data?.round||data;
+      if(Array.isArray(state?.players))state.players.forEach((v,i)=>{
+        if(!v)return;
+        const index=window.__tagOnlinePlayerIds?.indexOf(v.user_id);
+        const slot=index>=0?index:i;
+        const p=players[slot];if(!p)return;
+        if(v.skin==='default'||skins.some(x=>x.id===v.skin))p.v18Skin=v.skin;
+        if(typeof v.accessory==='string')p.v18Accessory=v.accessory;
+        if(/^#[0-9a-f]{6}$/i.test(v.color||''))p.v18Color=v.color;
+        if(typeof v.title==='string')p.v18Title=v.title;
+      });
+      return result;
+    };
   }
 
   const oldHud=updateHud;
