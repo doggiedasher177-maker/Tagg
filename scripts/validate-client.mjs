@@ -66,7 +66,7 @@ if (
 
 if (
   !source.includes("V17 · SOLID STRUCTURES & IN-MATCH FRIENDS") ||
-  !source.includes("TAG! — Zyron Studios v18 PEAK!") ||
+  !source.includes("TAG! — Zyron Studios V19 · Living Legends") ||
   !source.includes("function customPlatformGeometry") ||
   !source.includes("centerX-objectW/2") ||
   !source.includes("centerY-objectH/2") ||
@@ -89,13 +89,24 @@ if (
   !source.includes("MAILBOX · INCOMING FRIEND REQUESTS") ||
   !source.includes("refreshFriends().catch(()=>{})") ||
   source.includes("V18 · STRUCTURE UNDERSIDE COLLISION") ||
-  !source.includes("TAG! V18 PEAK") ||
+  !source.includes("V19 · THE LIVING LEGENDS UPDATE") ||
   !source.includes("function useItem(i)") ||
   !source.includes("data-v18-setting-skin") ||
   !source.includes("data-v18-setting-color") ||
   !source.includes("function updateKillerBots(dt)") ||
   !source.includes("function eliminatePlayer(i)") ||
-  !source.includes("GLITCHY LANDSCAPES")
+  !source.includes("GLITCHY LANDSCAPES") ||
+  !source.includes("function v19DrawV1") ||
+  !source.includes("previousBottom<q.y-2") ||
+  !source.includes("v19KillerDifficulty") ||
+  !source.includes("v19ProfileCardSelect") ||
+  !source.includes("[Unbeaten champion]") ||
+  !source.includes("tagV19DetailMode") ||
+  !source.includes("v19YouPicker") ||
+  !source.includes("Distraction Dance") ||
+  !source.includes("Boogie Down") ||
+  !source.includes("function v19RenderSkinPreviews") ||
+  !source.includes("docs/history.html")
 ) {
   throw new Error("V18 release, V17 solid collision, or existing V16/V17 safeguards are missing.");
 }
