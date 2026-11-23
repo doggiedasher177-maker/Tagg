@@ -208,10 +208,45 @@ try {
   await phonePage.locator("#botCount").selectOption("1");
   await phonePage.locator("#startBtn").click();
   for (const slot of [0, 2, 3]) await phonePage.locator('[data-ready="' + slot + '"]').click();
-  await phonePage.waitForFunction(() => {
-    const root = document.querySelector("#mobileControls");
-    return root && root.style.display === "grid" && root.querySelectorAll(".touch-player-pad").length === 3;
-  }, null, { timeout: 20000 });
+  try {
+    await phonePage.waitForFunction(() => {
+      const root = document.querySelector("#mobileControls");
+      return root && root.style.display === "grid" && root.querySelectorAll(".touch-player-pad").length === 3;
+    }, null, { timeout: 20000 });
+  } catch (error) {
+    const diagnostic = await phonePage.evaluate(() => {
+      const root = document.querySelector("#mobileControls");
+      const screen = document.querySelector("#menuScreen");
+      return {
+        viewport: { width: innerWidth, height: innerHeight },
+        pointerCoarse: matchMedia("(pointer: coarse)").matches,
+        mobileMedia: matchMedia("(pointer: coarse), (max-width: 900px)").matches,
+        menuClass: screen?.className,
+        menuDisplay: screen ? getComputedStyle(screen).display : null,
+        setupVisible: !!document.querySelector("#menuScreen .setup") &&
+          getComputedStyle(document.querySelector("#menuScreen .setup")).display !== "none",
+        readyButtons: [...document.querySelectorAll("[data-ready]")].map(el => ({
+          slot: el.getAttribute("data-ready"),
+          text: el.textContent?.trim(),
+          display: getComputedStyle(el).display
+        })),
+        playerCount: document.querySelector("#count")?.value,
+        botCount: document.querySelector("#botCount")?.value,
+        game: window.TAGOnlineHooks?.getBotDebug?.() || null,
+        players: window.TAGOnlineHooks?.getPlayerStates?.()?.length ?? null,
+        bots: window.TAGOnlineHooks?.getBotPlayers?.() ?? null,
+        controls: {
+          inlineDisplay: root?.style.display ?? null,
+          computedDisplay: root ? getComputedStyle(root).display : null,
+          pads: root?.querySelectorAll(".touch-player-pad").length ?? 0,
+          html: root?.innerHTML?.slice(0, 1800) ?? null
+        }
+      };
+    });
+    throw new Error("V18 phone controls did not render for three humans and one bot: " +
+      JSON.stringify(diagnostic) + " · " + error.message +
+      " · Browser diagnostics: " + (phonePage.__e2eDiagnostics || []).slice(-20).join(" | "));
+  }
   const phonePads = await phonePage.evaluate(() => [...document.querySelectorAll("#mobileControls .touch-player-pad")]
     .map(pad => ({ count: pad.querySelectorAll(".touch-key").length, item: !!pad.querySelector(".touch-item") })));
   assert(phonePads.length === 3 && phonePads.every(pad => pad.count === 5 && pad.item),
