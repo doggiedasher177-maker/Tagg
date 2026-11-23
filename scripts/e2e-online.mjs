@@ -211,6 +211,8 @@ try {
   const verifyStructureUnderside = async (mapId, motionAmp) => {
     await phonePage.bringToFront();
     await phonePage.evaluate(({ mapId, motionAmp }) => {
+      // Reset the prior wall-collision fixture before starting a fresh round.
+      window.TAGOnlineHooks.leaveLocalBotMatch?.();
       const ok = window.TAGOnlineHooks.loadCustomMap({
         id: mapId, name: "V17 Structure Collision", description: "Stationary/moving solid structure QA",
         modifiers: [],
