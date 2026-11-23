@@ -126,6 +126,59 @@ const results = [];
 let primaryPage = null;
 
 try {
+  // V20_MENU_VIEWPORT_REGRESSION: exercise the actual title menu at the screenshot
+  // size, a short laptop viewport, and a phone; this is layout-only QA.
+  for (const viewport of [
+    { name: "1620x913 screenshot", width: 1620, height: 913, fitHeight: true },
+    { name: "1366x600 short laptop", width: 1366, height: 600, fitHeight: true },
+    { name: "390x844 phone", width: 390, height: 844, fitHeight: false }
+  ]) {
+    const menuContext = await browser.newContext({
+      viewport: { width: viewport.width, height: viewport.height },
+      deviceScaleFactor: 1
+    });
+    const menuPage = await menuContext.newPage();
+    await menuPage.goto(SITE_URL, { waitUntil: "domcontentloaded", timeout: 45000 });
+    await menuPage.evaluate(() => document.fonts?.ready);
+    await menuPage.waitForFunction(() => {
+      const screen = document.querySelector("#menuScreen.screen.show");
+      const hero = screen?.querySelector(".menu-shell .hero");
+      return !!screen && !!hero && getComputedStyle(screen).display !== "none" &&
+        hero.getBoundingClientRect().width > 0;
+    }, null, { timeout: 15000 });
+    const layout = await menuPage.evaluate(() => {
+      const screen = document.querySelector("#menuScreen");
+      const hero = screen.querySelector(".menu-shell .hero");
+      const rect = hero.getBoundingClientRect();
+      return {
+        viewport: { width: innerWidth, height: innerHeight },
+        documentWidth: document.documentElement.scrollWidth,
+        bodyWidth: document.body.scrollWidth,
+        screen: {
+          width: screen.clientWidth, height: screen.clientHeight,
+          scrollWidth: screen.scrollWidth, scrollHeight: screen.scrollHeight
+        },
+        hero: { top: rect.top, bottom: rect.bottom, height: rect.height },
+        scrollableVertically: screen.scrollHeight > screen.clientHeight + 1
+      };
+    });
+    assert(layout.documentWidth <= viewport.width + 1 &&
+      layout.bodyWidth <= viewport.width + 1 &&
+      layout.screen.scrollWidth <= viewport.width + 1 &&
+      layout.hero.top >= -1,
+      "V20 menu has horizontal overflow or clips its top at " + viewport.name + ": " + JSON.stringify(layout));
+    if (viewport.fitHeight) {
+      assert(layout.hero.bottom <= viewport.height + 1,
+        "V20 menu does not fit vertically at " + viewport.name + ": " + JSON.stringify(layout));
+    } else if (layout.hero.bottom > viewport.height + 1) {
+      assert(layout.scrollableVertically,
+        "V20 phone menu extends below the viewport without allowing vertical scrolling: " + JSON.stringify(layout));
+    }
+    results.push("PASS: V20 title menu fits " + viewport.name +
+      (viewport.fitHeight ? " without clipping" : " without horizontal overflow or inaccessible content"));
+    await menuContext.close();
+  }
+
   // 1. Public web client and Nakama health.
   const health = await fetch(NAKAMA_URL.replace(/\/$/, "") + "/healthcheck", { signal: AbortSignal.timeout(15000) });
   assert(health.ok, "Nakama healthcheck returned HTTP " + health.status);
