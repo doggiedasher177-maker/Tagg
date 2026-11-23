@@ -20,7 +20,7 @@ async function waitForPublishedClient() {
           html.includes("V15 · SMART BOTS & ARENA ARCHITECTURE") &&
           html.includes("V17 · SOLID STRUCTURES & IN-MATCH FRIENDS") &&
           html.includes("V16 · MOBILE PLAY, SOLID ARENAS & FRIEND MAILBOX") &&
-          html.includes("TAG! — Zyron Studios v18 PEAK!") && html.includes("TAG! V18 PEAK") && html.includes("GLITCHY LANDSCAPES") &&
+          html.includes("TAG! — Zyron Studios V19 · Living Legends") && html.includes("V19 · THE LIVING LEGENDS UPDATE") && html.includes("function v19DrawV1") && html.includes("previousBottom<q.y-2") && html.includes("v19KillerDifficulty") && html.includes("tagV19DetailMode") && html.includes("GLITCHY LANDSCAPES") &&
           html.includes("function customPlatformGeometry") &&
           html.includes("getStructureStates(){return platforms.filter(p=>p.kind==='structure')") &&
           html.includes('id="matchMailboxRefreshBtn"') &&
