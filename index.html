@@ -3360,24 +3360,40 @@ rafId=requestAnimationFrame(frame);
   const baseDrawSkinV19=drawSkin;drawSkin=function(p,i){if((p.v18Skin||playerSkins[i])==='v1')v19DrawV1(p,i);else baseDrawSkinV19(p,i);};
 
   let v19PendingDuo=null;
+  const v19DuoHandledTokens=new Set();
   function v19StopEmote(i){const p=players[i];if(!p)return;p.v19Emote='';p.v19EmoteStarted=0;p.v19EmotePartner=-1;p.v19Duo=false;}
   function v19StartEmote(i,id,paired=false,partner=-1){const p=players[i];if(!p||roundEliminated.has(i))return;p.v19Emote=id;p.v19EmoteStarted=worldTime;p.v19EmotePartner=partner;p.v19Duo=paired;}
-  function v19ShowDuoInvite(sender,id,partner){
+  function v19ShowDuoInvite(sender,id,partner,senderUserId='',token=''){
     let box=$('v19DuoInvite');if(!box){box=document.createElement('div');box.id='v19DuoInvite';box.className='v19-duo-invite';document.body.appendChild(box);}
-    v19PendingDuo={sender,id,partner};const emote=v19Emotes.find(x=>x.id===id);
+    v19PendingDuo={sender,id,partner,senderUserId,token};const emote=v19Emotes.find(x=>x.id===id);
     box.innerHTML='<b>🤝 '+esc(emote?.name||'DUO EMOTE')+' INVITATION</b><p>PLAYER '+(sender+1)+' invited PLAYER '+(partner+1)+'. The second runner decides whether to join.</p><div><button type="button" data-v19-duo="join">JOIN</button><button type="button" data-v19-duo="decline">DECLINE</button></div>';box.style.display='block';
   }
   function v19PlayEmote(i,slot){
     if(mode!=='playing')return;const id=equippedEmotes[i]?.[slot];if(!id)return;
     const emote=v19Emotes.find(x=>x.id===id);if(!emote)return;
-    if(emote.duo){const partner=players.findIndex((p,j)=>j!==i&&j<activePlayerCount&&!botPlayers[j]&&!roundEliminated.has(j));if(partner<0){notice('A second human runner must accept this emote.');return;}v19ShowDuoInvite(i,id,partner);return;}
+    if(emote.duo){
+      const partner=players.findIndex((p,j)=>j!==i&&j<activePlayerCount&&!botPlayers[j]&&!roundEliminated.has(j));
+      if(partner<0){notice('A second human runner must accept this emote.');return;}
+      if(onlineActive){
+        const ids=window.__tagOnlinePlayerIds||[],targetId=ids[partner];
+        if(!targetId){notice('The other runner is not ready to receive an emote invitation.');return;}
+        const p=players[i];p.v19DuoInviteId=id;p.v19DuoInviteTarget=targetId;
+        p.v19DuoInviteToken=Date.now().toString(36)+Math.random().toString(36).slice(2,10);
+        p.v19DuoResponseProcessed='';notice('Duo invitation sent. Waiting for the other runner.');return;
+      }
+      v19ShowDuoInvite(i,id,partner);return;
+    }
     v19StartEmote(i,id,false,-1);
   }
   document.addEventListener('click',e=>{
     const choice=e.target.closest('[data-v19-duo]');if(!choice||!v19PendingDuo)return;
     const pending=v19PendingDuo,box=$('v19DuoInvite');if(box)box.style.display='none';
-    if(choice.dataset.v19Duo==='join'&&!botPlayers[pending.partner]){v19StartEmote(pending.sender,pending.id,true,pending.partner);v19StartEmote(pending.partner,pending.id,true,pending.sender);notice('DUO EMOTE STARTED');}
-    else notice('Invitation declined.');v19PendingDuo=null;
+    const accepted=choice.dataset.v19Duo==='join'&&!botPlayers[pending.partner];
+    if(onlineActive){
+      const p=players[onlineLocalIndex];
+      if(p){p.v19DuoResponse=accepted?'accept':'decline';p.v19DuoResponseTo=pending.senderUserId;p.v19DuoResponseToken=pending.token||'';if(accepted)v19StartEmote(onlineLocalIndex,pending.id,true,pending.sender);if(pending.token)v19DuoHandledTokens.add(pending.token);}
+    }else if(accepted){v19StartEmote(pending.sender,pending.id,true,pending.partner);v19StartEmote(pending.partner,pending.id,true,pending.sender);}
+    notice(accepted?'DUO EMOTE ACCEPTED':'Invitation declined.');v19PendingDuo=null;
   });
   const v19EmoteKeys=[['q','e'],['u','o'],['7','8'],['5','6']];
   if(controls[0]?.abilityKeys&&(controls[0].abilityKeys.guns==='q'||controls[0].abilityKeys.guns==='e')){controls[0].abilityKeys.guns='1';const saved=v19Read('tagAbilityKeys',{});saved[0]=controls[0].abilityKeys;v19Write('tagAbilityKeys',saved);}
@@ -3429,11 +3445,37 @@ rafId=requestAnimationFrame(frame);
   }
   if(window.TAGOnlineHooks){
     const v19Hooks=window.TAGOnlineHooks,oldGetV19=v19Hooks.getLocalState;
-    v19Hooks.getLocalState=function(){const v=oldGetV19?.apply(this,arguments),i=onlineLocalIndex;if(v){v.emote=players[i]?.v19Emote||'';v.heldItem=equippedItems[i]||'';}return v;};
+    v19Hooks.getLocalState=function(){
+      const v=oldGetV19?.apply(this,arguments),i=onlineLocalIndex,p=players[i];
+      if(v&&p){
+        v.emote=p.v19Emote||'';v.heldItem=equippedItems[i]||'';
+        v.duoInviteId=p.v19DuoInviteId||'';v.duoInviteTarget=p.v19DuoInviteTarget||'';v.duoInviteToken=p.v19DuoInviteToken||'';
+        v.duoResponse=p.v19DuoResponse||'';v.duoResponseTo=p.v19DuoResponseTo||'';v.duoResponseToken=p.v19DuoResponseToken||'';
+      }
+      return v;
+    };
     const oldRemoteV19=v19Hooks.applyRemotePlayer;
     v19Hooks.applyRemotePlayer=function(i,v){oldRemoteV19?.apply(this,arguments);const p=players[i];if(p&&v){const id=typeof v.emote==='string'?v.emote:'';if(p.v19RemoteEmote!==id){p.v19RemoteEmote=id;p.v19RemoteEmoteStarted=worldTime;}p.v19RemoteItem=typeof v.heldItem==='string'?v.heldItem:'';}};
     const oldNetworkV19=v19Hooks.applyNetworkState;
-    v19Hooks.applyNetworkState=function(data){const result=oldNetworkV19?.apply(this,arguments),state=data?.round||data;if(Array.isArray(state?.players))state.players.forEach((v,i)=>{const slot=window.__tagOnlinePlayerIds?.indexOf(v?.user_id),p=players[slot>=0?slot:i];if(p&&v){const id=typeof v.emote==='string'?v.emote:'';if(p.v19RemoteEmote!==id){p.v19RemoteEmote=id;p.v19RemoteEmoteStarted=worldTime;}p.v19RemoteItem=typeof v.heldItem==='string'?v.heldItem:'';}});return result;};
+    v19Hooks.applyNetworkState=function(data){
+      const result=oldNetworkV19?.apply(this,arguments),state=data?.round||data,ids=window.__tagOnlinePlayerIds||[],selfId=ids[onlineLocalIndex]||'',self=players[onlineLocalIndex];
+      if(Array.isArray(state?.players))state.players.forEach((v,i)=>{
+        const mapped=ids.indexOf(v?.user_id),slot=mapped>=0?mapped:i,p=players[slot];if(!p||!v)return;
+        const id=typeof v.emote==='string'?v.emote:'';
+        if(p.v19RemoteEmote!==id){p.v19RemoteEmote=id;p.v19RemoteEmoteStarted=worldTime;}
+        p.v19RemoteItem=typeof v.heldItem==='string'?v.heldItem:'';
+        if(v.duoInviteId&&v.duoInviteTarget===selfId&&v.duoInviteToken&&!v19DuoHandledTokens.has(v.duoInviteToken)&&!v19PendingDuo&&slot!==onlineLocalIndex){
+          v19ShowDuoInvite(slot,v.duoInviteId,onlineLocalIndex,v.user_id,v.duoInviteToken);
+        }
+        if(self&&self.v19DuoInviteId&&v.duoResponseTo===selfId&&v.duoResponseToken===self.v19DuoInviteToken&&self.v19DuoResponseProcessed!==v.duoResponseToken&&(v.duoResponse==='accept'||v.duoResponse==='decline')){
+          self.v19DuoResponseProcessed=v.duoResponseToken;
+          if(v.duoResponse==='accept')v19StartEmote(onlineLocalIndex,self.v19DuoInviteId,true,slot);
+          self.v19DuoInviteId='';self.v19DuoInviteTarget='';self.v19DuoInviteToken='';
+          notice(v.duoResponse==='accept'?'DUO EMOTE ACCEPTED':'DUO EMOTE DECLINED');
+        }
+      });
+      return result;
+    };
   }
   const baseDrawPlayerV19=drawPlayer;
   drawPlayer=function(p,i){
