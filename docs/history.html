@@ -36,14 +36,14 @@ iframe{width:100%;height:calc(100vh - 150px);min-height:650px;border:0;backgroun
 <script>
 (()=>{
 const versions=['V19','V18','V17.5V','V17','V16','V15','V14','V13','V12','V11','V10','V9','V8','V7','V6','V5','V4','V3','V2','V1'];
-const files={'V14':'../archive/legacy-offline/TAG_V14_OFFLINE.html','V15':'../archive/legacy-offline/TAG_V15_OFFLINE.html','V16':'../archive/legacy-offline/TAG_V16_OFFLINE.html','V17':'../archive/legacy-offline/TAG_V17_OFFLINE.html','V17.5V':'../archive/legacy-offline/TAG_V17_5_OFFLINE.html','V18':'../archive/legacy-offline/TAG_V18_OFFLINE.html'};
+const files={'V14':'archive/legacy-offline/TAG_V14_OFFLINE.html','V15':'archive/legacy-offline/TAG_V15_OFFLINE.html','V16':'archive/legacy-offline/TAG_V16_OFFLINE.html','V17':'archive/legacy-offline/TAG_V17_OFFLINE.html','V17.5V':'archive/legacy-offline/TAG_V17_5_OFFLINE.html','V18':'archive/legacy-offline/TAG_V18_OFFLINE.html'};
 const params=new URLSearchParams(location.search);let current=params.get('version')||'V18';
 const menu=document.getElementById('versions'),frame=document.getElementById('build'),fallback=document.getElementById('fallback'),caption=document.getElementById('caption'),state=document.getElementById('state');
 function choose(v){
 current=v;history.replaceState(null,'','?version='+encodeURIComponent(v));
 document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.version===v));
 caption.textContent=v+' · HISTORICAL BUILD';
-if(v==='V19'){frame.src='../index.html';frame.style.display='block';fallback.style.display='none';state.textContent='CURRENT ONLINE RELEASE';return;}
+if(v==='V19'){frame.src='./index.html';frame.style.display='block';fallback.style.display='none';state.textContent='CURRENT ONLINE RELEASE';return;}
 if(files[v]){frame.src=files[v];frame.style.display='block';fallback.style.display='none';state.textContent='OFFLINE SNAPSHOT · ONLINE FEATURES LOCKED';return;}
 frame.removeAttribute('src');frame.style.display='none';fallback.style.display='block';state.textContent='BUNDLED ORIGINAL HTML SNAPSHOT';
 }
