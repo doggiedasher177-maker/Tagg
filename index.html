@@ -1952,7 +1952,7 @@ function updateGame(dt) {
     potionTimer-=dt;if(potionTimer<=0&&!potion){let spawnX=worldWidth*.5,best=-1;for(let x=80;x<worldWidth-80;x+=35){const nearest=Math.min(...players.map(p=>Math.abs(p.x-x)));if(nearest>best){best=nearest;spawnX=x;}}potion={x:spawnX,y:height*.28,visible:true};potionTimer=40;}
     if(potion&&potion.visible){const carrier=players.find(p=>!roundEliminated.has(p.id)&&Math.hypot(p.x-potion.x,p.y-potion.y)<38);if(carrier){carrier.potionTime=5;const px=potion.x,py=potion.y;potion=null;burst(px,py,'#b6ff75',25,180);burst(px,py,'#efffd0',14,130);shake=Math.max(shake,3);}}
   }
-  orbs.forEach(o=>{o.cool=Math.max(0,o.cool-dt);players.forEach(p=>{if((!onlineActive||p.id===onlineLocalIndex)&&o.cool<=0&&(p.jumpBuffer>0||keysDown.has(controls[p.id].jump))&&Math.hypot(p.x-o.x,p.y-o.y)<o.r+19){p.vx+=Number(o.forceX)||0;p.vy=Math.min(p.vy+(Number(o.forceY)||-610),-200);o.cool=1.8;p.dashGlow=1;burst(o.x,o.y,o.color,24,190);burst(o.x,o.y,'#ffffff',10,110);shake=Math.max(shake,2.5);}})});
+  orbs.forEach(o=>{if(o.dynamicV18)return;o.cool=Math.max(0,o.cool-dt);players.forEach(p=>{if((!onlineActive||p.id===onlineLocalIndex)&&o.cool<=0&&(p.jumpBuffer>0||keysDown.has(controls[p.id].jump))&&Math.hypot(p.x-o.x,p.y-o.y)<o.r+19){p.vx+=Number(o.forceX)||0;p.vy=Math.min(p.vy+(Number(o.forceY)||-610),-200);o.cool=1.8;p.dashGlow=1;burst(o.x,o.y,o.color,24,190);burst(o.x,o.y,'#ffffff',10,110);shake=Math.max(shake,2.5);}})});
   if(!onlineActive){
     scoreTick+=dt;while(scoreTick>=1){scoreTick-=1;players.forEach((p,i)=>{if(i!==tagged)scores[i]=(scores[i]||0)+1;});updateHud();}
     checkTag(dt);
@@ -2646,6 +2646,7 @@ rafId=requestAnimationFrame(frame);
   const equippedItems=Array.from({length:4},(_,i)=>read('tagV18EquippedItems',['','','',''])[i]||'');
   const playerCosmetics=Array.from({length:4},(_,i)=>read('tagV18PlayerAccessories',['none','none','none','none'])[i]||playerAccessories[i]||'none');
   const colorOverrides=Array.from({length:4},(_,i)=>read('tagV18Colors',[])[i]||'');
+  colorOverrides.forEach((c,i)=>{if(/^#[0-9a-f]{6}$/i.test(c||'')){playerColors[i]=c;playerAccents[i]=c;}});
   let shopTab='skins',remapTarget=null,killerCount=2,killerBots=[],bullets=[],orbClocks={double:20,jump:20};
   const oldFinish=finishRound,oldSpawn=spawnPlayers,oldReady=renderReadyRoom,oldUpdate=updateGame,oldConfigure=configureModifierRound,oldTouch=refreshMobileControls,oldDraw=drawPlayer,oldBg=drawBackground,oldPause=togglePause;
   const esc=v=>escapeHtml(String(v??''));
@@ -2901,6 +2902,25 @@ rafId=requestAnimationFrame(frame);
     const acc=p.v18Accessory||playerCosmetics[i]||'none';
     if(['fedora','peanut','watermelon'].includes(acc)){ctx.save();ctx.translate(p.x,p.y);ctx.scale(p.face||1,1);drawAccessory(acc);ctx.restore();}
   };
+
+  if(window.TAGOnlineHooks){
+    const originalGetLocal=window.TAGOnlineHooks.getLocalState;
+    window.TAGOnlineHooks.getLocalState=function(){
+      const v=originalGetLocal?.apply(this,arguments);
+      if(v){const i=onlineLocalIndex;v.skin=players[i]?.v18Skin||playerSkins[i]||'default';v.accessory=playerCosmetics[i]||'none';v.color=colorOverrides[i]||playerColors[i];v.title=playerTitles[i]||'';}
+      return v;
+    };
+    const originalApplyRemote=window.TAGOnlineHooks.applyRemotePlayer;
+    window.TAGOnlineHooks.applyRemotePlayer=function(i,v){
+      originalApplyRemote?.apply(this,arguments);
+      const p=players[i];if(!p||!v)return;
+      if(v.skin==='default'||skins.some(x=>x.id===v.skin))p.v18Skin=v.skin;
+      if(typeof v.accessory==='string')p.v18Accessory=v.accessory;
+      if(/^#[0-9a-f]{6}$/i.test(v.color||''))p.v18Color=v.color;
+      if(typeof v.title==='string')p.v18Title=v.title;
+    };
+  }
+
   const oldHud=updateHud;
   updateHud=function(){
     oldHud();
@@ -3065,7 +3085,7 @@ rafId=requestAnimationFrame(frame);
   }
   function eliminatePlayer(i){
     if(mode!=='pause'||!players[i]||roundEliminated.has(i))return;
-    const alive=players.filter(p=>!roundEliminated.has(p.id));if(alive.length<=2){notice('The final two players cannot be removed here.');return;}
+    const alive=players.filter(p=>!roundEliminated.has(p.id));if(alive.length<=1){notice('At least one player must remain.');return;}
     roundEliminated.add(i);burst(players[i].x,players[i].y,playerColors[i],30,230);
     if(alive.length-1===1){const winner=alive.find(p=>p.id!==i);mode='playing';finishRound(false,winner.id);return;}
     pauseRender();updateHud();
