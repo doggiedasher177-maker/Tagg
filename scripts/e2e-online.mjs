@@ -208,11 +208,17 @@ try {
   await phonePage.locator("#botCount").selectOption("1");
   await phonePage.locator("#startBtn").click();
   for (const slot of [0, 2, 3]) await phonePage.locator('[data-ready="' + slot + '"]').click();
+  // Wait for the local lobby countdown to enter active play before checking pads.
+  // The high-DPI phone canvas can advance more slowly on a loaded CI runner.
+  await waitFor(phonePage,
+    () => window.TAGOnlineHooks?.getBotDebug?.()?.mode === "playing",
+    "phone lobby countdown to enter active play",
+    60000);
   try {
     await phonePage.waitForFunction(() => {
       const root = document.querySelector("#mobileControls");
       return root && root.style.display === "grid" && root.querySelectorAll(".touch-player-pad").length === 3;
-    }, null, { timeout: 20000 });
+    }, null, { timeout: 10000 });
   } catch (error) {
     const diagnostic = await phonePage.evaluate(() => {
       const root = document.querySelector("#mobileControls");
