@@ -287,10 +287,16 @@ try {
   await verifyStructureUnderside("v17_static_structure_test", 0);
   await verifyStructureUnderside("v17_moving_structure_test", 100);
 
+  // Stop the phone test match before running the tablet regression. Keeping a
+  // second animated game active needlessly contends with the tablet canvas in CI.
+  await phonePage.evaluate(() => window.TAGOnlineHooks?.endMatch?.());
+
   // Tablet viewport regression: controls render and the page does not overflow horizontally.
   const tabletContext = await browser.newContext({
     viewport: { width: 820, height: 1180 },
-    deviceScaleFactor: 2,
+    // This assertion measures CSS layout, not Retina raster density. A 1x
+    // backing store prevents high-DPI canvas rendering from starving the timer.
+    deviceScaleFactor: 1,
     isMobile: true,
     hasTouch: true
   });
@@ -309,7 +315,7 @@ try {
     () => window.TAGOnlineHooks?.getBotDebug?.()?.mode === "playing" &&
       document.querySelector("#mobileControls")?.style.display === "grid",
     "V18 tablet bot match and touch controls to enter active play",
-    22000);
+    30000);
   try {
     await tabletPage.waitForFunction(() =>
       document.querySelector("#mobileControls")?.style.display === "grid" &&
