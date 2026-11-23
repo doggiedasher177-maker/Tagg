@@ -4591,5 +4591,110 @@ document.addEventListener('DOMContentLoaded',()=>{
  }
 },{once:true});
 </script>
+
+<style id="v205-premium-layer">
+:root{--v205-bg:#09051c;--v205-accent:#c6a6ff;--v205-glow:#9c74ff}
+body.v205-theme-cherry{--v205-bg:#261426;--v205-accent:#ffc4dc;--v205-glow:#ff8fbd}
+body.v205-theme-lava{--v205-bg:#240b08;--v205-accent:#ff9b48;--v205-glow:#ff4d21}
+body.v205-theme-city{--v205-bg:#080f24;--v205-accent:#73e9ff;--v205-glow:#3e9fff}
+body.v205-theme-amongus{--v205-bg:#101b29;--v205-accent:#ff6e65;--v205-glow:#ff4d59}
+body.v205-theme-minecraft{--v205-bg:#152514;--v205-accent:#a8e77b;--v205-glow:#61b84e}
+body.v205-theme-moon{--v205-bg:#10182a;--v205-accent:#dce9ff;--v205-glow:#9ebce9}
+body.v205-theme-underwater{--v205-bg:#03232c;--v205-accent:#8effe7;--v205-glow:#27c9d9}
+body.v205-theme-blackhole{--v205-bg:#07030e;--v205-accent:#f0c6ff;--v205-glow:#b34dff}
+body.v205-theme-space{--v205-bg:#160b38;--v205-accent:#d1b4ff;--v205-glow:#8b5cff}
+body.v205-theme-theatre{--v205-bg:#260b18;--v205-accent:#ffd18a;--v205-glow:#e04d69}
+body.v205-theme-cherry .screen{background:radial-gradient(ellipse at 50% 0%,#8e456d88,transparent 55%),linear-gradient(145deg,#30172f,#160f26)!important}
+body.v205-theme-lava .screen{background:radial-gradient(ellipse at 50% 100%,#e14b1c66,transparent 55%),linear-gradient(145deg,#3b120d,#120b13)!important}
+body.v205-theme-city .screen{background:linear-gradient(135deg,#09132d,#13284b 55%,#100e27)!important}
+body.v205-theme-amongus .screen{background:radial-gradient(ellipse at 50% 100%,#d8494966,transparent 55%),linear-gradient(145deg,#182c40,#090f1b)!important}
+body.v205-theme-minecraft .screen{background:linear-gradient(180deg,#6b9bce 0 35%,#345c2b 35% 62%,#17291b)!important}
+body.v205-theme-moon .screen{background:radial-gradient(ellipse at 75% 20%,#c7d9f355,transparent 30%),linear-gradient(145deg,#18233a,#070c19)!important}
+body.v205-theme-underwater .screen{background:radial-gradient(ellipse at 50% 100%,#13a5aa55,transparent 55%),linear-gradient(145deg,#06445a,#03151f)!important}
+body.v205-theme-blackhole .screen{background:radial-gradient(ellipse at 50% 48%,#000 0 9%,#6f2a9b 11%,#21103f 18%,transparent 39%),linear-gradient(145deg,#080511,#10071e)!important}
+body.v205-theme-space .screen{background:radial-gradient(ellipse at 20% 10%,#7546c966,transparent 45%),radial-gradient(ellipse at 90% 90%,#244bba66,transparent 45%),linear-gradient(145deg,#170d36,#080b20)!important}
+body.v205-theme-theatre .screen{background:radial-gradient(ellipse at 50% 0%,#a52b4d66,transparent 50%),linear-gradient(145deg,#321020,#100812)!important}
+body[class*="v205-theme-"] .full-panel,body[class*="v205-theme-"] .setup{border-color:color-mix(in srgb,var(--v205-accent) 55%,transparent);box-shadow:0 24px 90px #0009,0 0 36px color-mix(in srgb,var(--v205-glow) 22%,transparent)}
+#v205ScenarioScreen{z-index:30}
+#v205ScenarioScreen .full-panel{width:min(1050px,calc(100% - 28px));max-height:calc(100dvh - 28px);overflow:auto}
+.v205-scenarios{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin:20px 0}
+.v205-scenario{position:relative;text-align:left;min-height:118px;border:1px solid #ffffff25;border-radius:15px;padding:14px;color:#fff;background:linear-gradient(145deg,#ffffff16,#00000035);overflow:hidden;transition:transform .25s,border-color .25s,box-shadow .25s}
+.v205-scenario:hover{transform:translateY(-5px) scale(1.02);border-color:var(--v205-accent);box-shadow:0 12px 30px #0006}
+.v205-scenario b{display:block;font-size:14px;margin:24px 0 6px}.v205-scenario small{color:#c3d0e1}.v205-scenario .v205-emoji{position:absolute;right:12px;top:8px;font-size:27px;filter:drop-shadow(0 0 12px var(--v205-glow))}
+.v205-scenario.owned{border-color:#9bffd5}.v205-scenario.active{outline:2px solid var(--v205-accent)}
+#v205FPS{position:fixed;z-index:10001;right:12px;top:12px;padding:7px 10px;border:1px solid #ffffff30;border-radius:9px;background:#050914c9;color:#a8ffdc;font:900 12px ui-monospace,monospace;letter-spacing:.05em;pointer-events:none;backdrop-filter:blur(10px);text-shadow:0 0 12px #73ffc477}
+#v205Intro{position:fixed;z-index:10000;inset:0;display:grid;place-items:center;background:#000;opacity:1;transition:opacity 1s ease;pointer-events:all}
+#v205Intro.done{opacity:0;pointer-events:none}
+.v205-logo-wrap{text-align:center;animation:v205LogoIn 1.35s cubic-bezier(.16,1,.3,1) both}
+.v205-logo-mark{width:76px;height:76px;margin:0 auto 22px;border-radius:24px;display:grid;place-items:center;background:linear-gradient(145deg,#fff0b2,#9fffe5 55%,#a88cff);color:#111;font-size:38px;font-weight:1000;box-shadow:0 0 75px #9fffe577}
+.v205-studio{font-size:clamp(18px,4vw,32px);font-weight:950;letter-spacing:.38em;color:#f3f1ff;text-shadow:0 0 30px #bba4ff88}
+.v205-present{margin-top:13px;font-size:9px;letter-spacing:.48em;color:#9c91b6;animation:v205Fade 1s .8s both}
+@keyframes v205LogoIn{from{opacity:0;transform:translateY(24px) scale(.82);filter:blur(12px)}to{opacity:1;transform:none;filter:blur(0)}}
+@keyframes v205Fade{from{opacity:0}to{opacity:1}}
+#settingsScreen .full-panel{max-height:calc(100dvh - 28px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+#settingsScreen{align-items:flex-start;padding:14px 0}
+@media(max-width:600px){#v205FPS{right:6px;top:6px;font-size:10px}.v205-scenarios{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+<script id="v205-premium-systems">
+(()=>{'use strict';
+const $=id=>document.getElementById(id);
+const langs={
+en:{scenarios:'SCENARIOS',subtitle:'Choose a world for your menus',cost:'2 TAG POINTS',owned:'OWNED',active:'ACTIVE',buy:'UNLOCK · 2 POINTS',notEnough:'Not enough Tag Points. Win matches to earn more.',back:'BACK TO MENU',fps:'FPS',intro:'A ZYRON STUDIOS EXPERIENCE',names:['Cherry Blossom','Lava','City','Among Us Spaceship','Minecraft World','The Moon','Underwater','Massive Realistic Black Hole','Purple Space','Theatre']},
+es:{scenarios:'ESCENARIOS',subtitle:'Elegí un mundo para los menús',cost:'2 PUNTOS TAG',owned:'DESBLOQUEADO',active:'ACTIVO',buy:'DESBLOQUEAR · 2 PUNTOS',notEnough:'No tenés suficientes puntos TAG. Ganá partidas para conseguir más.',back:'VOLVER AL MENÚ',fps:'FPS',intro:'UNA EXPERIENCIA DE ZYRON STUDIOS',names:['Cerezos en flor','Lava','Ciudad','Nave de Among Us','Mundo de Minecraft','La Luna','Bajo el agua','Agujero negro realista gigante','Espacio violeta','Teatro']},
+arg:{scenarios:'ESCENARIOS',subtitle:'Elegí un mundo para los menús, ¡dale!',cost:'2 PUNTOS TAG',owned:'DESBLOQUEADO',active:'ACTIVO',buy:'DESBLOQUEAR · 2 PUNTOS',notEnough:'No te alcanzan los puntos TAG, che. Ganá partidas y volvé.',back:'VOLVER AL MENÚ',fps:'FPS',intro:'UNA EXPERIENCIA DE ZYRON STUDIOS',names:['Cerezos en flor','Lava','Ciudad','Nave de Among Us','Mundo de Minecraft','La Luna','Bajo el agua','Agujero negro realista gigante','Espacio violeta','Teatro']},
+fr:{scenarios:'DÉCORS',subtitle:'Choisissez un monde pour les menus',cost:'2 POINTS TAG',owned:'OBTENU',active:'ACTIF',buy:'DÉBLOQUER · 2 POINTS',notEnough:'Pas assez de points TAG. Gagnez des matchs.',back:'RETOUR AU MENU',fps:'IPS',intro:'UNE EXPÉRIENCE ZYRON STUDIOS',names:['Cerisier en fleurs','Lave','Ville','Vaisseau Among Us','Monde Minecraft','La Lune','Sous-marin','Immense trou noir réaliste','Espace violet','Théâtre']},
+pt:{scenarios:'CENÁRIOS',subtitle:'Escolha um mundo para os menus',cost:'2 PONTOS TAG',owned:'DESBLOQUEADO',active:'ATIVO',buy:'DESBLOQUEAR · 2 PONTOS',notEnough:'Pontos TAG insuficientes. Vença partidas.',back:'VOLTAR AO MENU',fps:'FPS',intro:'UMA EXPERIÊNCIA ZYRON STUDIOS',names:['Cerejeiras em flor','Lava','Cidade','Nave Among Us','Mundo Minecraft','A Lua','Debaixo d’água','Buraco negro realista gigante','Espaço roxo','Teatro']},
+it:{scenarios:'SCENARI',subtitle:'Scegli un mondo per i menu',cost:'2 PUNTI TAG',owned:'SBLOCCATO',active:'ATTIVO',buy:'SBLOCCA · 2 PUNTI',notEnough:'Punti TAG insufficienti. Vinci delle partite.',back:'TORNA AL MENU',fps:'FPS',intro:'UN’ESPERIENZA ZYRON STUDIOS',names:['Ciliegi in fiore','Lava','Città','Astronave Among Us','Mondo Minecraft','La Luna','Sott’acqua','Enorme buco nero realistico','Spazio viola','Teatro']},
+zh:{scenarios:'场景',subtitle:'为菜单选择一个世界',cost:'2 个 TAG 点数',owned:'已解锁',active:'使用中',buy:'解锁 · 2 点',notEnough:'TAG 点数不足。赢得比赛即可获得。',back:'返回菜单',fps:'帧率',intro:'ZYRON STUDIOS 呈现',names:['樱花','熔岩','城市','Among Us 飞船','Minecraft 世界','月球','水下','巨型写实黑洞','紫色太空','剧院']}
+};
+const keys=['cherry','lava','city','amongus','minecraft','moon','underwater','blackhole','space','theatre'];
+const icons=['🌸','🌋','🌆','🚀','⛏️','🌕','🐠','🕳️','🌌','🎭'];
+const cost=2, storage='tagV205Scenarios';
+const read=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v??d}catch(e){return d}};
+const write=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+let owned=new Set(read(storage,['space']));owned.add('space');
+let selected=read('tagV205ActiveScenario','space');
+function lang(){return langs[window.tagLanguage]||langs.en}
+function wallet(){const stats=read('tagProfileStatsV1',{});return Math.max(0,Number(read('tagV18Tagpoints',0))||0,Number(stats.tagpoints)||0)}
+function setWallet(v){write('tagV18Tagpoints',v);const stats=read('tagProfileStatsV1',{});stats.tagpoints=v;write('tagProfileStatsV1',stats);document.querySelectorAll('[data-v18-wallet]').forEach(e=>e.textContent='TAG POINTS · '+v);if($('v18WalletHome'))$('v18WalletHome').textContent='✦ '+v+' TAG POINTS';if($('profileTagpoints'))$('profileTagpoints').textContent=v;}
+function applyTheme(){document.body.classList.remove(...keys.map(k=>'v205-theme-'+k));document.body.classList.add('v205-theme-'+selected);write('tagV205ActiveScenario',selected);}
+function create(){
+ if(!$('v205ScenarioScreen')){
+  const section=document.createElement('section');section.id='v205ScenarioScreen';section.className='screen';
+  section.innerHTML='<div class="full-panel"><div class="eyebrow">ZYRON STUDIOS · V20.5</div><h2 id="v205Title"></h2><p id="v205Subtitle"></p><p id="v205Balance" class="profile-footnote"></p><div class="v205-scenarios" id="v205Grid"></div><div class="result-actions"><button class="primary-small" id="v205Back"></button></div></div>';
+  document.body.append(section);
+  $('v205Back').onclick=()=>window.TAGAppScreens?.show('menu');
+ }
+ if(!$('v205ScenariosBtn')){
+  const b=document.createElement('button');b.id='v205ScenariosBtn';b.textContent='✦ SCENARIOS';b.onclick=()=>{render();window.TAGAppScreens?.show('v205Scenario');};
+  $('menuUtility')?.append(b);
+ }
+}
+function render(){
+ const l=lang();$('v205Title').textContent=l.scenarios;$('v205Subtitle').textContent=l.subtitle;$('v205Back').textContent=l.back;$('v205Balance').textContent=l.cost+' · '+wallet()+' AVAILABLE';
+ $('v205Grid').innerHTML=keys.map((key,i)=>{const has=owned.has(key),active=selected===key;return '<button class="v205-scenario '+(has?'owned ':'')+(active?'active':'')+'" data-v205="'+key+'"><span class="v205-emoji">'+icons[i]+'</span><b>'+l.names[i]+'</b><small>'+(active?l.active:has?l.owned:l.buy)+'</small></button>'}).join('');
+ $('v205Grid').querySelectorAll('[data-v205]').forEach(b=>b.onclick=()=>choose(b.dataset.v205));
+}
+function choose(key){
+ if(!keys.includes(key))return;
+ if(!owned.has(key)){const balance=wallet();if(balance<cost){alert(lang().notEnough);return;}setWallet(balance-cost);owned.add(key);write(storage,[...owned]);}
+ selected=key;applyTheme();render();
+}
+function addFPS(){
+ if($('v205FPS'))return;
+ const el=document.createElement('div');el.id='v205FPS';el.textContent='FPS --';document.body.append(el);
+ let last=performance.now(),frames=0,fps=0;
+ function tick(now){frames++;if(now-last>=500){fps=Math.round(frames*1000/(now-last));frames=0;last=now;el.textContent=(lang().fps||'FPS')+' '+fps;}requestAnimationFrame(tick)}
+ requestAnimationFrame(tick);
+}
+function intro(){
+ if($('v205Intro'))return;
+ const el=document.createElement('div');el.id='v205Intro';el.innerHTML='<div class="v205-logo-wrap"><div class="v205-logo-mark">Z</div><div class="v205-studio">ZYRON STUDIOS</div><div class="v205-present">'+lang().intro+'</div></div>';document.body.append(el);
+ setTimeout(()=>{el.classList.add('done');setTimeout(()=>el.remove(),1100)},3000);
+}
+function init(){create();addFPS();applyTheme();intro();window.addEventListener('tag-language-changed',render);$('settingsLanguage')?.addEventListener('change',()=>setTimeout(render,0));}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+})();
+</script>
 </body>
 </html>
