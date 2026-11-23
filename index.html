@@ -3584,7 +3584,7 @@ rafId=requestAnimationFrame(frame);
   if(changelogV19){
     changelogV19.insertAdjacentHTML('afterbegin','<article class="changelog-entry current" id="v19ChangelogEntry"><h3>V19 · THE LIVING LEGENDS UPDATE</h3><p>Clickable historical HTML builds with online locked in past versions; V1-inspired combat-machine skin and full model previews; fourteen purchasable emotes with two-slot inventories and consent-based duo dances; four profile-card designs; human-player victory rewards; dynamic Unbeaten Champion ELO badge; Killer Bot difficulty and speed controls; item-in-hand animations; non-solid launch pads; low, medium and high graphics detail; richer realm atmospheres, menu decoration and smoother transitions.</p></article>');
     changelogV19.querySelectorAll('.changelog-entry').forEach(entry=>{
-      const heading=entry.querySelector('h3')?.textContent||'',found=heading.match(/(17\.5V|V\d+)/i),version=found?found[1].toUpperCase():'V19';
+      const heading=entry.querySelector('h3')?.textContent||'',found=heading.match(/(V17\.5V|17\.5V|V\d+)/i);let version=found?found[1].toUpperCase():'V19';if(version==='17.5V')version='V17.5V';
       entry.dataset.v19Version=version;entry.tabIndex=0;entry.setAttribute('role','link');
       entry.addEventListener('click',e=>{if(e.target.closest('a,button,select,input'))return;const destination=version==='V19'?'./index.html':'./history.html?version='+encodeURIComponent(version);window.open(destination,'_blank','noopener');});
       entry.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();entry.click();}});
