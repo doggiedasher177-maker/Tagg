@@ -3056,8 +3056,8 @@ rafId=requestAnimationFrame(frame);
   }
   function drawBullets(){bullets.forEach(b=>{ctx.save();ctx.fillStyle='#fff3a4';ctx.shadowColor='#ffb74a';ctx.shadowBlur=16;ctx.beginPath();ctx.ellipse(b.x,b.y,8,3,0,0,TAU);ctx.fill();ctx.restore();});}
   updateGame=function(dt){
-    if(mode==='playing'&&!onlineActive){updateKillerBots(dt);updateSpecialOrbs(dt);updateBullets(dt);}
-    oldUpdate(dt);
+    if(mode==='playing'&&!onlineActive){updateKillerBots(dt);if(mode==='playing')updateSpecialOrbs(dt);if(mode==='playing')updateBullets(dt);}
+    if(mode==='playing')oldUpdate(dt);
     if(mode==='playing'&&!onlineActive&&gameMode==='survivebots'){const alive=players.filter(p=>!roundEliminated.has(p.id));if(alive.length===1)finishRound(false,alive[0].id);}
   };
   const originalDrawWorld=renderWorld;
