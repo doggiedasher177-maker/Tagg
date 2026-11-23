@@ -361,6 +361,21 @@ try {
   assert(v18Diagnostics?.passed === v18Diagnostics?.total && v18Diagnostics.total >= 6,
     "V18 catalog/economy diagnostics failed: " + JSON.stringify(v18Diagnostics));
   await first.page.locator("#backAvatarsBtn").click();
+  await first.page.evaluate(() => window.TAGAppScreens?.show("menu"));
+  await first.page.locator("#settingsBtn").click();
+  await first.page.locator('[data-v18-setting-skin="0"]').waitFor({ state: "visible", timeout });
+  await first.page.locator('[data-v18-setting-skin="0"]').selectOption("gangbeast");
+  await first.page.locator('[data-v18-setting-color="0"]').evaluate(el => {
+    el.value = "#36a9e8";
+    el.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+  const savedSkinSettings = await first.page.evaluate(() => ({
+    skins: JSON.parse(localStorage.getItem("tagV18PlayerSkins") || "[]"),
+    colors: JSON.parse(localStorage.getItem("tagV18Colors") || "[]")
+  }));
+  assert(savedSkinSettings.skins[0] === "gangbeast" && savedSkinSettings.colors[0] === "#36a9e8",
+    "V18 Controls menu did not save the selected skin and player color: " + JSON.stringify(savedSkinSettings));
+  await first.page.locator("#backSettingsBtn").click();
   await first.page.evaluate(() => window.TAGAppScreens?.show("online"));
   await first.page.locator("#onlineName").waitFor({ state: "visible", timeout });
   results.push("PASS: V18 Item Shop, three-use item stack cap, skin/accessory/title purchases, and emotes Coming Soon tab");
