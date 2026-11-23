@@ -49,7 +49,8 @@ async function waitFor(page, fn, description, ms = timeout) {
     const status = await page.locator("#onlineStatus").textContent().catch(() => "unavailable");
     const diagnostics = page.__e2eDiagnostics || [];
     const button = await page.locator("#onlineConnectBtn").evaluate(el => ({ hidden: el.hidden, exists: !!el, disabled: el.disabled })).catch(() => null);
-    throw new Error("Timed out waiting for " + description + ". Last status: " + status + ". Button: " + JSON.stringify(button) + ". Browser diagnostics: " + diagnostics.slice(-20).join(" | "));
+    const game = await page.evaluate(() => window.TAGOnlineHooks?.getBotDebug?.() || null).catch(() => null);
+    throw new Error("Timed out waiting for " + description + ". Last status: " + status + ". Button: " + JSON.stringify(button) + ". Game: " + JSON.stringify(game) + ". Browser diagnostics: " + diagnostics.slice(-20).join(" | "));
   }
 }
 
@@ -289,13 +290,19 @@ try {
   contexts.push(tabletContext);
   const tabletPage = await tabletContext.newPage();
   await tabletPage.goto(SITE_URL, { waitUntil: "domcontentloaded", timeout: 45000 });
-  await tabletPage.evaluate(() => window.TAGOnlineHooks?.startLocalBotMatch({
-    playerName: "QA TABLET", botLevel: "easy", mapId: "forge", roundLength: 120
-  }));
+  await tabletPage.bringToFront();
+  const tabletStart = await tabletPage.evaluate(() => {
+    const hooks = window.TAGOnlineHooks;
+    if (!hooks?.startLocalBotMatch) return { started: false, reason: "game hooks not loaded" };
+    hooks.startLocalBotMatch({ playerName: "QA TABLET", botLevel: "easy", mapId: "forge", roundLength: 120 });
+    return { started: true, state: hooks.getBotDebug?.() || null };
+  });
+  assert(tabletStart.started, "Could not start the V18 tablet bot match: " + JSON.stringify(tabletStart));
   await waitFor(tabletPage,
-    () => window.TAGOnlineHooks?.getBotDebug?.()?.mode === "playing",
-    "V18 tablet bot match to enter active play",
-    12000);
+    () => window.TAGOnlineHooks?.getBotDebug?.()?.mode === "playing" &&
+      document.querySelector("#mobileControls")?.style.display === "grid",
+    "V18 tablet bot match and touch controls to enter active play",
+    22000);
   try {
     await tabletPage.waitForFunction(() =>
       document.querySelector("#mobileControls")?.style.display === "grid" &&
