@@ -2722,7 +2722,7 @@ rafId=requestAnimationFrame(frame);
     const eb=e.target.closest('[data-v18-eliminate]');if(eb)eliminatePlayer(Number(eb.dataset.v18Eliminate));
   });
   $('itemShopBtn')?.addEventListener('click',renderShops);
-  $('avatarsBtn')?.addEventListener('click',renderShops);
+  $('avatarsBtn')?.addEventListener('click',()=>{shopTab='skins';renderShops();});
   if($('itemShopBtn'))$('itemShopBtn').textContent='🛍 ITEM SHOP';
   if($('avatarsBtn'))$('avatarsBtn').textContent='✦ SKIN SHOP';
   const accessoriesShopBtn=document.createElement('button');accessoriesShopBtn.type='button';accessoriesShopBtn.id='accessoriesShopBtn';accessoriesShopBtn.className='secondary-btn';accessoriesShopBtn.textContent='🎩 ACCESSORIES SHOP';
