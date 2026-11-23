@@ -1,4 +1,4 @@
-# TAG! V20 — Cosmic Menu & Character Polish
+# TAG! V20.5 — Scenario Menus & Cinematic Polish
 
 This repository contains the TAG! browser client and a Nakama server runtime.
 
@@ -20,6 +20,13 @@ For a hosted deployment, deploy this repository with a persistent Postgres datab
 - Offline historical snapshots for V14–V19: `archive/legacy-offline/` (mirrored in `docs/archive/` for Pages)
 - Nakama runtime match module: `server/modules/tag_match.lua`
 - Docker Compose: Nakama + PostgreSQL
+
+## V20.5 release notes
+
+- Added a Scenarios menu with ten selectable menu aesthetics: Cherry Blossom, Lava, City, Among Us Spaceship, Minecraft World, The Moon, Underwater, Massive Realistic Black Hole, Purple Space, and Theatre. Each new scenario costs 2 Tag Points; the original purple-space look is included as the default unlock.
+- Added a persistent live FPS counter and a black-screen Zyron Studios logo intro.
+- Made the settings panel vertically scrollable so options remain reachable on smaller screens.
+- Added localized scenario names and controls for English, Spanish, Argentine Spanish, French, Portuguese, Italian and Chinese. Existing game screens still contain legacy text that requires a full localization pass; this release does not claim every string is translated.
 
 ## V20 release notes
 
