@@ -149,6 +149,7 @@ try {
   phonePage.on("console", message => { if (message.type() === "error") phonePage.__e2eDiagnostics.push("console: " + message.text()); });
   phonePage.on("pageerror", error => phonePage.__e2eDiagnostics.push("pageerror: " + String(error?.stack || error)));
   await phonePage.goto(SITE_URL, { waitUntil: "domcontentloaded", timeout: 45000 });
+  await phonePage.bringToFront();
   await phonePage.locator("#playMenuBtn").click();
   await phonePage.locator("#count").selectOption("4");
   await phonePage.locator("#botCount").selectOption("1");
@@ -208,6 +209,7 @@ try {
   // V17: both stationary and moving custom structures must collide from underneath.
   await phonePage.bringToFront();
   const verifyStructureUnderside = async (mapId, motionAmp) => {
+    await phonePage.bringToFront();
     await phonePage.evaluate(({ mapId, motionAmp }) => {
       const ok = window.TAGOnlineHooks.loadCustomMap({
         id: mapId, name: "V17 Structure Collision", description: "Stationary/moving solid structure QA",
