@@ -3178,7 +3178,7 @@ rafId=requestAnimationFrame(frame);
   window.TAGV18Diagnostics={
     run:function(){
       const checks=[
-        ['9 skin designs',skins.length===9],
+        ['10 skin designs including V1',skins.length===10&&skins.some(s=>s.id==='v1')],
         ['shop prices',skins.every(()=>true)&&accessories.filter(a=>a.id!=='christmas').every(a=>a.price===1)&&accessories.find(a=>a.id==='christmas').price===2],
         ['item stack cap',items.every(x=>(stock[x.id]||0)<=3)],
         ['robot limit',killerCount>=1&&killerCount<=5],
