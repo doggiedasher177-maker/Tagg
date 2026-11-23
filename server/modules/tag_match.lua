@@ -167,6 +167,12 @@ local function public_state(state)
       face = p.face or 1,
       emote = p.emote or "",
       heldItem = p.held_item or "",
+      duoInviteId = p.duo_invite_id or "",
+      duoInviteTarget = p.duo_invite_target or "",
+      duoInviteToken = p.duo_invite_token or "",
+      duoResponse = p.duo_response or "",
+      duoResponseTo = p.duo_response_to or "",
+      duoResponseToken = p.duo_response_token or "",
       slot = slot - 1,
       connected = true,
       violations = p.violations or 0,
@@ -457,6 +463,41 @@ local function accept_player_snapshot(state, sender, data, tick)
   local held_item = type(source.heldItem) == "string" and source.heldItem:sub(1, 24) or ""
   player.emote = allowed_emotes[emote] and emote or ""
   player.held_item = allowed_items[held_item] and held_item or ""
+
+  -- Consent-based V19 duo-emote handshakes. Only connected human players can
+  -- invite/respond; the server simply relays cosmetic state, not game actions.
+  local invite_id = type(source.duoInviteId) == "string" and source.duoInviteId:sub(1, 24) or ""
+  local invite_target = type(source.duoInviteTarget) == "string" and source.duoInviteTarget:sub(1, 128) or ""
+  local invite_token = type(source.duoInviteToken) == "string" and source.duoInviteToken:sub(1, 64) or ""
+  local target_player = invite_target ~= "" and state.players[invite_target] or nil
+  if allowed_emotes[invite_id] and invite_id ~= "" and invite_id ~= "dapup" and invite_id ~= "boogiedown" then
+    invite_id = ""
+  end
+  if (invite_id == "dapup" or invite_id == "boogiedown") and invite_token ~= "" and
+    target_player and target_player.connected and not target_player.is_bot and invite_target ~= sender.user_id then
+    player.duo_invite_id = invite_id
+    player.duo_invite_target = invite_target
+    player.duo_invite_token = invite_token
+  else
+    player.duo_invite_id = ""
+    player.duo_invite_target = ""
+    player.duo_invite_token = ""
+  end
+
+  local response = type(source.duoResponse) == "string" and source.duoResponse:sub(1, 8) or ""
+  local response_to = type(source.duoResponseTo) == "string" and source.duoResponseTo:sub(1, 128) or ""
+  local response_token = type(source.duoResponseToken) == "string" and source.duoResponseToken:sub(1, 64) or ""
+  local response_target = response_to ~= "" and state.players[response_to] or nil
+  if (response == "accept" or response == "decline") and response_token ~= "" and
+    response_target and response_target.connected and not response_target.is_bot and response_to ~= sender.user_id then
+    player.duo_response = response
+    player.duo_response_to = response_to
+    player.duo_response_token = response_token
+  else
+    player.duo_response = ""
+    player.duo_response_to = ""
+    player.duo_response_token = ""
+  end
   player.last_tick = tick
 end
 
