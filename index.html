@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#09051c">
 <meta name="description" content="TAG! — a local multiplayer platform chase across many living realms.">
-<title>TAG! — Zyron Studios V20.5 · Ultra Detail Update</title>
+<title>TAG! — Zyron Studios V21 · Living Realms & Dance Gallery</title>
 <style>
 :root{
   --ink:#edf5ff;--muted:#9eafc5;--line:rgba(202,224,255,.15);
@@ -746,9 +746,23 @@ button:active{transform:translateY(1px) scale(.985)}
   </div>
 </section>
 
-<section class="screen" id="settingsScreen" aria-label="Settings"><div class="full-panel"><div class="eyebrow">GAME SETTINGS</div><h2>Settings</h2><div class="setting-row"><label for="fovSlider">Field of view <b id="fovValue">100</b></label><input id="fovSlider" type="range" min="50" max="200" value="100" step="5"></div><p>100 is the close default view. The camera only widens a little to keep nearby runners in frame; distant runners do not force a huge zoom-out.</p><div class="setting-row"><label for="settingsLanguage">Language</label><select id="settingsLanguage"><option value="en">English</option><option value="es">Español (España)</option><option value="fr">Français</option><option value="pt">Português</option><option value="it">Italiano</option><option value="zh">中文</option><option value="arg">Argentino 🇦🇷</option></select></div><div class="setting-row"><label for="settingsMusicVolume">Music volume <b id="settingsMusicValue">65%</b></label><input id="settingsMusicVolume" type="range" min="0" max="100" step="1" value="65"></div><button class="secondary-btn" id="settingsMusicToggle">MUSIC: ON</button><div class="music-indicator" id="settingsMusicStatus">ORIGINAL MAP SOUNDTRACK</div><button class="secondary-btn" id="resetWinsBtn">RESET ALL WIN COUNTERS</button><div class="result-actions"><button class="primary-small" id="backSettingsBtn">BACK TO TITLE</button></div></div></section>
+<section class="screen" id="settingsScreen" aria-label="Settings"><div class="full-panel"><div class="eyebrow">GAME SETTINGS</div><h2>Settings</h2><div class="setting-row"><label for="fovSlider">Field of view <b id="fovValue">100</b></label><input id="fovSlider" type="range" min="50" max="200" value="100" step="5"></div><p>100 is the close default view. The camera only widens a little to keep nearby runners in frame; distant runners do not force a huge zoom-out.</p><div class="setting-row"><label for="settingsLanguage">Language</label><select id="settingsLanguage"><option value="en">English</option><option value="es">Español (España)</option><option value="fr">Français</option><option value="pt">Português</option><option value="it">Italiano</option><option value="zh">中文</option><option value="arg">Argentino 🇦🇷</option></select></div><div class="setting-row"><label for="settingsMusicVolume">Music volume <b id="settingsMusicValue">65%</b></label><input id="settingsMusicVolume" type="range" min="0" max="100" step="1" value="65"></div><button class="secondary-btn" id="settingsMusicToggle">MUSIC: ON</button><div class="music-indicator" id="settingsMusicStatus">ORIGINAL MAP SOUNDTRACK</div><button class="secondary-btn" id="openControlsGalleryBtn" type="button">⌨ CONTROLS & DANCE GALLERY</button><button class="secondary-btn" id="resetWinsBtn">RESET ALL WIN COUNTERS</button><div class="result-actions"><button class="primary-small" id="backSettingsBtn">BACK TO TITLE</button></div></div></section>
+
+<section class="screen" id="controlsShowcaseScreen" aria-label="Controls and dance gallery">
+ <div class="full-panel">
+  <div class="eyebrow">ZYRON STUDIOS · RUNNER GUIDE</div>
+  <h2 id="v21ControlsTitle">Controls & Dance Gallery</h2>
+  <p id="v21ControlsIntro">Your current player key assignments and the full emote choreography collection.</p>
+  <h3 id="v21ControlsSubhead">PLAYER CONTROLS</h3><div class="v21-controls-layout" id="v21ControlRows"></div>
+  <h3 id="v21DanceSubhead">DANCE SHOWCASE · 14 EMOTES</h3>
+  <p id="v21DanceNote">Animated previews of the emotes you can equip and use in a match.</p>
+  <div class="v21-dance-gallery" id="v21DanceGallery"></div>
+  <div class="result-actions"><button class="primary-small" id="v21BackControls" type="button">BACK TO SETTINGS</button></div>
+ </div>
+</section>
 <section class="screen" id="tournamentScreen" aria-label="Tournament setup"><div class="full-panel"><div class="eyebrow">TAG! WORLD CUP</div><h2>Tournaments</h2><p>Build a local elimination bracket. Pick a field size and decide how each duel is judged.</p><div class="setting-row"><label for="tournamentSize">Tournament size</label><select id="tournamentSize"><option value="4">4 groups · 8 players</option><option value="6">6 groups · 12 players</option><option value="8">8 groups · 16 players</option></select></div><div class="setting-row"><label for="tournamentRule">Duel winner</label><select id="tournamentRule"><option value="points">Most points</option><option value="untagged">Player who avoids the tag</option></select></div><div class="setting-row"><label for="tournamentModifier">Tournament modifiers · up to 3</label><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;width:65%"><select id="tournamentModifier"><option value="none">Slot 1 · None</option><option value="doublejump">Double jump</option><option value="superspeed">Speed boost</option><option value="decoys">Decoys</option><option value="chained">Chained</option><option value="sentinels">Sentinels</option><option value="parry">Parry</option><option value="munci">Angry Munci</option></select><select id="tournamentModifier2"><option value="none">Slot 2 · None</option><option value="doublejump">Double jump</option><option value="superspeed">Speed boost</option><option value="decoys">Decoys</option><option value="chained">Chained</option><option value="sentinels">Sentinels</option><option value="parry">Parry</option><option value="munci">Angry Munci</option></select><select id="tournamentModifier3"><option value="none">Slot 3 · None</option><option value="doublejump">Double jump</option><option value="superspeed">Speed boost</option><option value="decoys">Decoys</option><option value="chained">Chained</option><option value="sentinels">Sentinels</option><option value="parry">Parry</option><option value="munci">Angry Munci</option></select></div></div><p id="tournamentInfo">Create up to 8 local brackets. Assign entrants as humans or bots, then play matchups.</p><h3 class="subsection-title">Entrants · choose human or bot</h3><div id="tournamentEntrants" class="entrant-grid"></div><div class="result-actions"><button class="primary-small" id="createTournamentBtn">CREATE BRACKET</button><button class="secondary-btn" id="backTournamentBtn">BACK TO TITLE</button></div><div id="tournamentList" class="control-grid"></div><div id="tournamentBracket" class="tournament-bracket"></div><div id="tournamentMatchPanel" class="setting-row" style="display:none;flex-direction:column;align-items:stretch"><h3 id="matchTitle">Matchup</h3><p id="matchPlayers"></p><div class="result-actions"><button class="primary-small" id="playMatchA">PLAY AS PLAYER A</button><button class="primary-small" id="playMatchB">PLAY AS PLAYER B</button><button class="secondary-btn" id="coinFlipMatch">COIN FLIP</button></div><button class="secondary-btn" id="closeMatchPanel">CLOSE MATCH</button></div></div></section>
-<section class="screen" id="changelogScreen" aria-label="What's new"><div class="full-panel"><div class="eyebrow">ZYRON STUDIOS · COMPLETE UPDATE HISTORY</div><h2>TAG! Update Log · V1–19.5V</h2><p>Milestones from the original V1 prototype through 19.5V. Historical releases open as offline snapshots; only the current 19.5V build keeps online multiplayer enabled.</p><div class="changelog-timeline" id="changelogTimeline">
+<section class="screen" id="changelogScreen" aria-label="What's new"><div class="full-panel"><div class="eyebrow">ZYRON STUDIOS · COMPLETE UPDATE HISTORY</div><h2>TAG! Update Log · V1–21</h2><p>Milestones from the original V1 prototype through 19.5V. Historical releases open as offline snapshots; only the current 19.5V build keeps online multiplayer enabled.</p><div class="changelog-timeline" id="changelogTimeline">
+<article class="changelog-entry current" id="v21ChangelogEntry"><h3>V21 · LIVING REALMS, MODEL PREVIEWS & DANCE GALLERY</h3><p>Rebuilt the title-screen actions as a responsive grid with independent scrolling so every menu button remains reachable on small displays. Added a Controls & Dance Gallery for all 14 existing emotes, animated runner previews in the emote store, rendered accessory model artwork, and individual scenery accents across all 13 built-in realms. Existing emote gameplay, keybinds, duo invitations, saved inventory, collision and online systems are preserved.</p></article>
   <article class="changelog-entry current" id="v18ChangelogEntry"><h3>V18 · PEAK! CUSTOMIZATION & CHAOS</h3><p>Unlocked the Skin, Accessories and Item Shops; added Tag Points for match wins, stackable one-use items, nine player skins, new accessories, player color and title selection, remappable keyboard controls, adjustable mobile item controls, an emotes tab marked Coming Soon, the Glitchy Landscapes map, X2 and Jump Orbs, two-hit guns, a Killer Bot survival mode with up to five robots, space-themed menus, a Zyron Studios info panel, and pause-menu player elimination. Cosmetics and items cost 1 Tag Point except the Christmas Hat, which costs 2.</p></article>
   <article class="changelog-entry current"><h3>17.5V · ORIGINAL UPDATE HISTORY RESTORED</h3><p>Restored the original TAG! milestones V1–V3 to the complete update history. This is a history-only release: the game itself remains labeled V17, and no gameplay systems were changed.</p></article>
   <article class="changelog-entry"><h3>V17 · SOLID STRUCTURES & IN-MATCH FRIENDS</h3><p>Fixed custom structure geometry so collision boxes line up with structures drawn in the level editor. Stationary and moving structures are solid from the top, bottom, left and right: jumping into their underside stops the jump and sends the runner back down. The in-match friend mailbox also supports manual refresh and automatic refresh on Nakama notifications, with outgoing, incoming, decline, resend, accept and mutual friendship records verified.</p></article>
@@ -2980,6 +2994,25 @@ rafId=requestAnimationFrame(frame);
     if(kind==='item')stock[id]=(stock[id]||0)+1;
     wallet-=cost;save();renderShops();notice('Purchase complete!');
   }
+
+  function accessoryModelSvg(id){
+    const drawings={
+      fedora:'<path d="M17 61Q60 49 103 61Q99 73 60 75Q22 73 17 61Z" fill="#171a28" stroke="#aab3c8" stroke-width="2"/><path d="M34 60L41 25Q60 15 79 25L86 60Z" fill="#34303d" stroke="#aab3c8" stroke-width="2"/><path d="M38 47Q60 53 82 47L80 54Q60 61 40 54Z" fill="#b78a58"/>',
+      peanut:'<path d="M44 12C20 8 21 37 37 43C18 57 35 79 54 70C68 82 91 66 81 48C98 30 82 9 63 19C57 10 50 9 44 12Z" fill="#a66a30" stroke="#ffdfa4" stroke-width="3"/><path d="M47 17Q31 37 47 43M65 20Q84 38 67 49M45 48Q33 61 52 68M67 51Q83 62 70 71" fill="none" stroke="#f8d59d" stroke-width="2"/>',
+      watermelon:'<path d="M16 62A44 44 0 0 1 104 62Z" fill="#2b8b51" stroke="#a7edbb" stroke-width="3"/><path d="M24 61A36 36 0 0 1 96 61Z" fill="#f5e6ba"/><path d="M29 60A31 31 0 0 1 91 60Z" fill="#e64d63"/><path d="M38 46l-3 9M51 34l-2 8M66 34l2 8M80 46l3 8" stroke="#253f2f" stroke-width="3" stroke-linecap="round"/>',
+      cone:'<path d="M22 72L50 13Q60 4 70 13L98 72Z" fill="#ff792d" stroke="#ffd0a4" stroke-width="2"/><path d="M37 48H84L89 60H31Z" fill="#fff1d9"/><path d="M17 70Q60 65 103 70L101 81Q60 88 19 81Z" fill="#2b3440" stroke="#9ca9ba" stroke-width="2"/>',
+      pumpkin:'<ellipse cx="60" cy="49" rx="39" ry="29" fill="#f28a22" stroke="#ffcf86" stroke-width="2"/><path d="M60 21C46 31 46 65 60 78M60 21C74 31 74 65 60 78M42 26Q28 48 42 72M78 26Q92 48 78 72" fill="none" stroke="#a84c15" stroke-width="3"/><path d="M55 22V11Q60 4 65 11L64 23Z" fill="#497b39"/>',
+      witch:'<path d="M17 66Q60 54 103 66Q95 78 60 79Q25 78 17 66Z" fill="#20162f" stroke="#b48ce5" stroke-width="2"/><path d="M31 63L56 10Q61 1 67 13L88 63Z" fill="#392650" stroke="#d1b2f5" stroke-width="2"/><path d="M38 52Q60 57 81 52L84 63Q59 69 34 63Z" fill="#9b55bf"/><path d="M51 44H72" stroke="#f4b8ff" stroke-width="4"/>',
+      marker:'<g transform="rotate(-24 60 45)"><rect x="28" y="24" width="64" height="40" rx="8" fill="#f2d83d" stroke="#fff0a5" stroke-width="2"/><path d="M28 34H92V43H28Z" fill="#28303d"/><path d="M35 28H80" stroke="#fff" stroke-width="3" opacity=".55"/><path d="M82 24L100 34V54L92 64H82Z" fill="#d95b50" stroke="#682e34" stroke-width="2"/><path d="M100 34L108 39V49L100 54Z" fill="#343b48"/></g>',
+      christmas:'<path d="M25 68Q43 18 76 14Q69 44 96 67Z" fill="#c92743" stroke="#ffb0bd" stroke-width="2"/><path d="M24 62Q58 52 97 66L94 78Q55 88 22 76Z" fill="#f4f3ee" stroke="#fff" stroke-width="2"/><circle cx="78" cy="13" r="9" fill="#fff" stroke="#d5dbe7" stroke-width="2"/>'
+    };
+    return '<svg viewBox="0 0 120 90" role="img" aria-label="'+id+' accessory model">'+(drawings[id]||'')+'</svg>';
+  }
+  function v21DancePreview(id,duo){
+    const figure='<div class="v21-dancer"><i class="v21-head"></i><i class="v21-visor"></i><i class="v21-torso"></i><i class="v21-chest"></i><i class="v21-arm v21-left-arm"></i><i class="v21-arm v21-right-arm"></i><i class="v21-leg v21-left-leg"></i><i class="v21-leg v21-right-leg"></i></div>';
+    return '<div class="v21-dance-stage v21-shop-preview v21-dance-'+id+'" aria-hidden="true"><div class="v21-dance-floor"></div>'+figure+(duo?figure.replace('v21-dancer','v21-dancer v21-partner'):'')+'</div>';
+  }
+
   function card(kind,x){
     const id=typeof x==='string'?x:x.id;
     const name=typeof x==='string'?x:x.name;
@@ -2989,7 +3022,8 @@ rafId=requestAnimationFrame(frame);
     const qty=kind==='item'?(stock[id]||0):0,price=kind==='accessory'?(x.price||1):1;
     const disabled=kind==='item'?qty>=3:owned;
     const label=kind==='item'?(qty>=3?'MAX STACK':'BUY · 1 POINT'):owned?'OWNED':'BUY · '+price+' POINT'+(price===1?'':'S');
-    return '<article class="v18-shop-card"><div class="v18-shop-icon">'+icon+'</div><b>'+esc(name)+'</b><small>'+esc(desc||'TAG! collectible')+'</small>'+(kind==='item'?'<span class="v18-stock">STOCK · '+qty+' / 3</span>':'')+'<button type="button" data-v18-buy="'+kind+'" data-v18-id="'+esc(id)+'" '+(disabled?'disabled':'')+'>'+label+'</button></article>';
+    const art=kind==='accessory'?'<div class="v21-accessory-preview">'+accessoryModelSvg(id)+'</div>':'<div class="v18-shop-icon">'+icon+'</div>';
+    return '<article class="v18-shop-card">'+art+'<b>'+esc(name)+'</b><small>'+esc(desc||'TAG! collectible')+'</small>'+(kind==='item'?'<span class="v18-stock">STOCK · '+qty+' / 3</span>':'')+'<button type="button" data-v18-buy="'+kind+'" data-v18-id="'+esc(id)+'" '+(disabled?'disabled':'')+'>'+label+'</button></article>';
   }
   function buildItems(){
     const el=$('itemShopScreen');if(!el)return;
@@ -3555,7 +3589,7 @@ rafId=requestAnimationFrame(frame);
 
   function v19RenderEmoteStore(){
     const body=$('v18CosmeticBody');if(!body)return;
-    body.innerHTML='<div class="v19-shop-intro"><b>EMOTE STORE</b><span>Every emote costs 1 TAG POINT. Purchased emotes stay in your inventory until equipped in the Ready Room. Press Q or E during a match.</span></div><div class="v19-emote-grid">'+v19Emotes.map(x=>'<article class="v19-collectible"><div class="v19-emote-art">'+({distraction:'🕺',jamal:'💃',headbop:'🎧',originalsound:'🎵',griddy:'👟',subaru:'🪜',purple:'🟣',defaultdance:'🪩',kwikflip:'🔄',dapup:'🤝',gangnam:'🐎',hero:'🦸',boogiedown:'🪩',icecream:'🍦'}[x.id])+'</div><b>'+esc(x.name)+(x.duo?' · DUO':'')+'</b><small>'+esc(x.desc)+'</small><button type="button" data-v19-action="buy-emote" data-v19-id="'+x.id+'" '+(ownedEmotes.has(x.id)?'disabled':'')+'>'+(ownedEmotes.has(x.id)?'OWNED':'BUY · 1 TAG POINT')+'</button></article>').join('')+'</div><p class="v18-note">Duo emotes send an invitation to another human runner. The second player chooses JOIN or DECLINE.</p>';
+    body.innerHTML='<div class="v19-shop-intro"><b>EMOTE STORE</b><span>Every emote costs 1 TAG POINT. Purchased emotes stay in your inventory until equipped in the Ready Room. Press Q or E during a match.</span></div><div class="v19-emote-grid">'+v19Emotes.map(x=>'<article class="v19-collectible">'+v21DancePreview(x.id,!!x.duo)+'<b>'+esc(x.name)+(x.duo?' · DUO':'')+'</b><small>'+esc(x.desc)+'</small><button type="button" data-v19-action="buy-emote" data-v19-id="'+x.id+'" '+(ownedEmotes.has(x.id)?'disabled':'')+'>'+(ownedEmotes.has(x.id)?'OWNED':'BUY · 1 TAG POINT')+'</button></article>').join('')+'</div><p class="v18-note">Duo emotes send an invitation to another human runner. The second player chooses JOIN or DECLINE.</p>';
   }
   function v19RenderEmoteInventory(){
     const body=$('v18CosmeticBody');if(!body)return;const owned=v19Emotes.filter(x=>ownedEmotes.has(x.id));
@@ -4780,6 +4814,205 @@ function intro(){
 }
 function init(){create();addFPS();applyTheme();intro();window.addEventListener('tag-language-changed',render);$('settingsLanguage')?.addEventListener('change',()=>setTimeout(render,0));}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+})();
+</script>
+
+<style id="v21-responsive-gallery-polish">
+/* Home menu: a scroll-safe grid at every viewport size. */
+#menuScreen.screen.show{height:100dvh;min-height:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+#menuScreen:not(.setup-open) .menu-shell{min-height:100%;padding:clamp(14px,2vh,24px) clamp(14px,3vw,42px) calc(48px + env(safe-area-inset-bottom))}
+#menuScreen:not(.setup-open) .hero{width:min(860px,100%);padding:0}
+#menuScreen:not(.setup-open) .hero-actions{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));width:min(790px,100%);max-width:790px;margin:clamp(10px,1.4vh,18px) auto 0;gap:9px;align-items:stretch}
+#menuScreen:not(.setup-open) .hero-actions>*{min-width:0;max-width:100%;width:100%}
+#menuScreen:not(.setup-open) .hero-actions .secondary-btn{min-width:0;min-height:48px;height:100%;padding:9px 7px;white-space:normal;overflow-wrap:anywhere;line-height:1.2;font-size:clamp(8px,.72vw,10px)}
+#menuScreen:not(.setup-open) .hero-actions #playMenuBtn{grid-column:1/-1;justify-self:center;width:min(260px,100%);height:auto;min-height:58px;flex:auto;padding:12px 16px}
+#menuScreen:not(.setup-open) .cosmetic-menu-pair,#menuScreen:not(.setup-open) .online-profile-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;min-width:0}
+#menuScreen:not(.setup-open) .hero-actions .cosmetic-menu-pair button,#menuScreen:not(.setup-open) .hero-actions .online-profile-pair button{width:100%;min-width:0;min-height:48px;padding:8px 5px;white-space:normal;overflow-wrap:anywhere;line-height:1.2;font-size:clamp(7px,.66vw,9px)}
+#menuScreen:not(.setup-open) .creator-line{max-width:850px;margin:12px auto 0;line-height:1.5}
+#menuScreen.setup-open.screen.show{padding:8px 0;overflow-y:auto}
+#menuScreen.setup-open .menu-shell{min-height:0;padding:8px 4px 20px}
+#menuScreen.setup-open .setup{max-height:calc(100dvh - 16px);overscroll-behavior:contain}
+@media(max-width:760px){
+ #menuScreen:not(.setup-open) .hero-actions{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+ #menuScreen:not(.setup-open) .hero-actions #playMenuBtn{grid-column:1/-1}
+ #menuScreen:not(.setup-open) .hero-actions .cosmetic-menu-pair,#menuScreen:not(.setup-open) .hero-actions .online-profile-pair{grid-column:1/-1}
+ #menuScreen:not(.setup-open) .hero-actions .secondary-btn{min-height:46px;font-size:8px}
+ #menuScreen:not(.setup-open) .hero-actions .cosmetic-menu-pair button,#menuScreen:not(.setup-open) .hero-actions .online-profile-pair button{min-height:46px;font-size:8px}
+}
+@media(max-width:380px){
+ #menuScreen:not(.setup-open) .menu-shell{padding-left:9px;padding-right:9px}
+ #menuScreen:not(.setup-open) .hero-actions{gap:6px}
+ #menuScreen:not(.setup-open) .hero-actions .secondary-btn{font-size:7px;padding:7px 4px}
+ #menuScreen:not(.setup-open) .cosmetic-menu-pair,#menuScreen:not(.setup-open) .online-profile-pair{gap:5px}
+}
+/* Character-like animated previews for all fourteen existing emotes. */
+.v21-dance-stage{position:relative;height:118px;overflow:hidden;border-radius:13px;border:1px solid #ffffff25;background:radial-gradient(ellipse at 50% 18%,#5551a5 0,transparent 48%),linear-gradient(145deg,#1b2146,#10182b 65%,#0b2539);isolation:isolate}
+.v21-dance-stage:before{content:"";position:absolute;inset:0;opacity:.22;background-image:linear-gradient(90deg,#9ec7ff22 1px,transparent 1px),linear-gradient(#9ec7ff22 1px,transparent 1px);background-size:18px 18px;mask-image:linear-gradient(transparent,#000)}
+.v21-dance-floor{position:absolute;left:10%;right:10%;bottom:13px;height:17px;border-radius:50%;background:#6ee7f833;filter:blur(6px);box-shadow:0 0 24px #8b5cf655}
+.v21-dancer{position:absolute;z-index:2;left:50%;bottom:20px;width:48px;height:79px;transform:translateX(-50%);transform-origin:50% 100%;filter:drop-shadow(0 7px 6px #0008)}
+.v21-head{position:absolute;top:0;left:16px;width:17px;height:17px;border-radius:50%;background:linear-gradient(145deg,#f2fbff,#9bc7df 60%,#526d91);border:1px solid #ffffffaa}
+.v21-visor{position:absolute;z-index:2;top:7px;left:17px;width:15px;height:6px;border-radius:5px;background:linear-gradient(90deg,#2d6e9c,#a4f7ff,#3588bd);box-shadow:0 0 9px #67e8f9aa}
+.v21-torso{position:absolute;top:17px;left:11px;width:27px;height:31px;border-radius:9px 9px 7px 7px;background:linear-gradient(110deg,#d7e8f2,#6e9fc2 45%,#293c60);border:1px solid #e5f5ff99;box-shadow:inset -4px -3px 0 #17284255}
+.v21-chest{position:absolute;z-index:2;top:28px;left:21px;width:7px;height:7px;border-radius:50%;background:#7df6ff;box-shadow:0 0 10px #68f4ff}
+.v21-arm{position:absolute;top:20px;width:7px;height:28px;border-radius:7px;background:linear-gradient(90deg,#dbeaf1,#638aab);transform-origin:50% 5px}
+.v21-left-arm{left:6px;transform:rotate(18deg)}.v21-right-arm{right:6px;transform:rotate(-18deg)}
+.v21-leg{position:absolute;top:44px;width:9px;height:27px;border-radius:5px;background:linear-gradient(90deg,#263f60,#9cb6cf);transform-origin:50% 4px}
+.v21-left-leg{left:13px}.v21-right-leg{right:13px}
+.v21-dance-stage .v21-partner{left:67%;transform:translateX(-50%) scale(.78);opacity:.94}
+.v21-dance-stage .v21-partner:after{content:"";position:absolute;left:-42px;top:19px;width:4px;height:4px;border-radius:50%;background:#ffe2a8;box-shadow:0 0 12px #ffe2a8}
+.v21-dance-distraction .v21-dancer{animation:v21-bounce .48s ease-in-out infinite alternate}.v21-dance-distraction .v21-left-arm{animation:v21-arm-a .38s ease-in-out infinite alternate}.v21-dance-distraction .v21-right-arm{animation:v21-arm-b .38s ease-in-out infinite alternate}.v21-dance-distraction .v21-left-leg{animation:v21-step-a .38s ease-in-out infinite alternate}.v21-dance-distraction .v21-right-leg{animation:v21-step-b .38s ease-in-out infinite alternate}
+.v21-dance-jamal .v21-dancer{animation:v21-groove .35s ease-in-out infinite alternate}.v21-dance-jamal .v21-arm{animation:v21-pump .31s ease-in-out infinite alternate}.v21-dance-jamal .v21-leg{animation:v21-tap .28s ease-in-out infinite alternate}
+.v21-dance-headbop .v21-dancer{animation:v21-head-bop .62s ease-in-out infinite}.v21-dance-headbop .v21-arm{animation:v21-small-wave .62s ease-in-out infinite alternate}
+.v21-dance-originalsound .v21-dancer{animation:v21-sway .86s ease-in-out infinite alternate}.v21-dance-originalsound .v21-arm{animation:v21-arm-a .7s ease-in-out infinite alternate}
+.v21-dance-griddy .v21-dancer{animation:v21-griddy .76s ease-in-out infinite alternate}.v21-dance-griddy .v21-leg{animation:v21-kick .45s ease-in-out infinite alternate}
+.v21-dance-subaru .v21-dancer{animation:v21-climb .95s ease-in-out infinite alternate}.v21-dance-subaru:after{content:"";position:absolute;left:12%;bottom:24px;width:76%;height:27px;background:repeating-linear-gradient(165deg,transparent 0 12px,#b6a3ea99 13px 16px);opacity:.45}.v21-dance-subaru .v21-arm{animation:v21-climb-arm .7s ease-in-out infinite alternate}.v21-dance-subaru .v21-leg{animation:v21-climb-leg .6s ease-in-out infinite alternate}
+.v21-dance-purple .v21-dancer,.v21-dance-defaultdance .v21-dancer{animation:v21-bounce .56s ease-in-out infinite alternate}.v21-dance-purple .v21-arm{animation:v21-spread .46s ease-in-out infinite alternate}.v21-dance-purple .v21-leg{animation:v21-wide-step .46s ease-in-out infinite alternate}.v21-dance-defaultdance .v21-arm{animation:v21-arm-b .46s ease-in-out infinite alternate}.v21-dance-defaultdance .v21-leg{animation:v21-tap .36s ease-in-out infinite alternate}
+.v21-dance-kwikflip .v21-dancer{animation:v21-quickflip 1.1s cubic-bezier(.3,.8,.3,1) infinite}.v21-dance-kwikflip .v21-arm{animation:v21-spread .48s ease-in-out infinite alternate}
+.v21-dance-dapup .v21-dancer:not(.v21-partner){left:34%;animation:v21-bounce .52s ease-in-out infinite alternate}.v21-dance-dapup .v21-partner{animation:v21-partner-bop .52s ease-in-out infinite alternate}.v21-dance-dapup .v21-arm{animation:v21-dap .5s ease-in-out infinite alternate}
+.v21-dance-gangnam .v21-dancer{animation:v21-horse .55s ease-in-out infinite alternate}.v21-dance-gangnam .v21-arm{animation:v21-horse-arm .55s ease-in-out infinite alternate}.v21-dance-gangnam .v21-leg{animation:v21-tap .35s ease-in-out infinite alternate}
+.v21-dance-hero .v21-dancer{animation:v21-hero .8s ease-in-out infinite alternate}.v21-dance-hero .v21-left-arm{animation:v21-hero-arm .8s ease-in-out infinite alternate}
+.v21-dance-boogiedown .v21-dancer{animation:v21-boogie .58s ease-in-out infinite alternate}.v21-dance-boogiedown .v21-arm{animation:v21-circle .58s ease-in-out infinite alternate}.v21-dance-boogiedown .v21-leg{animation:v21-wide-step .48s ease-in-out infinite alternate}
+.v21-dance-icecream .v21-dancer{animation:v21-serve .95s ease-in-out infinite alternate}.v21-dance-icecream .v21-right-arm{animation:v21-scoop .95s ease-in-out infinite alternate}.v21-dance-icecream:after{content:"";position:absolute;bottom:19px;left:calc(50% + 29px);width:25px;height:22px;border-radius:5px 5px 2px 2px;background:linear-gradient(90deg,#9d623d,#f2c48b 55%,#8d5536);box-shadow:inset 0 2px #ffe4ac}
+@keyframes v21-bounce{to{transform:translateX(-50%) translateY(-6px) rotate(4deg)}}@keyframes v21-arm-a{to{transform:rotate(105deg)}}@keyframes v21-arm-b{to{transform:rotate(-105deg)}}@keyframes v21-step-a{to{transform:rotate(32deg) translateY(-3px)}}@keyframes v21-step-b{to{transform:rotate(-32deg) translateY(-2px)}}
+@keyframes v21-groove{to{transform:translateX(-50%) translateX(5px) rotate(-5deg)}}@keyframes v21-pump{to{transform:rotate(78deg)}}@keyframes v21-tap{to{transform:rotate(29deg) translateY(-3px)}}@keyframes v21-head-bop{0%,100%{transform:translateX(-50%) rotate(-4deg)}50%{transform:translateX(-50%) translateY(-3px) rotate(5deg)}}
+@keyframes v21-small-wave{to{transform:rotate(48deg)}}@keyframes v21-sway{to{transform:translateX(-50%) translateX(-7px) rotate(8deg)}}@keyframes v21-griddy{to{transform:translateX(-50%) translateY(3px) rotate(-17deg)}}@keyframes v21-kick{to{transform:rotate(42deg) translateY(-5px)}}
+@keyframes v21-climb{to{transform:translateX(-50%) translateY(-13px)}}@keyframes v21-climb-arm{to{transform:rotate(75deg)}}@keyframes v21-climb-leg{to{transform:rotate(-35deg)}}@keyframes v21-spread{to{transform:rotate(125deg)}}@keyframes v21-wide-step{to{transform:rotate(38deg) translateX(3px)}}
+@keyframes v21-quickflip{0%,100%{transform:translateX(-50%) rotate(0)}45%{transform:translateX(-50%) translateY(-24px) rotate(180deg)}70%{transform:translateX(-50%) translateY(-6px) rotate(270deg)}}@keyframes v21-partner-bop{to{transform:translateX(-50%) scale(.78) translateY(-7px) rotate(-9deg)}}@keyframes v21-dap{to{transform:rotate(100deg)}}
+@keyframes v21-horse{to{transform:translateX(-50%) translateY(-8px) rotate(6deg)}}@keyframes v21-horse-arm{to{transform:rotate(90deg)}}@keyframes v21-hero{to{transform:translateX(-50%) translateY(-5px) scale(1.05)}}@keyframes v21-hero-arm{to{transform:rotate(-80deg)}}@keyframes v21-boogie{to{transform:translateX(-50%) rotate(15deg) scale(1.04)}}@keyframes v21-circle{to{transform:rotate(145deg)}}@keyframes v21-serve{to{transform:translateX(-50%) translateY(-3px) rotate(-5deg)}}@keyframes v21-scoop{to{transform:rotate(105deg)}}
+/* Proper accessory model artwork in the collection. */
+.v21-accessory-preview{height:100px;display:grid;place-items:center;margin:-3px -2px 8px;border-radius:12px;background:radial-gradient(ellipse at 50% 30%,#51417b,#18213a 70%);border:1px solid #ffffff1c}
+.v21-accessory-preview svg{width:120px;height:90px;overflow:visible;filter:drop-shadow(0 9px 9px #0008)}
+.v21-controls-layout{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:16px 0 22px}
+.v21-control-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 13px;border:1px solid #ffffff20;border-radius:12px;background:#ffffff09}
+.v21-control-row b{color:#fff}.v21-control-row span{color:#c8d9ee;font:800 11px ui-monospace,monospace;overflow-wrap:anywhere;text-align:right}
+#controlsShowcaseScreen.screen.show{align-items:flex-start;padding:14px 0}
+#controlsShowcaseScreen .full-panel{width:min(1050px,calc(100% - 24px));max-height:calc(100dvh - 28px);overflow:auto;overscroll-behavior:contain;text-align:left}
+#controlsShowcaseScreen .v21-dance-gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0}
+#controlsShowcaseScreen .v21-dance-card{min-width:0;padding:10px;border:1px solid #ffffff20;border-radius:14px;background:#ffffff09;overflow:hidden}
+#controlsShowcaseScreen .v21-dance-card b{display:block;margin:8px 0 4px;color:#f4ebff;font-size:12px}
+#controlsShowcaseScreen .v21-dance-card small{display:block;min-height:34px;color:#bdc8dc;font-size:10px;line-height:1.45}
+#controlsShowcaseScreen .v21-dance-card .v21-dance-stage{height:135px}
+#controlsShowcaseScreen .v21-duo-label{display:inline-block;margin-top:5px;padding:3px 6px;border-radius:5px;background:#7c3aed55;color:#e8d5ff;font-size:8px;font-weight:900;letter-spacing:.1em}
+#settingsScreen #openControlsGalleryBtn{width:100%;margin:10px 0;padding:12px;border-radius:11px;background:linear-gradient(120deg,#49328b,#165a7a);border:1px solid #9c8cfb77;color:white;font-weight:900;letter-spacing:.04em}
+body.v21-controls-open .menu-utility{display:none!important}
+@media(max-width:760px){.v21-controls-layout{grid-template-columns:1fr}#controlsShowcaseScreen .v21-dance-gallery{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:430px){#controlsShowcaseScreen .v21-dance-gallery{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.v21-dance-stage *{animation:none!important}.v21-dancer{transform:translateX(-50%)}}
+</style>
+
+<script id="v21-living-realms-and-controls">
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id);
+const dances=[
+ ['distraction','Distraction Dance','Side-to-side footwork with swinging arms.'],
+ ['jamal','Passinho do Jamal','Quick toe taps, shoulder pulses and compact arm accents.'],
+ ['headbop','Headbop','A relaxed head-and-shoulder groove.'],
+ ['originalsound','Original Sound','A smooth sway with a clean two-step.'],
+ ['griddy','Get Griddy','A forward-leaning stride with swinging arms.'],
+ ['subaru','Subaru Stairs','A slow cinematic climb with a rising stair effect.'],
+ ['purple','Purple','A wide-armed, springy groove.'],
+ ['defaultdance','Default','An upbeat lobby dance with broad arm swings.'],
+ ['kwikflip','Kwik Flip','A quick spin-and-recover with a dramatic finish.'],
+ ['dapup','Dap Up','A two-runner greeting that needs another human.','DUO'],
+ ['gangnam','Gangnam Style','A playful horse-riding bounce and arm pose.'],
+ ['hero','The Hero','A confident side-step with a heroic flourish.'],
+ ['boogiedown','Boogie Down','Sweeping arm circles and a crisp cross-step.'],
+ ['icecream','Ice Cream Stand','Sets up a tiny cart, then scoops and serves.']
+];
+const figure='<div class="v21-dancer"><i class="v21-head"></i><i class="v21-visor"></i><i class="v21-torso"></i><i class="v21-chest"></i><i class="v21-arm v21-left-arm"></i><i class="v21-arm v21-right-arm"></i><i class="v21-leg v21-left-leg"></i><i class="v21-leg v21-right-leg"></i></div>';
+function preview(id,duo){return '<div class="v21-dance-stage v21-dance-'+id+'" aria-hidden="true"><div class="v21-dance-floor"></div>'+figure+(duo?figure.replace('v21-dancer','v21-dancer v21-partner'):'')+'</div>';}
+const copy={
+ en:['Controls & Dance Gallery','Your current player key assignments and the complete emote choreography collection.','PLAYER CONTROLS','DANCE SHOWCASE · 14 EMOTES','Animated previews of the same emotes you can equip and trigger during a match. Player 1 uses Q / E; each player has separate emote keys.','BACK TO SETTINGS','DUO'],
+ es:['Controles y galería de bailes','Tus teclas actuales y la colección completa de coreografías.','CONTROLES DE JUGADORES','MUESTRA DE BAILES · 14 GESTOS','Vistas animadas de los mismos gestos que podés equipar y usar durante una partida. El jugador 1 usa Q / E.','VOLVER A AJUSTES','EN PAREJA'],
+ arg:['Controles y galería de bailes','Tus teclas actuales y toda la colección de coreografías.','CONTROLES DE JUGADORES','MUESTRA DE BAILES · 14 GESTOS','Son vistas animadas de los mismos gestos que podés equipar y usar en una partida. El jugador 1 usa Q / E.','VOLVER A AJUSTES','EN PAREJA'],
+ fr:['Commandes et galerie de danses','Touches actuelles des joueurs et chorégraphies disponibles.','COMMANDES DES JOUEURS','APERÇU DES DANSES · 14 ÉMOTES','Aperçus animés des émotes équipables et utilisables en match.','RETOUR AUX PARAMÈTRES','DUO'],
+ pt:['Controles e galeria de danças','Teclas atuais dos jogadores e coleção completa de coreografias.','CONTROLES DOS JOGADORES','MOSTRA DE DANÇAS · 14 EMOTES','Pré-visualizações animadas dos emotes que podem ser equipados e usados na partida.','VOLTAR ÀS CONFIGURAÇÕES','DUPLA'],
+ it:['Comandi e galleria delle danze','Tasti attuali dei giocatori e raccolta completa delle coreografie.','COMANDI GIOCATORI','ANTEPRIMA DANZE · 14 EMOTE','Anteprime animate degli emote equipaggiabili e utilizzabili durante la partita.','TORNA ALLE IMPOSTAZIONI','DUO'],
+ zh:['操作与舞蹈展示','当前玩家按键与完整动作合集。','玩家操作','舞蹈展示 · 14 个动作','这些动画预览对应可装备并在比赛中使用的动作。','返回设置','双人']
+};
+function tr(){return copy[window.tagLanguage||'en']||copy.en;}
+function clean(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function render(){
+ if(!$('controlsShowcaseScreen'))return;
+ const t=tr();
+ ['v21ControlsTitle','v21ControlsIntro','v21ControlsSubhead','v21DanceSubhead','v21DanceNote','v21BackControls'].forEach((id,i)=>{const el=$(id);if(el)el.textContent=t[i];});
+ const list=typeof controls!=='undefined'&&Array.isArray(controls)?controls.slice(0,4):[];
+ $('v21ControlRows').innerHTML=list.map((c,i)=>'<div class="v21-control-row"><b>'+clean(c.name||('PLAYER '+(i+1)))+'</b><span>'+clean((c.keys||[]).join(' · '))+'</span></div>').join('');
+ $('v21DanceGallery').innerHTML=dances.map(d=>'<article class="v21-dance-card">'+preview(d[0],!!d[3])+'<b>'+clean(d[1])+'</b><small>'+clean(d[2])+'</small>'+(d[3]?'<span class="v21-duo-label">'+t[6]+'</span>':'')+'</article>').join('');
+}
+function open(){
+ document.querySelectorAll('.screen.show').forEach(x=>x.classList.remove('show'));
+ $('controlsShowcaseScreen')?.classList.add('show');
+ document.body.classList.add('v21-controls-open');
+ render();
+}
+function back(){
+ $('controlsShowcaseScreen')?.classList.remove('show');
+ $('settingsScreen')?.classList.add('show');
+ document.body.classList.remove('v21-controls-open');
+}
+function decorateRealm(){
+ if(typeof maps==='undefined'||!maps[mapId])return;
+ const W=width,H=height;
+ const line=(x1,y1,x2,y2,color,w=1)=>{ctx.strokeStyle=color;ctx.lineWidth=w;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();};
+ const rect=(x,y,w,h,color)=>{ctx.fillStyle=color;ctx.fillRect(x,y,w,h);};
+ const glow=(x,y,r,color,a=.25)=>{ctx.globalAlpha=a;ctx.shadowColor=color;ctx.shadowBlur=r*2;ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;ctx.globalAlpha=1;};
+ if(mapId==='forge'){
+  for(let i=0;i<7;i++){const x=W*(.08+i*.14),y=H*(.15+(i%3)*.06);line(x,y,x,y+H*.18,'#ffb16f55',2);rect(x-7,y+H*.17,14,5,'#6b4544');glow(x,y+H*.2,2+i%2,'#ff874d',.4);}
+  for(let i=0;i<18;i++){const x=(i*79+worldTime*19)%(W+20)-10,y=H*.78-((i*37+worldTime*38)%(H*.5));glow(x,y,1.5+i%2,'#ff935e',.32);}
+ }else if(mapId==='archive'){
+  for(let i=0;i<5;i++){const x=W*(.12+i*.19),y=H*(.18+(i%2)*.08),r=18+i%3*7;ctx.strokeStyle='#d3c5ff55';ctx.lineWidth=1.3;ctx.beginPath();ctx.ellipse(x,y,r*1.7,r,.15+worldTime*.03,0,Math.PI*2);ctx.stroke();glow(x+Math.cos(worldTime*.55+i)*r,y,2,'#c5c5ff',.3);}
+ }else if(mapId==='tidal'){
+  for(let i=0;i<9;i++){const x=W*(.06+i*.11),y=H*.22+Math.sin(worldTime*.25+i)*H*.04;line(x,y,x+W*.03,y+H*.28,'#a9fff044',1.2);glow(x+W*.03,y+H*.28,2,'#9cf8e8',.25);}
+  for(let i=0;i<24;i++){const x=(i*71+Math.sin(worldTime+i)*18)%W,y=H-((i*43+worldTime*14)%(H*.7));ctx.strokeStyle='#c8fff055';ctx.beginPath();ctx.arc(x,y,2+i%3,0,Math.PI*2);ctx.stroke();}
+ }else if(mapId==='moon'){
+  for(let i=0;i<12;i++){const x=(i*137+53)%W,y=H*(.25+(i%4)*.105),r=5+i%4*2;ctx.fillStyle='#d7e5f422';ctx.beginPath();ctx.ellipse(x,y,r*1.7,r*.65,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#eff7ff22';ctx.stroke();}
+ }else if(mapId==='greenland'){
+  for(let i=0;i<15;i++){const x=(i*91+Math.sin(worldTime*.35+i)*12)%W,y=H*(.57+(i%3)*.025),r=14+i%4*5;ctx.fillStyle=i%2?'#153b2caa':'#285b3e99';ctx.beginPath();ctx.moveTo(x,y-r*2);ctx.lineTo(x-r,y+r);ctx.lineTo(x+r,y+r);ctx.closePath();ctx.fill();rect(x-2,y+r-2,4,14,'#70563a99');}
+ }else if(mapId==='city'){
+  for(let i=0;i<9;i++){const x=W*(.04+i*.115),base=H*.59,h=H*(.13+(i%4)*.055);rect(x,base-h,28,h,'#0b1728cc');for(let r=0;r<4;r++)rect(x+5+(r%2)*10,base-h+17+r*15,5,7,'#80e9ff55');line(x+14,base-h,x+14,base-h-15,'#7edfff88',1.5);glow(x+14,base-h-16,2,'#7adfff',.3);}
+  for(let i=0;i<6;i++){const x=W*(.08+i*.17),y=H*(.2+(i%2)*.13);rect(x,y,32,12,'#1b2442cc');line(x+4,y+5,x+28,y+5,'#ff91db77',2);}
+ }else if(mapId==='mall'){
+  for(let i=0;i<6;i++){const x=W*(.07+i*.16),y=H*.22+(i%2)*H*.08;rect(x,y,70,3,'#c9f4f766');rect(x+10,y+12,48,20,['#cd5c8a55','#56a7c455','#d8bd5c55'][i%3]);rect(x+15,y+18,38,3,'#ffffff55');}
+ }else if(mapId==='dojo'){
+  for(let i=0;i<7;i++){const x=W*(.08+i*.14),y=H*.22+(i%3)*8;line(x,y-18,x,y+30,'#c7b18a66',1.3);ctx.fillStyle='#b84d4dcc';ctx.beginPath();ctx.moveTo(x-8,y);ctx.lineTo(x+8,y);ctx.lineTo(x+5,y+23);ctx.lineTo(x-5,y+23);ctx.closePath();ctx.fill();rect(x-10,y-2,20,3,'#f3d29a');glow(x,y+24,4,'#ff9c69',.25);}
+ }else if(mapId==='desert'){
+  for(let i=0;i<7;i++){const x=W*(.08+i*.145),y=H*.62-(i%3)*20;ctx.strokeStyle='#b5a16e99';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x,y-20);ctx.moveTo(x,y-12);ctx.lineTo(x-9,y-19);ctx.moveTo(x,y-9);ctx.lineTo(x+9,y-17);ctx.stroke();}
+  for(let i=0;i<5;i++){const y=H*(.54+i*.055);ctx.strokeStyle='#ffe2a022';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,y);ctx.quadraticCurveTo(W*.5,y-15,W,y+3);ctx.stroke();}
+ }else if(mapId==='glacier'){
+  for(let i=0;i<8;i++){const x=W*(.06+i*.13),y=H*.61,h=H*(.08+(i%3)*.045);ctx.fillStyle='#9ce6f255';ctx.beginPath();ctx.moveTo(x-12,y);ctx.lineTo(x,y-h);ctx.lineTo(x+13,y);ctx.closePath();ctx.fill();ctx.strokeStyle='#e5fbff77';ctx.beginPath();ctx.moveTo(x,y-h+8);ctx.lineTo(x+4,y-2);ctx.stroke();}
+  ctx.strokeStyle='#86edff2e';ctx.lineWidth=4;ctx.beginPath();for(let x=0;x<=W;x+=18){const y=H*.17+Math.sin(x*.009+worldTime*.45)*H*.035;if(x===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}ctx.stroke();
+ }else if(mapId==='skyport'){
+  for(let i=0;i<5;i++){const x=(i*190+worldTime*7)%(W+120)-60,y=H*(.22+(i%3)*.13);ctx.fillStyle='#dceeff44';ctx.beginPath();ctx.ellipse(x,y,42,8,0,0,Math.PI*2);ctx.fill();ctx.fillRect(x-18,y-10,36,10);line(x,y+10,x,y+22,'#d7e8ff66',1);}
+ }else if(mapId==='carnival'){
+  for(let i=0;i<13;i++){const x=W*i/12;line(x,H*.08,x,H*.21,'#f5d9ff55',1);ctx.fillStyle=['#ff6c9b','#ffd166','#6ee7f9','#a78bfa'][i%4];ctx.beginPath();ctx.moveTo(x,H*.21);ctx.lineTo(x+W/24,H*.21);ctx.lineTo(x+W/48,H*.28);ctx.closePath();ctx.fill();}
+  for(let i=0;i<12;i++){const x=W*(.05+i*.08),y=H*.43+Math.sin(worldTime*2+i)*4;glow(x,y,2.5,['#ff9bb8','#ffe28c','#76efff','#c3a2ff'][i%4],.55);}
+ }else if(mapId==='volcano'){
+  for(let i=0;i<8;i++){const x=W*(.07+i*.125),y=H*.75;line(x,y,x+7,y-13,'#ff7a3d88',2);line(x+7,y-13,x+3,y-24,'#ff7a3d88',2);line(x+3,y-24,x+13,y-37,'#ff7a3d88',2);glow(x+13,y-37,3,'#ff6738',.25);}
+  for(let i=0;i<16;i++){const x=(i*89+worldTime*13)%W,y=H-((i*57+worldTime*25)%(H*.8));glow(x,y,1.5,'#ff9a60',.3);}
+ }
+}
+const originalBackground=drawBackground;
+drawBackground=function(){originalBackground();try{ctx.save();decorateRealm();ctx.restore();}catch(error){console.warn('V21 scenery detail skipped',error);}};
+function init(){
+ $('openControlsGalleryBtn')?.addEventListener('click',open);
+ $('v21BackControls')?.addEventListener('click',back);
+ render();
+ window.addEventListener('tag-language-changed',render);
+ $('settingsLanguage')?.addEventListener('change',()=>setTimeout(render,0));
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+window.TAGV21Diagnostics={
+ check:function(){
+  return {menuScroll:getComputedStyle($('menuScreen')).overflowY==='auto',
+   danceGallery:!!$('controlsShowcaseScreen')&&dances.length===14,
+   menuButtons:document.querySelectorAll('#menuScreen .hero-actions button').length,
+   builtInRealms:typeof maps!=='undefined'?Object.keys(maps).length:0,
+   galleryDances:document.querySelectorAll('#v21DanceGallery .v21-dance-card').length,
+   accessories:document.querySelectorAll('.v21-accessory-preview svg').length};
+ }
+};
 })();
 </script>
 </body>
