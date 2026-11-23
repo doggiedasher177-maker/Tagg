@@ -5185,6 +5185,7 @@ function init(){
  }));
  observer.observe(document.body,{subtree:true,childList:true,characterData:true});
  ['settingsLanguage','pauseLanguage'].forEach(id=>document.getElementById(id)?.addEventListener('change',()=>requestAnimationFrame(()=>apply())));
+ document.getElementById('pauseLanguage')?.addEventListener('change',e=>{const setting=document.getElementById('settingsLanguage');if(setting&&setting.value!==e.target.value){setting.value=e.target.value;setting.dispatchEvent(new Event('change',{bubbles:true}));}});
  window.addEventListener('tag-language-changed',()=>requestAnimationFrame(apply));
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
