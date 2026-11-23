@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TAG! · Historical Builds</title>
+<style>
+:root{color-scheme:dark;font-family:Inter,ui-sans-serif,system-ui,Arial,sans-serif;background:#091321;color:#edf6ff}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 15% 5%,#266c7455,transparent 34%),radial-gradient(circle at 90% 95%,#67408055,transparent 32%),#091321}
+header{padding:26px max(18px,calc((100vw - 1200px)/2));border-bottom:1px solid #9bd9e633;background:linear-gradient(135deg,#132941ee,#1f1b39ee)}
+header small{color:#96f2dd;letter-spacing:.18em;font-weight:900;font-size:10px}h1{margin:8px 0 5px;font-size:clamp(25px,5vw,42px);letter-spacing:-.04em}header p{margin:0;color:#b4c9dc;max-width:750px;font-size:13px;line-height:1.55}
+main{max-width:1200px;margin:22px auto;padding:0 18px;display:grid;grid-template-columns:250px minmax(0,1fr);gap:18px}
+nav,.viewer{border:1px solid #9bd4e333;background:#101d30dd;border-radius:18px;box-shadow:0 20px 50px #0007}
+nav{padding:14px;align-self:start;display:grid;gap:6px}nav b{padding:7px;color:#aef5e8;letter-spacing:.15em;font-size:10px}
+nav button{width:100%;text-align:left;background:transparent;color:#d5e5f5;border:1px solid transparent;border-radius:9px;padding:9px 10px;font-size:11px;font-weight:800;cursor:pointer}
+nav button:hover,nav button.active{background:linear-gradient(120deg,#23475b,#34294d);border-color:#9be8df66}
+.viewer{min-height:74vh;overflow:hidden;display:flex;flex-direction:column}
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 15px;border-bottom:1px solid #9bd4e322}
+#caption{font-size:12px;font-weight:900;letter-spacing:.12em;color:#f0f7ff}
+#state{font-size:10px;color:#9eb5ca}
+iframe{width:100%;height:calc(100vh - 150px);min-height:650px;border:0;background:#101827}
+#fallback{display:none;padding:34px;max-width:680px;line-height:1.65;color:#bdcfe0}
+#fallback h2{color:#f1f7ff;font-size:24px}#fallback a{color:#9af0df}
+@media(max-width:820px){main{grid-template-columns:1fr}nav{grid-template-columns:repeat(3,minmax(0,1fr))}nav b{grid-column:1/-1}.viewer{min-height:60vh}iframe{height:65vh;min-height:500px}}
+</style>
+</head>
+<body>
+<header><small>ZYRON STUDIOS · TAG! ARCHIVE</small><h1>THE HISTORY OF TAG!</h1><p>Open the actual historical HTML build for each archived milestone. V14–V18 are served as offline snapshots; V1–V13 are preserved in the original numbered V1–V14 offline source bundle.</p></header>
+<main>
+<nav aria-label="Historical versions"><b>SELECT A VERSION</b><div id="versions"></div></nav>
+<section class="viewer">
+<div class="toolbar"><span id="caption">SELECT A BUILD</span><span id="state">ARCHIVE VIEWER</span></div>
+<iframe id="build" title="Historical TAG! game build"></iframe>
+<div id="fallback"><h2>Original V1–V13 archive</h2><p>These original builds are preserved in the companion <b>TAG V1–V14 Historical Offline</b> bundle. Open its <code>history.html</code> file to browse their exact original HTML snapshots. The V14–V18 pages are available directly from this online viewer.</p><p>Older builds that predate the Nakama online client run offline by design. V14’s online module is removed in the historical snapshot.</p></div>
+</section>
+</main>
+<script>
+(()=>{
+const versions=['V19','V18','V17.5V','V17','V16','V15','V14','V13','V12','V11','V10','V9','V8','V7','V6','V5','V4','V3','V2','V1'];
+const files={'V14':'../archive/legacy-offline/TAG_V14_OFFLINE.html','V15':'../archive/legacy-offline/TAG_V15_OFFLINE.html','V16':'../archive/legacy-offline/TAG_V16_OFFLINE.html','V17':'../archive/legacy-offline/TAG_V17_OFFLINE.html','V17.5V':'../archive/legacy-offline/TAG_V17_5_OFFLINE.html','V18':'../archive/legacy-offline/TAG_V18_OFFLINE.html'};
+const params=new URLSearchParams(location.search);let current=params.get('version')||'V18';
+const menu=document.getElementById('versions'),frame=document.getElementById('build'),fallback=document.getElementById('fallback'),caption=document.getElementById('caption'),state=document.getElementById('state');
+function choose(v){
+current=v;history.replaceState(null,'','?version='+encodeURIComponent(v));
+document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.version===v));
+caption.textContent=v+' · HISTORICAL BUILD';
+if(v==='V19'){frame.src='../index.html';frame.style.display='block';fallback.style.display='none';state.textContent='CURRENT ONLINE RELEASE';return;}
+if(files[v]){frame.src=files[v];frame.style.display='block';fallback.style.display='none';state.textContent='OFFLINE SNAPSHOT · ONLINE FEATURES LOCKED';return;}
+frame.removeAttribute('src');frame.style.display='none';fallback.style.display='block';state.textContent='BUNDLED ORIGINAL HTML SNAPSHOT';
+}
+versions.forEach(v=>{const b=document.createElement('button');b.type='button';b.dataset.version=v;b.textContent=v+(v==='V19'?' · CURRENT':'');b.addEventListener('click',()=>choose(v));menu.appendChild(b);});
+if(!versions.includes(current))current='V18';choose(current);
+})();
+</script>
+</body></html>
