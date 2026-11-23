@@ -2743,7 +2743,7 @@ rafId=requestAnimationFrame(frame);
     const attr=e.target.dataset;
     if(attr.v18Skin!==undefined)playerSkins[Number(attr.v18Skin)]=e.target.value||'default';
     if(attr.v18Color!==undefined){const i=Number(attr.v18Color);colorOverrides[i]=e.target.value;playerColors[i]=e.target.value;playerAccents[i]=e.target.value;}
-    if(attr.v18Accessory!==undefined)playerCosmetics[Number(attr.v18Accessory)]=e.target.value||'none';
+    if(attr.v18Accessory!==undefined){const i=Number(attr.v18Accessory);playerCosmetics[i]=e.target.value||'none';playerAccessories[i]=playerCosmetics[i];if(players[i]){players[i].accessory=playerCosmetics[i];players[i].v18Accessory=playerCosmetics[i];}}
     if(attr.v18Title!==undefined)playerTitles[Number(attr.v18Title)]=e.target.value||'';
     if(attr.v18Item!==undefined)equippedItems[Number(attr.v18Item)]=e.target.value||'';
     if(attr.v18Skin!==undefined||attr.v18Color!==undefined||attr.v18Accessory!==undefined||attr.v18Title!==undefined||attr.v18Item!==undefined){save();if(mode==='ready')updateReadyStatus();}
@@ -2846,6 +2846,11 @@ rafId=requestAnimationFrame(frame);
     if(id==='fedora'){ctx.fillStyle='#211f2a';ctx.fillRect(-14,-9,28,5);ctx.fillRect(-9,-20,18,12);ctx.fillStyle='#b78a58';ctx.fillRect(-9,-10,18,3);}
     if(id==='peanut'){ctx.fillStyle='#a66a30';ctx.beginPath();ctx.ellipse(0,-11,10,16,-.15,0,TAU);ctx.fill();ctx.strokeStyle='#f0c27c';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(0,-11,6,12,-.15,0,TAU);ctx.stroke();}
     if(id==='watermelon'){ctx.fillStyle='#2b8b51';ctx.beginPath();ctx.arc(0,-8,15,Math.PI,TAU);ctx.fill();ctx.fillStyle='#e64d63';ctx.beginPath();ctx.arc(0,-8,12,Math.PI,TAU);ctx.fill();ctx.strokeStyle='#f6edcf';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,-8,13,Math.PI,TAU);ctx.stroke();ctx.fillStyle='#25412d';[-8,-3,3,8].forEach(x=>ctx.fillRect(x,-18+(Math.abs(x)%3),2,5));}
+    if(id==='christmas'){ctx.fillStyle='#c92743';ctx.beginPath();ctx.moveTo(-12,-10);ctx.lineTo(1,-33);ctx.lineTo(13,-10);ctx.closePath();ctx.fill();ctx.fillStyle='#fff';ctx.fillRect(-13,-13,26,5);ctx.beginPath();ctx.arc(1,-33,3.5,0,TAU);ctx.fill();}
+    if(id==='cone'){ctx.fillStyle='#ff7a22';ctx.beginPath();ctx.moveTo(-12,-9);ctx.lineTo(0,-34);ctx.lineTo(12,-9);ctx.closePath();ctx.fill();ctx.fillStyle='#fff2df';ctx.fillRect(-7,-22,14,4);ctx.fillRect(-10,-12,20,4);}
+    if(id==='pumpkin'){ctx.fillStyle='#f28a22';ctx.beginPath();ctx.ellipse(0,-16,13,11,0,0,TAU);ctx.fill();ctx.strokeStyle='#b85b18';ctx.lineWidth=1.5;[-7,0,7].forEach(x=>{ctx.beginPath();ctx.ellipse(x,-16,4,10,0,0,TAU);ctx.stroke();});ctx.fillStyle='#497b39';ctx.fillRect(-2,-29,4,6);}
+    if(id==='witch'){ctx.fillStyle='#38234f';ctx.beginPath();ctx.moveTo(-14,-10);ctx.lineTo(1,-39);ctx.lineTo(13,-10);ctx.closePath();ctx.fill();ctx.fillStyle='#6f3ca0';ctx.fillRect(-14,-14,28,4);ctx.fillStyle='#f4b8ff';ctx.fillRect(-4,-20,9,3);}
+    if(id==='marker'){ctx.save();ctx.rotate(-.12);ctx.fillStyle='#f2d83d';ctx.fillRect(-11,-32,22,21);ctx.fillStyle='#252a33';ctx.fillRect(-11,-32,22,5);ctx.fillStyle='#e95b4b';ctx.fillRect(-7,-12,14,4);ctx.fillRect(-3,-37,6,5);ctx.restore();}
     ctx.restore();
   }
   function drawSkin(p,i){
@@ -2891,7 +2896,7 @@ rafId=requestAnimationFrame(frame);
     }else if(skin==='creeper'){
       ctx.fillStyle=color;ctx.fillRect(-11,-27,22,31);ctx.fillStyle='#162e29';ctx.fillRect(-7,-18,4,5);ctx.fillRect(3,-18,4,5);ctx.fillRect(-4,-11,8,9);ctx.fillRect(-12,4,8,14);ctx.fillRect(4,4,8,14);
     }
-    if(acc==='fedora'||acc==='peanut'||acc==='watermelon')drawAccessory(acc);
+    if(acc&&acc!=='none')drawAccessory(acc);
     if(i===tagged){ctx.fillStyle='#ffe7a4';ctx.shadowColor='#ffe7a4';ctx.shadowBlur=15;ctx.beginPath();ctx.arc(0,-47,4,0,TAU);ctx.fill();}
     ctx.restore();
   }
@@ -2930,7 +2935,7 @@ rafId=requestAnimationFrame(frame);
   };
   spawnPlayers=function(count){
     oldSpawn(count);
-    players.forEach((p,i)=>{p.v18Skin=playerSkins[i]||'default';p.v18Accessory=playerCosmetics[i]||'none';p.v18Color=colorOverrides[i]||playerColors[i];p.v18Title=playerTitles[i]||'';p.gunCooldown=rand(.2,1);p.gunHits=0;});
+    players.forEach((p,i)=>{playerAccessories[i]=playerCosmetics[i]||'none';p.accessory=playerAccessories[i];p.v18Skin=playerSkins[i]||'default';p.v18Accessory=playerCosmetics[i]||'none';p.v18Color=colorOverrides[i]||playerColors[i];p.v18Title=playerTitles[i]||'';p.gunCooldown=rand(.2,1);p.gunHits=0;});
   };
   function winnerForFinish(authoritative){
     if(Number.isInteger(authoritative))return clamp(authoritative,0,Math.max(0,players.length-1));
