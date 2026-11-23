@@ -529,6 +529,103 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid r
   #avatarsScreen .v18-tabs{position:sticky;top:0;z-index:5;padding:9px 0;background:linear-gradient(135deg,#15243af5,#11182ff5);backdrop-filter:blur(10px)}
 </style>
 
+
+<style id="v20-fit-screen">
+/* V20_VIEWPORT_FIT: keep the menu visible at common desktop, laptop and mobile sizes. */
+#menuScreen.screen.show{
+  align-items:flex-start;
+  justify-content:flex-start;
+  overflow-x:hidden;
+  overflow-y:auto;
+  scrollbar-width:none;
+}
+#menuScreen.screen.show::-webkit-scrollbar{display:none}
+#menuScreen::after{inset:0}
+#menuScreen:not(.setup-open) .menu-shell{
+  width:min(1500px,100%);
+  min-height:100%;
+  margin:0 auto;
+  padding:clamp(12px,2.1vh,24px) clamp(16px,3vw,44px);
+}
+#menuScreen:not(.setup-open) .hero{
+  width:min(850px,100%);
+  padding:0;
+}
+#menuScreen:not(.setup-open) .brandline{justify-content:center}
+#menuScreen:not(.setup-open) .hero h1{
+  font-size:clamp(64px,11vh,136px);
+  line-height:.88;
+  margin:clamp(7px,1.05vh,12px) 0;
+}
+#menuScreen:not(.setup-open) .hero-copy{
+  font-size:clamp(13px,1.15vw,17px);
+  line-height:1.4;
+}
+#menuScreen:not(.setup-open) .hero-rule{
+  width:min(460px,84%);
+  margin:clamp(9px,1.35vh,15px) auto;
+}
+#menuScreen:not(.setup-open) .hero-meta{
+  justify-content:center;
+  gap:6px;
+}
+#menuScreen:not(.setup-open) .meta-chip,
+#menuScreen:not(.setup-open) .hero-meta::after{
+  padding:6px 9px;
+  font-size:clamp(7px,.65vw,9px);
+}
+#menuScreen:not(.setup-open) .hero-actions{
+  width:min(720px,100%);
+  margin:clamp(9px,1.2vh,14px) auto 0;
+  gap:clamp(6px,.65vw,9px);
+}
+#menuScreen:not(.setup-open) .hero-actions .secondary-btn{
+  min-height:clamp(38px,4.9vh,48px);
+  padding:8px 10px;
+  font-size:clamp(8px,.7vw,10px);
+}
+#menuScreen:not(.setup-open) .hero-actions #playMenuBtn{
+  min-height:clamp(50px,6.8vh,66px);
+  padding:11px 16px;
+  font-size:clamp(18px,1.6vw,24px);
+  border-radius:18px;
+}
+#menuScreen:not(.setup-open) .creator-line{
+  margin-top:clamp(7px,1vh,12px);
+  font-size:clamp(8px,.68vw,9px);
+  line-height:1.4;
+}
+#menuScreen:not(.setup-open) .realm-ornament{
+  width:min(22vw,230px);
+  bottom:1%;
+  opacity:.42;
+}
+@media(max-height:760px) and (min-width:701px){
+  #menuScreen:not(.setup-open) .menu-shell{padding-top:10px;padding-bottom:10px}
+  #menuScreen:not(.setup-open) .hero h1{font-size:clamp(60px,9.5vh,82px);margin:5px 0}
+  #menuScreen:not(.setup-open) .hero-copy{font-size:13px;line-height:1.32}
+  #menuScreen:not(.setup-open) .hero-rule{margin:8px auto}
+  #menuScreen:not(.setup-open) .hero-actions{margin-top:8px;gap:6px}
+  #menuScreen:not(.setup-open) .hero-actions .secondary-btn{min-height:38px;padding:6px 8px}
+  #menuScreen:not(.setup-open) .hero-actions #playMenuBtn{min-height:48px}
+  #menuScreen:not(.setup-open) .creator-line{margin-top:6px}
+}
+@media(max-width:700px){
+  #menuScreen:not(.setup-open) .menu-shell{padding:12px 12px;gap:8px}
+  #menuScreen:not(.setup-open) .brandline{font-size:8px;letter-spacing:.16em}
+  #menuScreen:not(.setup-open) .hero h1{font-size:clamp(56px,10vh,84px);margin:7px 0}
+  #menuScreen:not(.setup-open) .hero-copy{font-size:13px;line-height:1.38}
+  #menuScreen:not(.setup-open) .hero-rule{margin:9px auto}
+  #menuScreen:not(.setup-open) .hero-actions{margin-top:9px;gap:6px}
+  #menuScreen:not(.setup-open) .hero-actions .secondary-btn{min-height:42px;padding:8px 6px;font-size:8px}
+  #menuScreen:not(.setup-open) .hero-actions #playMenuBtn{min-height:54px;font-size:19px}
+  #menuScreen:not(.setup-open) .creator-line{margin-top:8px;font-size:8px}
+  #menuScreen:not(.setup-open) .realm-ornament{width:min(32vw,150px);opacity:.28}
+}
+@media(prefers-reduced-motion:reduce){
+  #menuScreen::after{animation:none}
+}
+</style>
 </head>
 <body>
 <canvas id="world" aria-label="TAG game world"></canvas>
