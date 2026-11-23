@@ -626,6 +626,27 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid r
   #menuScreen::after{animation:none}
 }
 </style>
+
+<style id="v20-short-screen-fit">
+/* Keep the complete title menu inside short laptop-height viewports. */
+@media(max-height:650px) and (min-width:701px){
+  #menuScreen:not(.setup-open) .menu-shell{padding-top:4px;padding-bottom:4px}
+  #menuScreen:not(.setup-open) .brandline{font-size:7px;gap:8px;letter-spacing:.13em}
+  #menuScreen:not(.setup-open) .brandmark{width:24px;height:24px;border-radius:8px;font-size:13px}
+  #menuScreen:not(.setup-open) .hero h1{font-size:clamp(44px,7vh,54px);line-height:.84;margin:3px 0}
+  #menuScreen:not(.setup-open) .hero-copy{font-size:11px;line-height:1.18}
+  #menuScreen:not(.setup-open) .hero-rule{margin:4px auto}
+  #menuScreen:not(.setup-open) .hero-meta{gap:4px}
+  #menuScreen:not(.setup-open) .meta-chip,
+  #menuScreen:not(.setup-open) .hero-meta::after{padding:4px 7px;font-size:7px}
+  #menuScreen:not(.setup-open) .hero-actions{margin-top:5px;gap:4px}
+  #menuScreen:not(.setup-open) .hero-actions .secondary-btn{min-height:30px;padding:5px 7px;font-size:8px;border-radius:10px}
+  #menuScreen:not(.setup-open) .hero-actions #playMenuBtn{min-height:42px;padding:8px 12px;font-size:18px;border-radius:14px}
+  #menuScreen:not(.setup-open) .cosmetic-menu-pair,
+  #menuScreen:not(.setup-open) .online-profile-pair{gap:4px}
+  #menuScreen:not(.setup-open) .creator-line{margin-top:4px;font-size:7px;line-height:1.2}
+}
+</style>
 </head>
 <body>
 <canvas id="world" aria-label="TAG game world"></canvas>
