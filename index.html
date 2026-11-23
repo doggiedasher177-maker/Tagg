@@ -3393,11 +3393,13 @@ rafId=requestAnimationFrame(frame);
   },true);
   document.addEventListener('pointerdown',e=>{const pad=e.target.closest('.touch-player-pad');if(!pad)return;const n=Number((pad.querySelector('.touch-player-label')?.textContent||'P1').match(/\d+/)?.[0]||1)-1;if(e.target.closest('.touch-up,.touch-down'))v19StopEmote(n);},true);
   const baseNormalDashV19=normalDash;normalDash=function(i){v19StopEmote(i);return baseNormalDashV19(i);};
-  const baseUseItemV19=useItem;useItem=function(i){v19StopEmote(i);const ok=baseUseItemV19(i);if(ok&&players[i])players[i].v19ItemUse=.48;return ok;};
+  const baseUseItemV19=useItem;useItem=function(i){v19StopEmote(i);const itemId=equippedItems[i];const ok=baseUseItemV19(i);if(ok&&players[i]){players[i].v19ItemUse=.48;players[i].v19ActiveItemId=itemId;}return ok;};
 
   function v19DrawHeldItem(p,i){
-    const id=equippedItems[i];if(!id||!(stock[id]>0))return;
-    const using=Math.max(0,p.v19ItemUse||0),swing=using>0?Math.sin((.48-using)*Math.PI/.48)*.9:Math.sin(worldTime*3+i)*.04;
+    const using=Math.max(0,p.v19ItemUse||0);
+    const id=using>0?(p.v19ActiveItemId||p.v19RemoteItem||equippedItems[i]):(p.v19RemoteItem||equippedItems[i]);
+    if(!id||(!(stock[id]>0)&&using<=0&&!p.v19RemoteItem))return;
+    const swing=using>0?Math.sin((.48-using)*Math.PI/.48)*.9:Math.sin(worldTime*3+i)*.04;
     if(using>0)p.v19ItemUse=Math.max(0,using);
     ctx.save();ctx.translate(p.x+(p.face||1)*15,p.y-10);ctx.rotate(swing*(id==='shield'?-.45:.35));
     ctx.shadowColor='#83eaff';ctx.shadowBlur=using>0?15:5;ctx.lineWidth=2;ctx.strokeStyle='#e8f7ff';ctx.fillStyle=({dash:'#ffe16a',shield:'#65c9f6',jump:'#8becaa',speed:'#c5a1ff',blink:'#6cf4e9',decoy:'#d8c4ff'}[id]||'#a9d8eb');
@@ -3410,7 +3412,7 @@ rafId=requestAnimationFrame(frame);
   }
   function v19DrawEmote(p,i){
     const id=p.v19Emote||p.v19RemoteEmote;if(!id)return;
-    const phase=(worldTime-(p.v19EmoteStarted||worldTime))*7,bob=Math.sin(phase*1.4)*2.2,wide=['distraction','defaultdance','purple','boogiedown'].includes(id),step=Math.sin(phase);
+    const phase=(worldTime-(p.v19EmoteStarted||p.v19RemoteEmoteStarted||worldTime))*7,bob=Math.sin(phase*1.4)*2.2,wide=['distraction','defaultdance','purple','boogiedown'].includes(id),step=Math.sin(phase);
     ctx.save();ctx.translate(p.x+(id==='griddy'?Math.sin(phase*.5)*7:Math.sin(phase*.7)*3),p.y+bob);ctx.scale(p.face||1,1);
     ctx.strokeStyle=p.v18Color||playerColors[i];ctx.lineWidth=4;ctx.lineCap='round';ctx.lineJoin='round';
     const armL=wide?Math.sin(phase)*.85:Math.sin(phase*1.25)*.55,armR=wide?Math.cos(phase)*.85:-Math.sin(phase*1.25)*.55;
@@ -3425,6 +3427,14 @@ rafId=requestAnimationFrame(frame);
     if(id==='dapup'||id==='boogiedown'){ctx.strokeStyle='#fff1b8';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(15,-29);ctx.lineTo(25,-34+Math.sin(phase)*3);ctx.stroke();}
     ctx.restore();
   }
+  if(window.TAGOnlineHooks){
+    const v19Hooks=window.TAGOnlineHooks,oldGetV19=v19Hooks.getLocalState;
+    v19Hooks.getLocalState=function(){const v=oldGetV19?.apply(this,arguments),i=onlineLocalIndex;if(v){v.emote=players[i]?.v19Emote||'';v.heldItem=equippedItems[i]||'';}return v;};
+    const oldRemoteV19=v19Hooks.applyRemotePlayer;
+    v19Hooks.applyRemotePlayer=function(i,v){oldRemoteV19?.apply(this,arguments);const p=players[i];if(p&&v){const id=typeof v.emote==='string'?v.emote:'';if(p.v19RemoteEmote!==id){p.v19RemoteEmote=id;p.v19RemoteEmoteStarted=worldTime;}p.v19RemoteItem=typeof v.heldItem==='string'?v.heldItem:'';}};
+    const oldNetworkV19=v19Hooks.applyNetworkState;
+    v19Hooks.applyNetworkState=function(data){const result=oldNetworkV19?.apply(this,arguments),state=data?.round||data;if(Array.isArray(state?.players))state.players.forEach((v,i)=>{const slot=window.__tagOnlinePlayerIds?.indexOf(v?.user_id),p=players[slot>=0?slot:i];if(p&&v){const id=typeof v.emote==='string'?v.emote:'';if(p.v19RemoteEmote!==id){p.v19RemoteEmote=id;p.v19RemoteEmoteStarted=worldTime;}p.v19RemoteItem=typeof v.heldItem==='string'?v.heldItem:'';}});return result;};
+  }
   const baseDrawPlayerV19=drawPlayer;
   drawPlayer=function(p,i){
     baseDrawPlayerV19(p,i);
@@ -3433,18 +3443,22 @@ rafId=requestAnimationFrame(frame);
   };
   const baseMovePlayerV19=movePlayer;
   movePlayer=function(p,dt){
-    const i=p?.id;
+    const i=p?.id,previousBottom=p?p.y+HALF_H:0;
     if(Number.isInteger(i)&&controls[i]){
       if(keysDown.has(controls[i].jump)||keysDown.has(controls[i].dash))v19StopEmote(i);
       p.v19ItemUse=Math.max(0,(p.v19ItemUse||0)-dt);p.v19PadCooldown=Math.max(0,(p.v19PadCooldown||0)-dt);
     }
-    // Pads are launch triggers, never collision surfaces.
+    // V19 pads are not collision geometry. We remove them from the legacy
+    // collision pass and only launch when the runner falls onto their top.
     const savedPads=pads;pads=[];
     try{baseMovePlayerV19(p,dt);}finally{pads=savedPads;}
-    if(!p||!Number.isInteger(i))return;
-    if((p.v19PadCooldown||0)<=0){
-      const pad=savedPads.find(q=>p.x+HALF_W>q.x&&p.x-HALF_W<q.x+q.w&&p.y+HALF_H>=q.y-12&&p.y-HALF_H<=q.y+q.h+18);
-      if(pad){p.vy=-Math.max(850,Math.abs(p.vy)+640);p.onGround=false;p.groundId=null;p.v19PadCooldown=.32;pad.flash=1;p.dashGlow=1;shake=Math.max(shake,2.5);burst(p.x,pad.y,'#e1fff5',18,230);burst(p.x,pad.y,'#8be9ff',12,180);}
+    if(!p||!Number.isInteger(i)||(p.v19PadCooldown||0)>0)return;
+    const bottom=p.y+HALF_H;
+    const pad=savedPads.find(q=>p.x+HALF_W>q.x&&p.x-HALF_W<q.x+q.w&&previousBottom<q.y-2&&bottom>=q.y-3&&bottom<=q.y+q.h+24);
+    if(pad){
+      p.vy=-Math.max(850,Math.abs(p.vy)+640);p.onGround=false;p.groundId=null;p.v19PadCooldown=.32;
+      pad.flash=1;p.dashGlow=1;shake=Math.max(shake,2.5);
+      burst(p.x,pad.y,'#e1fff5',18,230);burst(p.x,pad.y,'#8be9ff',12,180);
     }
   };
 
