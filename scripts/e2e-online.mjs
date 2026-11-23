@@ -453,6 +453,7 @@ try {
   contexts.splice(contexts.indexOf(tabletContext), 1);
 
   // Online input on a phone should expose only the local human's control pad.
+  await phonePage.bringToFront();
   await phonePage.evaluate(() => window.TAGOnlineHooks.startMatch({
     localIndex: 2, isHost: false, matchId: "v16-touch-online-test", mapId: "forge",
     players: [
@@ -462,10 +463,14 @@ try {
       { userId: "v16-test-d", username: "RUNNER D" }
     ]
   }));
+  await waitFor(phonePage,
+    () => window.TAGOnlineHooks?.getBotDebug?.()?.mode === "playing",
+    "V18 online phone round countdown to enter active play",
+    60000);
   await phonePage.waitForFunction(() =>
     document.querySelector("#mobileControls")?.style.display === "grid" &&
     document.querySelectorAll("#mobileControls .touch-player-pad").length === 1,
-    null, { timeout: 20000 });
+    null, { timeout: 10000 });
   const onlinePad = await phonePage.locator("#mobileControls .touch-player-label").innerText();
   assert(onlinePad === "YOU", "V17 online phone controls were not restricted to the local player.");
   results.push("PASS: V18 online phone controls are restricted to the local human player and include ITEM");
