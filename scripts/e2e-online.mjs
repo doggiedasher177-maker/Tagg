@@ -345,6 +345,10 @@ try {
     tabletLayout.controls.length === 1 && tabletLayout.controls[0].count === 5 && tabletLayout.controls[0].item,
     "V18 tablet layout overflowed or failed to render four directions plus ITEM: " + JSON.stringify(tabletLayout));
   results.push("PASS: V18 tablet viewport fits without horizontal overflow and includes four directions plus ITEM");
+  // The tablet game has completed its assertions; close its canvas to keep CI
+  // resource use predictable during subsequent online and bot-navigation tests.
+  await tabletContext.close();
+  contexts.splice(contexts.indexOf(tabletContext), 1);
 
   // Online input on a phone should expose only the local human's control pad.
   await phonePage.evaluate(() => window.TAGOnlineHooks.startMatch({
@@ -363,6 +367,8 @@ try {
   const onlinePad = await phonePage.locator("#mobileControls .touch-player-label").innerText();
   assert(onlinePad === "YOU", "V17 online phone controls were not restricted to the local player.");
   results.push("PASS: V18 online phone controls are restricted to the local human player and include ITEM");
+  await phoneContext.close();
+  contexts.splice(contexts.indexOf(phoneContext), 1);
 
   // V18 shops, wallet, inventory limits, title/accessory unlocks, and emotes placeholder.
   await first.page.evaluate(() => { localStorage.setItem("tagV18Tagpoints", "8"); location.reload(); });
@@ -602,6 +608,8 @@ try {
   // 6. Leave the friend room and let the Quick Match fallback reach its accelerated
   // 30-second deadline (fake browser clock only; the production server remains real-time).
   await leaveMatch(second.page);
+  await second.context.close();
+  contexts.splice(contexts.indexOf(second.context), 1);
   await leaveMatch(first.page);
   // Use a distinctive ruleset so another simultaneous test or normal player is
   // unlikely to match this Quick Match before the 30-second bot fallback.
@@ -633,6 +641,10 @@ try {
   assert(await first.page.evaluate(() => window.TAGOnlineHooks?.isLocalBotMatch?.() === true && window.TAGOnlineHooks?.isOnline?.() === false),
     "The fallback bot was not simulated locally.");
   results.push("PASS: Quick Match timeout starts a local-physics bot match with no ranked server match");
+  // No more assertions use this account page. Close it so its canvas does not
+  // compete with the isolated hard-bot traversal fixture below.
+  await first.context.close();
+  contexts.splice(contexts.indexOf(first.context), 1);
 
   // V15: verify local hard-bot traversal in a fresh, dedicated normal-clock browser page.
   // A separate context avoids hidden-tab throttling and visibility state left by online play.
@@ -654,7 +666,7 @@ try {
     () => window.TAGOnlineHooks?.getBotDebug?.()?.mode === "playing" &&
       window.TAGOnlineHooks?.isLocalBotMatch?.() === true,
     "V15 local bot round to enter active play",
-    12000);
+    30000);
   const localClockStart = await localBotPage.evaluate(() => ({
     display: (document.querySelector("#timer")?.textContent || "").trim(),
     remaining: Number(window.TAGOnlineHooks?.getHostState?.()?.remaining)
@@ -680,10 +692,11 @@ try {
   await localBotPage.evaluate(() => window.TAGOnlineHooks?.leaveLocalBotMatch?.());
   await localBotPage.evaluate(() => window.TAGAppScreens?.show("online"));
   results.push("PASS: V15 hard bot uses active platform navigation and moves across the arena");
+  await localBotContext.close();
+  contexts.splice(contexts.indexOf(localBotContext), 1);
 
   // 7. A published community map is searchable and starts with three replaceable bots.
   // V15 rechecks this path against the nil-safe Nakama bot planner deployed to production.
-  await leaveMatch(first.page);
   const mapName = "QA Community Arena " + randomUUID().slice(0, 8);
   const mapClientA = makeClient();
   const mapClientB = makeClient();
