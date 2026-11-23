@@ -338,7 +338,7 @@ try {
   await first.page.locator("#itemShopBtn").click();
   assert(await first.page.locator("#itemShopScreen").evaluate(el => el.classList.contains("show")),
     "V18 Item Shop did not open.");
-  assert((await first.page.locator("#itemShopScreen").innerText()).includes("DASH CHARGE"),
+  assert((await first.page.locator("#itemShopScreen").innerText()).toUpperCase().includes("DASH CHARGE"),
     "V18 Item Shop did not display its purchasable inventory.");
   for (let n = 0; n < 3; n++) await first.page.locator('[data-v18-buy="item"][data-v18-id="dash"]').click();
   const itemInventory = await first.page.evaluate(() => window.TAGV18Diagnostics?.getInventory?.());
@@ -347,7 +347,7 @@ try {
     "V18 item stack limit did not disable a fourth purchase.");
   await first.page.locator("#backItemShopBtn").click();
   await first.page.locator("#avatarsBtn").click();
-  assert((await first.page.locator("#avatarsScreen").innerText()).includes("GANG BEASTS"),
+  assert((await first.page.locator("#avatarsScreen").innerText()).toUpperCase().includes("GANG BEASTS"),
     "V18 skin shop did not display the Gang Beasts skin.");
   await first.page.locator('[data-v18-buy="skin"][data-v18-id="gangbeast"]').click();
   await first.page.locator('[data-v18-tab="accessories"]').click();
