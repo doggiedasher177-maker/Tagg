@@ -289,15 +289,25 @@ try {
   contexts.push(tabletContext);
   const tabletPage = await tabletContext.newPage();
   await tabletPage.goto(SITE_URL, { waitUntil: "domcontentloaded", timeout: 45000 });
-  await tabletPage.locator("#playMenuBtn").click();
-  await tabletPage.locator("#count").selectOption("2");
-  await tabletPage.locator("#botCount").selectOption("1");
-  await tabletPage.locator("#startBtn").click();
-  await tabletPage.locator('[data-ready="0"]').click();
+  await tabletPage.evaluate(() => window.TAGOnlineHooks?.startLocalBotMatch({
+    playerName: "QA TABLET", botLevel: "easy", mapId: "forge", roundLength: 120
+  }));
+  await waitFor(tabletPage,
+    () => window.TAGOnlineHooks?.getBotDebug?.()?.mode === "playing",
+    "V18 tablet bot match to enter active play",
+    12000);
   await tabletPage.waitForFunction(() =>
     document.querySelector("#mobileControls")?.style.display === "grid" &&
     document.querySelectorAll("#mobileControls .touch-player-pad").length === 1,
-    null, { timeout: 20000 });
+    () => ({
+      width: window.innerWidth,
+      coarse: window.matchMedia("(pointer: coarse)").matches,
+      mobile: window.matchMedia("(pointer: coarse), (max-width: 900px)").matches,
+      display: document.querySelector("#mobileControls")?.style.display,
+      mode: window.TAGOnlineHooks?.getBotDebug?.()?.mode,
+      bots: window.TAGOnlineHooks?.getBotPlayers?.()
+    }),
+    { timeout: 20000 });
   const tabletLayout = await tabletPage.evaluate(() => ({
     viewport: window.innerWidth,
     document: document.documentElement.scrollWidth,
