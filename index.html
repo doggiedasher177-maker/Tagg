@@ -4666,7 +4666,7 @@ function create(){
   $('v205Back').onclick=()=>window.TAGAppScreens?.show('menu');
  }
  if(!$('v205ScenariosBtn')){
-  const b=document.createElement('button');b.id='v205ScenariosBtn';b.textContent='✦ SCENARIOS';b.onclick=()=>{render();window.TAGAppScreens?.show('v205Scenario');};
+  const b=document.createElement('button');b.id='v205ScenariosBtn';b.textContent='✦ SCENARIOS';b.onclick=()=>{render();window.TAGAppScreens?.show('settings');$('settingsScreen').classList.remove('show');$('v205ScenarioScreen').classList.add('show');};
   $('menuUtility')?.append(b);
  }
 }
