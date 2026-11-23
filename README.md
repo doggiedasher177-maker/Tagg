@@ -1,4 +1,4 @@
-# TAG! V21 — Living Realms & Dance Gallery
+# TAG! V22 — Final Realms & Character Studio
 
 This repository contains the TAG! browser client and a Nakama server runtime.
 
@@ -20,6 +20,13 @@ For a hosted deployment, deploy this repository with a persistent Postgres datab
 - Offline historical snapshots for V14–V19: `archive/legacy-offline/` (mirrored in `docs/archive/` for Pages)
 - Nakama runtime match module: `server/modules/tag_match.lua`
 - Docker Compose: Nakama + PostgreSQL
+
+## V22 release notes
+
+- Completed environment-specific detail layers for all 17 built-in realms, including Hell, Heaven, La Bombonera and El Monumental.
+- Upgraded all eight in-game accessory renderings with layered shading, contouring, trim and hardware; accessory collection cards draw the same in-game geometry on canvas.
+- Replaced simplified emote tiles with animated canvas previews driven by TAG!’s existing 14 choreography renderer.
+- Added interface localization for English, Spanish, Argentine Spanish, French, Portuguese, Italian and Chinese across online, profile, tournaments, level editor, ready room, pause and results.
 
 ## V21 release notes
 
