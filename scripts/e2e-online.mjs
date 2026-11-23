@@ -377,6 +377,10 @@ try {
     "V18 dedicated Accessories Shop did not open.");
   assert((await first.page.locator("#avatarsScreen").innerText()).toUpperCase().includes("WATERMELON HELMET"),
     "V18 dedicated Accessories Shop did not open its accessories category.");
+  await first.page.locator('[data-v18-buy="accessory"][data-v18-id="christmas"]').click();
+  const christmasPurchase = await first.page.evaluate(() => window.TAGV18Diagnostics?.getInventory?.());
+  assert(christmasPurchase?.wallet === 0 && christmasPurchase.accessories.includes("christmas"),
+    "V18 Christmas Hat must cost exactly two Tag Points and unlock: " + JSON.stringify(christmasPurchase));
   await first.page.locator("#backAvatarsBtn").click();
   await first.page.evaluate(() => window.TAGAppScreens?.show("menu"));
   await first.page.locator("#settingsBtn").click();
