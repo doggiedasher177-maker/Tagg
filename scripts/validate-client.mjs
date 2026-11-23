@@ -66,7 +66,7 @@ if (
 
 if (
   !source.includes("V17 · SOLID STRUCTURES & IN-MATCH FRIENDS") ||
-  !source.includes("TAG! — Zyron Studios v17 Online") ||
+  !source.includes("TAG! — Zyron Studios v18 PEAK!") ||
   !source.includes("function customPlatformGeometry") ||
   !source.includes("centerX-objectW/2") ||
   !source.includes("centerY-objectH/2") ||
@@ -90,9 +90,13 @@ if (
   !source.includes("MAILBOX · INCOMING FRIEND REQUESTS") ||
   !source.includes("refreshFriends().catch(()=>{})") ||
   source.includes("V18 · STRUCTURE UNDERSIDE COLLISION") ||
-  source.includes("Zyron Studios v18 Online")
+  !source.includes("TAG! V18 PEAK") ||
+  !source.includes("function useItem(i)") ||
+  !source.includes("function updateKillerBots(dt)") ||
+  !source.includes("function eliminatePlayer(i)") ||
+  !source.includes("GLITCHY LANDSCAPES")
 ) {
-  throw new Error("V17 centered structure geometry, solid collision, or existing V16/V17 safeguards are missing.");
+  throw new Error("V18 release, V17 solid collision, or existing V16/V17 safeguards are missing.");
 }
 
 const directory = join(tmpdir(), "tag-client-check-" + process.pid);
