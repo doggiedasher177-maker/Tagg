@@ -4663,7 +4663,7 @@ function create(){
   const section=document.createElement('section');section.id='v205ScenarioScreen';section.className='screen';
   section.innerHTML='<div class="full-panel"><div class="eyebrow">ZYRON STUDIOS · V20.5</div><h2 id="v205Title"></h2><p id="v205Subtitle"></p><p id="v205Balance" class="profile-footnote"></p><div class="v205-scenarios" id="v205Grid"></div><div class="result-actions"><button class="primary-small" id="v205Back"></button></div></div>';
   document.body.append(section);
-  $('v205Back').onclick=()=>window.TAGAppScreens?.show('menu');
+  $('v205Back').onclick=()=>{$('v205ScenarioScreen').classList.remove('show');window.TAGAppScreens?.show('menu');};
  }
  if(!$('v205ScenariosBtn')){
   const b=document.createElement('button');b.id='v205ScenariosBtn';b.textContent='✦ SCENARIOS';b.onclick=()=>{render();window.TAGAppScreens?.show('settings');$('settingsScreen').classList.remove('show');$('v205ScenarioScreen').classList.add('show');};
